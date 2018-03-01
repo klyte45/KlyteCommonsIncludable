@@ -1042,6 +1042,31 @@ namespace Klyte.Commons.Utils
 
         }
         #endregion
+
+        #region Map Position
+
+        public static Vector2 gridPositionGameDefault(Vector3 pos)
+        {
+            int x = Mathf.Max((int)((pos.x) / 64f + 135f), 0);
+            int z = Mathf.Max((int)((-pos.z) / 64f + 135f), 0);
+            return new Vector2(x, z);
+        }
+
+
+        public static Vector2 gridPosition81Tiles(Vector3 pos, float invResolution = 24f)
+        {
+            int x = Mathf.Max((int)((pos.x) / invResolution + 648), 0);
+            int z = Mathf.Max((int)((-pos.z) / invResolution + 648), 0);
+            return new Vector2(x, z);
+        }
+
+        public static Vector2 getMapTile(Vector3 pos)
+        {
+            float x = (pos.x + 8640f) / 1920f;
+            float z = (pos.z + 8640f) / 1920f;
+            return new Vector2(x, z);
+        }
+        #endregion
     }
 
 
@@ -1174,9 +1199,7 @@ namespace Klyte.Commons.Utils
             {
                 return int.Parse(val);
             }
-#pragma warning disable CS0168 // Variable is declared but never used
-            catch (Exception e)
-#pragma warning restore CS0168 // Variable is declared but never used
+            catch
             {
                 return defaultVal;
             }
