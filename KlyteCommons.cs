@@ -14,7 +14,7 @@ using Klyte.Commons.Extensors;
 using Klyte.Commons.Overrides;
 using ColossalFramework.PlatformServices;
 
-[assembly: AssemblyVersion("1.0.1.*")]
+[assembly: AssemblyVersion("1.0.2.*")]
 namespace Klyte.Commons
 {
     public class KlyteCommonsMod : IUserMod, ILoadingExtension
