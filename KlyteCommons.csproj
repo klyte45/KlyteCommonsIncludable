@@ -55,6 +55,7 @@
     <Compile Include="UI\TLMAgesChartPanel.cs" />
     <Compile Include="UI\TLMWorkersChartPanel.cs" />
     <Compile Include="Overrides\DistrictManagerOverrides.cs" />
+    <Compile Include="Utils\CardinalPoint .cs" />
     <Compile Include="Utils\KlyteUtils.cs" />
   </ItemGroup>
   <ProjectExtensions>

@@ -586,27 +586,42 @@ namespace Klyte.Commons.Utils
         #region Reflection
         public static T GetPrivateField<T>(object o, string fieldName)
         {
-            var field = o.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-            if (field != null)
+            if (fieldName != null)
             {
-                return (T)field.GetValue(o);
+                var field = o.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                if (field != null)
+                {
+                    return (T)field.GetValue(o);
+                }
             }
-            else
-            {
-                return default(T);
-            }
+            return default(T);
+
         }
         public static object GetPrivateStaticField(string fieldName, Type type)
         {
-            FieldInfo field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-            if (field != null)
+            if (fieldName != null)
             {
-                return field.GetValue(null);
+                FieldInfo field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+                if (field != null)
+                {
+                    return field.GetValue(null);
+                }
             }
-            else
+            return null;
+
+        }
+        public static object GetPrivateStaticProperty(string fieldName, Type type)
+        {
+            if (fieldName != null)
             {
-                return null;
+                PropertyInfo field = type.GetProperty(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+                if (field != null)
+                {
+                    return field.GetValue(null, null);
+                }
             }
+            return null;
+
         }
         public static object ExecuteReflectionMethod(object o, string methodName, params object[] args)
         {
@@ -1066,6 +1081,7 @@ namespace Klyte.Commons.Utils
             float z = (pos.z + 8640f) / 1920f;
             return new Vector2(x, z);
         }
+
         #endregion
     }
 
@@ -1167,26 +1183,26 @@ namespace Klyte.Commons.Utils
         public static float GetAngleToPoint(this Vector2 from, Vector2 to)
         {
             float ca = to.x - from.x;
-            float co = to.y - from.y;
-            KlyteUtils.doLog($"ca = {ca},co = {co};");
+            float co = -to.y + from.y;
+            //KlyteUtils.doLog($"ca = {ca},co = {co};");
             if (co == 0)
             {
-                if (ca > 0)
-                {
-                    return 90;
-                }
-                else
+                if (ca < 0)
                 {
                     return 270;
                 }
+                else
+                {
+                    return 90;
+                }
             }
-            if (ca < 0)
+            if (co < 0)
             {
-                return (Mathf.Atan(ca / co) * Mathf.Rad2Deg + 180 + 360) % 360;
+                return (360 - ((Mathf.Atan(ca / co) * Mathf.Rad2Deg + 360) % 360) % 360);
             }
             else
             {
-                return (Mathf.Atan(ca / co) * Mathf.Rad2Deg + 360) % 360;
+                return 360 - ((Mathf.Atan(ca / co) * Mathf.Rad2Deg + 180 + 360) % 360);
             }
         }
     }
