@@ -7,7 +7,7 @@ namespace Klyte.Commons.UI
     public class TLMAgesChartPanel : MonoBehaviour
     {
         private UIPanel agesChartPanel;
-        private UIRadialChartAge agesChart;
+        private UIRadialChartExtended agesChart;
         private Transform parent => transform.parent;
 
         public void Awake()
@@ -59,7 +59,7 @@ namespace Klyte.Commons.UI
             criaFatiaELegenda(adultoColor, agesChart, pieLegendPanel, "ZONEDBUILDING_ADULTS", 14 * y++);
             criaFatiaELegenda(idosoColor, agesChart, pieLegendPanel, "ZONEDBUILDING_SENIORS", 14 * y++);
         }
-        private void criaFatiaELegenda(Color c, UIRadialChartAge chart, UIPanel legendPanel, string localeID, float offsetY)
+        private void criaFatiaELegenda(Color c, UIRadialChartExtended chart, UIPanel legendPanel, string localeID, float offsetY)
         {
             chart.AddSlice(c, c);
             KlyteUtils.createUIElement(out UIPanel legendItemContainer, legendPanel.transform);

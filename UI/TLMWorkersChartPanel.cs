@@ -12,8 +12,8 @@ namespace Klyte.Commons.UI
     public class TLMWorkerChartPanel : UICustomControl
     {
         private UIPanel agesChartPanel;
-        private UIRadialChartAge workersChart;
-        private UIRadialChartAge workplaceChart;
+        private UIRadialChartExtended workersChart;
+        private UIRadialChartExtended workplaceChart;
         private Transform parent;
 
         private UILabel legendL0;
@@ -101,7 +101,7 @@ namespace Klyte.Commons.UI
             criaFatiaELegenda(MultiplyColor(threeSchool, 0.5f), workersChart);
             legendFr = criaFatiaELegenda(Color.gray, workersChart, pieLegendPanel, "ZONEDBUILDING_JOBSAVAIL", 14 * y++);
         }
-        private UILabel criaFatiaELegenda(Color c, UIRadialChartAge chart, UIPanel legendPanel = null, string localeID = "", float offsetY = 0)
+        private UILabel criaFatiaELegenda(Color c, UIRadialChartExtended chart, UIPanel legendPanel = null, string localeID = "", float offsetY = 0)
         {
             chart.AddSlice(c, c);
             UIPanel legendItemContainer = null;

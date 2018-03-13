@@ -52,11 +52,20 @@ namespace Klyte.Commons.Utils
         #endregion
 
         #region UI utils
-        public static void createElement<T>(out T uiItem, Transform parent) where T : MonoBehaviour
+        public static T createElement<T>(Transform parent, string name = null) where T : MonoBehaviour
+        {
+            createElement<T>(out T uiItem, parent, name);
+            return uiItem;
+        }
+        public static void createElement<T>(out T uiItem, Transform parent, string name = null) where T : MonoBehaviour
         {
             GameObject container = new GameObject();
             container.transform.parent = parent;
             uiItem = (T)container.AddComponent(typeof(T));
+            if (name != null)
+            {
+                container.name = name;
+            }
         }
         public static void createElement(Type type, Transform parent)
         {
@@ -1087,7 +1096,7 @@ namespace Klyte.Commons.Utils
 
 
 
-    public class UIRadialChartAge : UIRadialChart
+    public class UIRadialChartExtended : UIRadialChart
     {
         public void AddSlice(Color32 innerColor, Color32 outterColor)
         {
@@ -1097,6 +1106,61 @@ namespace Klyte.Commons.Utils
                 innerColor = innerColor
             };
             this.m_Slices.Add(slice);
+            this.Invalidate();
+        }
+        public void SetValues(float offset, int[] percentages)
+        {
+            if (percentages.Length != this.sliceCount)
+            {
+                CODebugBase<InternalLogChannel>.Error(InternalLogChannel.UI, string.Concat(new object[]
+                {
+            "Percentage count should be ",
+            sliceCount,
+            " but is ",
+            percentages.Length
+                }), base.gameObject);
+                return;
+            }
+            float num = offset;
+            for (int i = 0; i < this.sliceCount; i++)
+            {
+                SliceSettings sliceSettings = this.m_Slices[i];
+                sliceSettings.Setter(null);
+                sliceSettings.startValue = Mathf.Max(num % 1, 0f);
+                num += percentages[i] * 0.01f;
+                sliceSettings.endValue = Mathf.Min(num % 1, 1f);
+            }
+            this.Invalidate();
+        }
+        public void SetValuesStarts(int[] starts)
+        {
+            if (starts.Length != sliceCount)
+            {
+                CODebugBase<InternalLogChannel>.Error(InternalLogChannel.UI, string.Concat(new object[]
+                {
+            "Starts count should be ",
+            sliceCount,
+            " but is ",
+            starts.Length
+                }), base.gameObject);
+                return;
+            }
+            float num = 0;
+            for (int i = 0; i < sliceCount; i++)
+            {
+                SliceSettings sliceSettings = this.m_Slices[i];
+                sliceSettings.Setter(null);
+                sliceSettings.startValue = num;
+                if (i == sliceCount - 1)
+                {
+                    num = 1f;
+                }
+                else
+                {
+                    num = (starts[i + 1]) * 0.01f;
+                }
+                sliceSettings.endValue = num;
+            }
             this.Invalidate();
         }
     }
@@ -1219,6 +1283,64 @@ namespace Klyte.Commons.Utils
             {
                 return defaultVal;
             }
+        }
+    }
+
+    public class Tuple<T1, T2, T3, T4>
+    {
+        public T1 First { get; private set; }
+        public T2 Second { get; private set; }
+        public T3 Third { get; private set; }
+        public T4 Fourth { get; private set; }
+        internal Tuple(T1 first, T2 second, T3 third, T4 fourth)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+            Fourth = fourth;
+        }
+    }
+
+    public class Tuple<T1, T2, T3>
+    {
+        public T1 First { get; private set; }
+        public T2 Second { get; private set; }
+        public T3 Third { get; private set; }
+        internal Tuple(T1 first, T2 second, T3 third)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+        }
+    }
+
+    public class Tuple<T1, T2>
+    {
+        public T1 First { get; private set; }
+        public T2 Second { get; private set; }
+        internal Tuple(T1 first, T2 second)
+        {
+            First = first;
+            Second = second;
+        }
+    }
+
+    public static class Tuple
+    {
+        public static Tuple<T1, T2, T3, T4> New<T1, T2, T3, T4>(T1 first, T2 second, T3 third, T4 fourth)
+        {
+            var tuple = new Tuple<T1, T2, T3, T4>(first, second, third, fourth);
+            return tuple;
+        }
+        public static Tuple<T1, T2, T3> New<T1, T2, T3>(T1 first, T2 second, T3 third)
+        {
+            var tuple = new Tuple<T1, T2, T3>(first, second, third);
+            return tuple;
+        }
+        public static Tuple<T1, T2> New<T1, T2>(T1 first, T2 second)
+        {
+            var tuple = new Tuple<T1, T2>(first, second);
+            return tuple;
         }
     }
 }

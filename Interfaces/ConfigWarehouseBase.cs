@@ -45,7 +45,11 @@ namespace Klyte.Commons.Interfaces
         public static void addToCurrentConfigListInt(T i, int value) => instance.currentLoadedCityConfig.addToListInt(i, value);
         public static void removeFromCurrentConfigListInt(T i, int value) => instance.currentLoadedCityConfig.removeFromListInt(i, value);
 
-        internal I currentLoadedCityConfig => getConfig(currentCityId, currentCityName);
+        public I currentLoadedCityConfig => getConfig(currentCityId, currentCityName);
+
+        public I getConfig2(string cityId, string cityName) => getConfig(cityId, cityName);
+        public I getConfig2() => getConfig(null, null);
+
         public static I getConfig() => getConfig(null, null);
 
         public static I getConfig(string cityId, string cityName)

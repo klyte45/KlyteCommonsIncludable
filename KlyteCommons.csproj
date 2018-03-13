@@ -49,7 +49,10 @@
   <ItemGroup>
     <Compile Include="Extensors\Redirector.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Interfaces\BasicExtensionInterface.cs" />
     <Compile Include="Interfaces\ConfigWarehouseBase.cs" />
+    <Compile Include="Interfaces\ExtensionInterfaceListImpl .cs" />
+    <Compile Include="Interfaces\ExtensionInterfaceDictionaryImpl.cs" />
     <Compile Include="KlyteCommons.cs" />
     <Compile Include="UI\AVOPreviewRenderer.cs" />
     <Compile Include="UI\TLMAgesChartPanel.cs" />

@@ -6,6 +6,45 @@ using UnityEngine;
 
 public struct CardinalPoint
 {
+    private static readonly string[] CARDINAL_16 = new string[]
+    {
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+    };
+
+    public static string getCardinalPoint16(float angle)
+    {
+        float diagSize = 22.5f;
+        angle %= 360;
+        angle += 360;
+        angle %= 360;
+
+        for (int i = 1; i < CARDINAL_16.Length; i++)
+        {
+            if (Math.Abs(angle - diagSize * i) < diagSize / 2)
+            {
+                return CARDINAL_16[i];
+            }
+        }
+        return CARDINAL_16[0];
+    }
+
+
+
     public static CardinalPoint getCardinalPoint(float angle, float diagSize = 45)
     {
         angle %= 360;
@@ -44,7 +83,6 @@ public struct CardinalPoint
         {
             return N;
         }
-
     }
 
     public static CardinalPoint getCardinalPoint4(float angle, bool azimutal = false)
