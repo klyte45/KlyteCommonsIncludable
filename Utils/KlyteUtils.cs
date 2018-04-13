@@ -199,6 +199,7 @@ namespace Klyte.Commons.Utils
             return targetType;
         }
 
+
         public UISlider GenerateSliderField(UIHelperExtension uiHelper, OnValueChanged action, out UILabel label, out UIPanel container)
         {
             UISlider budgetMultiplier = (UISlider)uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
@@ -674,16 +675,16 @@ namespace Klyte.Commons.Utils
         {
             var classes = from t in Assembly.GetAssembly(refType).GetTypes()
                           let y = t.BaseType
-                          where t.IsClass && y != null && y.IsGenericType == typeTarg.IsGenericType && (y.GetGenericTypeDefinition() == typeTarg || y.BaseType == typeTarg)
+                          where t.IsClass && y != null && y.IsGenericType == typeTarg.IsGenericType && (y.BaseType == typeTarg || (y.ContainsGenericParameters && y.GetGenericTypeDefinition() == typeTarg))
                           select t;
             List<Type> result = new List<Type>();
             foreach (Type t in classes)
             {
-                if (t.IsAbstract)
+                if (!t.IsSealed)
                 {
                     result.AddRange(GetSubtypesRecursive(t, refType));
                 }
-                else
+                if (!t.IsAbstract)
                 {
                     result.Add(t);
                 }
@@ -940,14 +941,15 @@ namespace Klyte.Commons.Utils
         #endregion
 
         #region Vehicle Utils
-        public static VehicleInfo GetRandomModel(List<string> assetList)
+        public static VehicleInfo GetRandomModel(List<string> assetList, out string selectedModel)
         {
+            selectedModel = null;
             if (assetList.Count == 0) return null;
             Randomizer r = new Randomizer(new System.Random().Next());
 
-            string model = assetList[r.Int32(0, assetList.Count - 1)];
+            selectedModel = assetList[r.Int32(0, assetList.Count - 1)];
 
-            var saida = PrefabCollection<VehicleInfo>.FindLoaded(model);
+            var saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel);
             if (saida == null)
             {
                 KlyteUtils.doLog("MODEL DOESN'T EXIST!");
@@ -1027,43 +1029,35 @@ namespace Klyte.Commons.Utils
         #region Log Utils
         internal static void doLog(string format, params object[] args)
         {
-            //try
-            //{
-            //    if (TLMSingleton.instance != null)
-            //    {
-            //        if (TLMSingleton.debugMode)
-            //        {
-            //            Debug.LogWarningFormat("TLMRv" + TLMSingleton.version + " " + format, args);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        Console.WriteLine("TLMRv" + TLMSingleton.version + " " + format, args);
-            //    }
-            //}
-            //catch
-            //{
-            //    Debug.LogErrorFormat("TLMRv" + TLMSingleton.version + " Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
-            //}
+            try
+            {
+                //    if (TLMSingleton.instance != null)
+                //    {
+                //        if (TLMSingleton.debugMode)
+                //        {
+                //            Debug.LogWarningFormat("TLMRv" + TLMSingleton.version + " " + format, args);
+                //        }
+                //    }
+                //    else
+                //    {
+                Console.WriteLine("KltUtils: " + format, args);
+                //    }
+            }
+            catch
+            {
+                Debug.LogErrorFormat("KltUtils: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+            }
         }
         internal static void doErrorLog(string format, params object[] args)
         {
-            //try
-            //{
-            //    if (TLMSingleton.instance != null)
-            //    {
-            //        Debug.LogErrorFormat("TLMRv" + TLMSingleton.version + " " + format, args);
-            //    }
-            //    else
-            //    {
-            //        Console.WriteLine("TLMRv" + TLMSingleton.version + " " + format, args);
-            //    }
-            //}
-            //catch
-            //{
-            //    Debug.LogErrorFormat("TLMRv" + TLMSingleton.version + " Erro ao logar ERRO!!!: {0} (args = [{1}])", format, args == null ? "" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
-            //}
-
+            try
+            {
+                Console.WriteLine("KCv" + KlyteCommonsMod.version + " " + format, args);
+            }
+            catch
+            {
+                Debug.LogErrorFormat("KltUtils: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+            }
         }
         #endregion
 

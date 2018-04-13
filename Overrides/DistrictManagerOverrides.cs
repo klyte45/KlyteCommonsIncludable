@@ -32,7 +32,7 @@ namespace Klyte.Commons.Overrides
 
         #region Hooking
 
-        public override void Awake()
+        public override void AwakeBody()
         {
             KlyteUtils.doLog("Loading District Manager Overrides");
             #region Release Line Hooks
@@ -45,6 +45,10 @@ namespace Klyte.Commons.Overrides
         }
         #endregion
 
+        public override void doLog(string text, params object[] param)
+        {
+
+        }
 
 
     }
