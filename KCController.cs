@@ -31,11 +31,6 @@ namespace Klyte.Commons
             }
         }
 
-        //public UIPanel defaultPanel => KCPublicTransportManagementPanel.Get().mainPanel;
-        //public UIPanel defaultPanel => KCPublicTransportManagementPanel.Get().mainPanel;
-
-
-
         public void Awake()
         {
             if (gameObject != null)

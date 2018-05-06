@@ -111,9 +111,9 @@ namespace Klyte.Commons.Interfaces
         }
 
         public string getString(T i) => getFromFileString(i);
-        public void setString(T i, string value) => setToFile(i, value);
         public bool getBool(T i) => getFromFileBool(i);
         public int getInt(T i) => getFromFileInt(i);
+        public void setString(T i, string value) => setToFile(i, value);
         public void setBool(T idx, bool newVal) => setToFile(idx, newVal);
         public void setInt(T idx, int value) => setToFile(idx, value);
 
@@ -154,11 +154,28 @@ namespace Klyte.Commons.Interfaces
             var data = new SavedString(i.ToString(), thisFileName, value, true);
             if (value == null) data.Delete();
             else data.value = value;
+
+            eventOnPropertyChanged?.Invoke(i, null, null, value);
         }
-        protected void setToFile(T i, bool value) => new SavedBool(i.ToString(), thisFileName, value, true).value = value;
-        protected void setToFile(T i, int value) => new SavedInt(i.ToString(), thisFileName, value, true).value = value;
+        protected void setToFile(T i, bool value)
+        {
+            new SavedBool(i.ToString(), thisFileName, value, true).value = value;
+            eventOnPropertyChanged?.Invoke(i, value, null, null);
+        }
+
+        protected void setToFile(T i, int value)
+        {
+            new SavedInt(i.ToString(), thisFileName, value, true).value = value;
+            eventOnPropertyChanged?.Invoke(i, null, value, null);
+        }
+
         public abstract bool getDefaultBoolValueForProperty(T i);
         public abstract int getDefaultIntValueForProperty(T i);
         public virtual string getDefaultStringValueForProperty(T i) => string.Empty;
+
+        public static event OnWarehouseConfigChanged eventOnPropertyChanged;
+
+
+        public delegate void OnWarehouseConfigChanged(T idx, bool? newValueBool, int? newValueInt, string newValueString);
     }
 }

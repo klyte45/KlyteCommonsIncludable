@@ -67,11 +67,12 @@ namespace Klyte.Commons.Utils
                 container.name = name;
             }
         }
-        public static void createElement(Type type, Transform parent)
+        public static GameObject createElement(Type type, Transform parent)
         {
             GameObject container = new GameObject();
             container.transform.parent = parent;
             container.AddComponent(type);
+            return container;
         }
         public static void createUIElement<T>(out T uiItem, Transform parent, String name = null, Vector4 area = default(Vector4)) where T : UIComponent
         {
@@ -183,22 +184,6 @@ namespace Klyte.Commons.Utils
 
         }
 
-        public static Type GetImplementationForGenericType(Type typeOr, params Type[] typeArgs)
-        {
-            var typeTarg = typeOr.MakeGenericType(typeArgs);
-
-            var instances = from t in Assembly.GetAssembly(typeOr).GetTypes()
-                            where t.IsClass && !t.IsAbstract && typeTarg.IsAssignableFrom(t) && !t.IsGenericType
-                            select t;
-            if (instances.Count() != 1)
-            {
-                throw new Exception($"Defininções inválidas para [{ String.Join(", ", typeArgs.Select(x => x.ToString()).ToArray()) }] no tipo genérico {typeOr}");
-            }
-
-            Type targetType = instances.First();
-            return targetType;
-        }
-
 
         public UISlider GenerateSliderField(UIHelperExtension uiHelper, OnValueChanged action, out UILabel label, out UIPanel container)
         {
@@ -222,13 +207,21 @@ namespace Klyte.Commons.Utils
                 clearAllVisibilityEvents(u.components[i]);
             }
         }
-        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, uint maxWidth)
+        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x)
+        {
+            return LimitWidth(x, (uint)x.minimumSize.x);
+        }
+        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, uint maxWidth, bool alsoMinSize = false)
         {
             void callback(UIComponent y, Vector2 z)
             {
                 x.transform.localScale = new Vector3(Math.Min(1, maxWidth / x.width), x.transform.localScale.y, x.transform.localScale.z);
             }
             x.eventSizeChanged += callback;
+            if (alsoMinSize)
+            {
+                x.minimumSize = new Vector2(maxWidth, x.minimumSize.y);
+            }
             return callback;
         }
         public static UIHelperExtension CreateScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition)
@@ -691,6 +684,22 @@ namespace Klyte.Commons.Utils
             }
             return result;
         }
+
+        public static Type GetImplementationForGenericType(Type typeOr, params Type[] typeArgs)
+        {
+            var typeTarg = typeOr.MakeGenericType(typeArgs);
+
+            var instances = from t in Assembly.GetAssembly(typeOr).GetTypes()
+                            where t.IsClass && !t.IsAbstract && typeTarg.IsAssignableFrom(t) && !t.IsGenericType
+                            select t;
+            if (instances.Count() != 1)
+            {
+                throw new Exception($"Defininções inválidas para [{ String.Join(", ", typeArgs.Select(x => x.ToString()).ToArray()) }] no tipo genérico {typeOr}");
+            }
+
+            Type targetType = instances.First();
+            return targetType;
+        }
         #endregion
 
         public static void doLocaleDump()
@@ -746,6 +755,30 @@ namespace Klyte.Commons.Utils
             }
             return true;
         }
+
+        #region Default (de)serialization
+        public static string SerializeColor(Color32 value, string separator)
+        {
+            return string.Join(separator, new string[] { value.r.ToString(), value.g.ToString(), value.b.ToString() });
+        }
+
+        public static Color DeserializeColor(string value, string separator)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                var list = value.Split(separator.ToCharArray()).ToList();
+                if (list.Count == 3 && byte.TryParse(list[0], out byte r) && byte.TryParse(list[1], out byte g) && byte.TryParse(list[2], out byte b))
+                {
+                    return new Color32(r, g, b, 255);
+                }
+                else
+                {
+                    doLog($"val = {value}; list = {String.Join(",", list.ToArray())} (Size {list.Count})");
+                }
+            }
+            return Color.clear;
+        }
+        #endregion
 
         #region Utility Numbering Arrays
         protected static string[] latinoMaiusculo = {
