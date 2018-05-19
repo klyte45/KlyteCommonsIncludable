@@ -1,17 +1,4 @@
-﻿using ColossalFramework;
-using ColossalFramework.Globalization;
-using ColossalFramework.UI;
-using ICities;
-using Klyte.Commons.Extensors;
-using Klyte.Extensions;
-using Klyte.Harmony;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
+﻿using Klyte.Commons.Extensors;
 
 namespace Klyte.Commons.LineList
 {

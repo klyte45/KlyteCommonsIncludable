@@ -68,6 +68,10 @@ namespace Klyte.Commons.Interfaces
 
         protected static I construct(string cityId, string cityName)
         {
+            if (string.IsNullOrEmpty(cityId))
+            {
+                throw new Exception("CITY ID NÃO PODE SER NULO!!!!!");
+            }
             I result = new I
             {
                 cityId = cityId,

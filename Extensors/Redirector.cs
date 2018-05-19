@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Klyte.Commons.Utils;
-using System.Reflection.Emit;
-using System.Security.Permissions;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using Klyte.Harmony;
-using ColossalFramework;
 using UnityEngine;
 using System.Diagnostics;
+using Klyte.Harmony;
 
 namespace Klyte.Commons.Extensors
 {
@@ -22,7 +13,7 @@ namespace Klyte.Commons.Extensors
     public abstract class Redirector<T> : MonoBehaviour where T : Redirector<T>
     {
         #region Class Base
-        private readonly HarmonyInstance harmony = HarmonyInstance.Create("com.klyte.transportlinemanager." + typeof(T).Name);
+        private readonly HarmonyInstance harmony = HarmonyInstance.Create("com.klyte.commons." + typeof(T).Name);
         private static Redirector<T> instance;
 
         public HarmonyInstance GetHarmonyInstance()
