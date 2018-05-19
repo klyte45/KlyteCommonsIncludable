@@ -1035,10 +1035,46 @@ namespace Klyte.Commons.Utils
             }
             var go = GameObject.Instantiate(s_colorFieldTemplate.gameObject, parent.transform);
             UIColorField component = go.GetComponent<UIColorField>();
-            component.pickerPosition = UIColorField.ColorPickerPosition.LeftAbove;
+            component.pickerPosition = UIColorField.ColorPickerPosition.RightAbove;
             component.transform.SetParent(parent.transform);
+            component.eventColorPickerOpen += DefaultColorPickerHandler;
             return component;
         }
+        private static void DefaultColorPickerHandler(UIColorField dropdown, UIColorPicker popup, ref bool overridden)
+        {
+            var panel = popup.GetComponent<UIPanel>();
+            overridden = true;
+            panel.height = 250;
+            createUIElement<UITextField>(out UITextField textField, panel.transform, "ColorText", new Vector4(15, 225, 200, 20));
+            uiTextFieldDefaults(textField);
+            textField.normalBgSprite = "TextFieldPanel";
+            textField.maxLength = 6;
+            textField.eventKeyUp += (x, y) =>
+            {
+                if (popup && textField.text.Length == 6)
+                {
+                    try
+                    {                        
+                        Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
+                        dropdown.selectedColor = targetColor;
+                        popup.color = targetColor;
+                        ((UITextField)x).textColor = Color.white;
+                        ((UITextField)x).text = targetColor.ToRGB();
+                    }
+                    catch
+                    {
+                        ((UITextField)x).textColor = Color.red;
+                    }
+                }
+            };
+            popup.eventColorUpdated += (x) =>
+            {
+                textField.text = ((Color32)x).ToRGB();
+            };
+            textField.text = ((Color32)popup.color).ToRGB();
+        }
+
+
         #endregion
 
         #region File Utils
