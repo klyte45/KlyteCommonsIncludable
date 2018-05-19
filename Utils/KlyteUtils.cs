@@ -1,10 +1,11 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Globalization;
+using ColossalFramework.IO;
 using ColossalFramework.Math;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Extensions;
+using Klyte.Commons.Extensors;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1041,6 +1042,8 @@ namespace Klyte.Commons.Utils
         #endregion
 
         #region File Utils
+        public static readonly string BASE_FOLDER_PATH = DataLocation.localApplicationData + Path.DirectorySeparatorChar + "Klyte45Mods" + Path.DirectorySeparatorChar;
+
         public static FileInfo EnsureFolderCreation(string folderName)
         {
             if (File.Exists(folderName) && (File.GetAttributes(folderName) & FileAttributes.Directory) != FileAttributes.Directory)
@@ -1900,6 +1903,27 @@ namespace Klyte.Commons.Utils
             {
                 return defaultVal;
             }
+        }
+    }
+    public static class ColorExtensions
+    {
+        public static string ToRGBA(this Color32 color)
+        {
+            return color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
+        }
+        public static string ToRGB(this Color32 color)
+        {
+            return color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
+        }
+        public static Color32 FromRGBA(string rgba)
+        {
+            var value = Convert.ToInt64(rgba, 16);
+            return new Color32((byte)((value & 0xFF000000) >> 24), (byte)((value & 0xFF0000) >> 16), (byte)((value & 0xFF00) >> 8), (byte)((value & 0xFF)));
+        }
+        public static Color32 FromRGB(string rgb)
+        {
+            var value = Convert.ToInt32(rgb, 16);
+            return new Color32((byte)((value & 0xFF0000) >> 16), (byte)((value & 0xFF00) >> 8), (byte)((value & 0xFF)), 0xFF);
         }
     }
 
