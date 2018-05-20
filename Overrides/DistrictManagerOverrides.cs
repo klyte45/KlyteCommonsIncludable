@@ -12,10 +12,9 @@ namespace Klyte.Commons.Overrides
         public delegate void OnDistrictChanged();
         public static event OnDistrictChanged eventOnDistrictRenamed;
 
-        private static bool OnDistrictRenamed()
+        private static void OnDistrictRenamed()
         {
             eventOnDistrictRenamed?.Invoke();
-            return true;
         }
         #endregion
 
@@ -25,9 +24,9 @@ namespace Klyte.Commons.Overrides
         {
             KlyteUtils.doLog("Loading District Manager Overrides");
             #region Release Line Hooks
-            MethodInfo preRename = typeof(DistrictManagerOverrides).GetMethod("OnDistrictRenamed", allFlags);
+            MethodInfo posRename = typeof(DistrictManagerOverrides).GetMethod("OnDistrictRenamed", allFlags);
 
-            AddRedirect(typeof(DistrictManager).GetMethod("UpdateNames", allFlags), preRename);
+            AddRedirect(typeof(DistrictManager).GetMethod("UpdateNames", allFlags), null, posRename);
             #endregion
 
 
@@ -36,7 +35,7 @@ namespace Klyte.Commons.Overrides
 
         public override void doLog(string text, params object[] param)
         {
-
+            KlyteUtils.doLog(text, param);
         }
 
 

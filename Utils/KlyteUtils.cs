@@ -2,7 +2,6 @@
 using ColossalFramework.Globalization;
 using ColossalFramework.IO;
 using ColossalFramework.Math;
-using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
@@ -489,9 +488,13 @@ namespace Klyte.Commons.Utils
         {
             return Singleton<DistrictManager>.instance.GetDistrict(location);
         }
+        public static ushort GetPark(Vector3 location)
+        {
+            return Singleton<DistrictManager>.instance.GetPark(location);
+        }
         #endregion
 
-        #region Road Name Utils
+        #region Road Search Utils
         public static ushort FindNearNamedRoad(Vector3 position)
         {
             return FindNearNamedRoad(position, ItemClass.Service.Road, NetInfo.LaneType.Vehicle | NetInfo.LaneType.TransportVehicle,
@@ -587,6 +590,66 @@ namespace Klyte.Commons.Utils
         }
         #endregion
 
+        #region Stop Search Utils
+        public static List<ushort> FindNearStops(Vector3 position)
+        {
+            return FindNearStops(position, ItemClass.Service.PublicTransport, true, 8f, out List<float> distanceSqrA);
+        }
+        public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, bool allowUnderground, float maxDistance, out List<float> distanceSqrA)
+        {
+            return FindNearStops(position, service, service, VehicleInfo.VehicleType.None, allowUnderground, maxDistance, out distanceSqrA);
+        }
+        public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, ItemClass.Service service2, VehicleInfo.VehicleType stopType, bool allowUnderground, float maxDistance,
+             out List<float> distanceSqrA)
+        {
+
+
+            Bounds bounds = new Bounds(position, new Vector3(maxDistance * 2f, maxDistance * 2f, maxDistance * 2f));
+            int num = Mathf.Max((int)((bounds.min.x - 64f) / 64f + 135f), 0);
+            int num2 = Mathf.Max((int)((bounds.min.z - 64f) / 64f + 135f), 0);
+            int num3 = Mathf.Min((int)((bounds.max.x + 64f) / 64f + 135f), 269);
+            int num4 = Mathf.Min((int)((bounds.max.z + 64f) / 64f + 135f), 269);
+            NetManager instance = Singleton<NetManager>.instance;
+            List<Tuple<ushort, float>> result = new List<Tuple<ushort, float>>();
+
+            float maxDistSqr = maxDistance * maxDistance;
+            for (int i = num2; i <= num4; i++)
+            {
+                for (int j = num; j <= num3; j++)
+                {
+                    ushort num6 = instance.m_nodeGrid[i * 270 + j];
+                    int num7 = 0;
+                    while (num6 != 0)
+                    {
+                        NetInfo info = instance.m_nodes.m_buffer[(int)num6].Info;
+                        if (info != null && (info.m_class.m_service == service || info.m_class.m_service == service2) && (instance.m_nodes.m_buffer[(int)num6].m_flags & (NetNode.Flags.Collapsed)) == NetNode.Flags.None && (allowUnderground || !info.m_netAI.IsUnderground()))
+                        {
+                            var node = instance.m_nodes.m_buffer[(int)num6];
+                            Vector3 nodePos = node.m_position;
+                            float delta = Mathf.Max(Mathf.Max(bounds.min.x - 64f - nodePos.x, bounds.min.z - 64f - nodePos.z), Mathf.Max(nodePos.x - bounds.max.x - 64f, nodePos.z - bounds.max.z - 64f));
+                            if (delta < 0f && instance.m_segments.m_buffer[(int)num6].m_bounds.Intersects(bounds))
+                            {
+                                float num14 = Vector3.SqrMagnitude(position - nodePos);
+                                if (num14 < maxDistSqr)
+                                {
+                                    result.Add(Tuple.New(num6, num14));
+                                }
+                            }
+                        }
+                        num6 = instance.m_segments.m_buffer[(int)num6].m_nextGridSegment;
+                        if (++num7 >= 36864)
+                        {
+                            CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                            break;
+                        }
+                    }
+                }
+            }
+            result = result.OrderBy(x => x.First).ToList();
+            distanceSqrA = result.Select(x => x.Second).ToList();
+            return result.Select(x => x.First).ToList();
+        }
+        #endregion
         #region Reflection
         public static T GetPrivateField<T>(object o, string fieldName)
         {
@@ -1054,7 +1117,7 @@ namespace Klyte.Commons.Utils
                 if (popup && textField.text.Length == 6)
                 {
                     try
-                    {                        
+                    {
                         Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
                         dropdown.selectedColor = targetColor;
                         popup.color = targetColor;
