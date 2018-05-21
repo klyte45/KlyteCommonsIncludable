@@ -730,11 +730,13 @@ namespace Klyte.Commons.Utils
         }
         public static List<Type> GetSubtypesRecursive(Type typeTarg, Type refType)
         {
+            //doLog($"typeTarg = {typeTarg} | IsGenType={typeTarg.IsGenericType} ");
             var classes = from t in Assembly.GetAssembly(refType).GetTypes()
                           let y = t.BaseType
-                          where t.IsClass && y != null && y.IsGenericType == typeTarg.IsGenericType && (y.BaseType == typeTarg || (y.ContainsGenericParameters && y.GetGenericTypeDefinition() == typeTarg))
+                          where t.IsClass && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
                           select t;
             List<Type> result = new List<Type>();
+            //doLog($"classes:\r\n\t {string.Join("\r\n\t", classes.Select(x => x.ToString()).ToArray())} ");
             foreach (Type t in classes)
             {
                 if (!t.IsSealed)
