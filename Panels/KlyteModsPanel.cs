@@ -53,11 +53,11 @@ namespace Klyte.Commons.UI
             controlContainer.absolutePosition = new Vector3(0, 0, 0);
         }
 
-        public void AddTab(ModTab cat, Type customControl, UITextureAtlas atlas, string fgTexture, string tooltip)
+        public UIPanel AddTab(ModTab cat, Type customControl, UITextureAtlas atlas, string fgTexture, string tooltip)
         {
             if (m_StripMain.Find<UIComponent>(cat.ToString()) != null)
             {
-                return;
+                return null;
             }
 
             UIButton superTab = CreateTabTemplate();
@@ -76,6 +76,8 @@ namespace Klyte.Commons.UI
             content.area = new Vector4(0, 0, mainPanel.width, mainPanel.height);
 
             m_StripMain.AddTab(cat.ToString(), superTab.gameObject, content.gameObject, customControl);
+
+            return content;
         }
 
         public void OpenAt(ModTab cat)
