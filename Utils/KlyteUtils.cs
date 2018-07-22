@@ -433,6 +433,8 @@ namespace Klyte.Commons.Utils
             {
                 return bm.FindBuilding(pos, maxDistance, service, subService, flagsRequired, flagsForbidden);
             }
+
+
             int num = Mathf.Max((int)((pos.x - maxDistance) / 64f + 135f), 0);
             int num2 = Mathf.Max((int)((pos.z - maxDistance) / 64f + 135f), 0);
             int num3 = Mathf.Min((int)((pos.x + maxDistance) / 64f + 135f), 269);
@@ -453,7 +455,7 @@ namespace Klyte.Commons.Utils
                             Building.Flags flags = bm.m_buildings.m_buffer[(int)num6].m_flags;
                             if ((flags & (flagsRequired | flagsForbidden)) == flagsRequired)
                             {
-                                if (info.GetAI() is DepotAI depotAI && allowedTypes.Contains(depotAI.m_transportInfo.m_vehicleReason))
+                                if (!(info.GetAI() is DepotAI depotAI) || allowedTypes.Contains(depotAI.m_transportInfo.m_vehicleReason))
                                 {
                                     float num8 = Vector3.SqrMagnitude(pos - bm.m_buildings.m_buffer[(int)num6].m_position);
                                     if (num8 < num5)
@@ -617,31 +619,41 @@ namespace Klyte.Commons.Utils
             {
                 for (int j = num; j <= num3; j++)
                 {
-                    ushort num6 = instance.m_nodeGrid[i * 270 + j];
+                    var idx = i * 270 + j;
+                    ushort num6 = 0;
                     int num7 = 0;
-                    while (num6 != 0)
+                    try
                     {
-                        NetInfo info = instance.m_nodes.m_buffer[(int)num6].Info;
-                        if (info != null && (info.m_class.m_service == service || info.m_class.m_service == service2) && (instance.m_nodes.m_buffer[(int)num6].m_flags & (NetNode.Flags.Collapsed)) == NetNode.Flags.None && (allowUnderground || !info.m_netAI.IsUnderground()))
+                        num6 = instance.m_nodeGrid[idx];
+                        num7 = 0;
+                        while (num6 != 0)
                         {
-                            var node = instance.m_nodes.m_buffer[(int)num6];
-                            Vector3 nodePos = node.m_position;
-                            float delta = Mathf.Max(Mathf.Max(bounds.min.x - 64f - nodePos.x, bounds.min.z - 64f - nodePos.z), Mathf.Max(nodePos.x - bounds.max.x - 64f, nodePos.z - bounds.max.z - 64f));
-                            if (delta < 0f && instance.m_segments.m_buffer[(int)num6].m_bounds.Intersects(bounds))
+                            NetInfo info = instance.m_nodes.m_buffer[(int)num6].Info;
+                            if (info != null && (info.m_class.m_service == service || info.m_class.m_service == service2) && (instance.m_nodes.m_buffer[(int)num6].m_flags & (NetNode.Flags.Collapsed)) == NetNode.Flags.None && (allowUnderground || !info.m_netAI.IsUnderground()))
                             {
-                                float num14 = Vector3.SqrMagnitude(position - nodePos);
-                                if (num14 < maxDistSqr)
+                                var node = instance.m_nodes.m_buffer[(int)num6];
+                                Vector3 nodePos = node.m_position;
+                                float delta = Mathf.Max(Mathf.Max(bounds.min.x - 64f - nodePos.x, bounds.min.z - 64f - nodePos.z), Mathf.Max(nodePos.x - bounds.max.x - 64f, nodePos.z - bounds.max.z - 64f));
+                                if (delta < 0f && instance.m_nodes.m_buffer[(int)num6].m_bounds.Intersects(bounds))
                                 {
-                                    result.Add(Tuple.New(num6, num14));
+                                    float num14 = Vector3.SqrMagnitude(position - nodePos);
+                                    if (num14 < maxDistSqr)
+                                    {
+                                        result.Add(Tuple.New(num6, num14));
+                                    }
                                 }
                             }
+                            num6 = instance.m_nodes.m_buffer[(int)num6].m_nextGridNode;
+                            if (++num7 >= 36864)
+                            {
+                                CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                                break;
+                            }
                         }
-                        num6 = instance.m_segments.m_buffer[(int)num6].m_nextGridSegment;
-                        if (++num7 >= 36864)
-                        {
-                            CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                            break;
-                        }
+                    }
+                    catch (Exception e)
+                    {
+                        doErrorLog($"ERROR ON TRYING FindNearStops: (It = {num7}; Init = {idx}; Curr = {num6})==>  {e.Message}\n{e.StackTrace}");
                     }
                 }
             }
@@ -1177,7 +1189,7 @@ namespace Klyte.Commons.Utils
                 //    }
                 //    else
                 //    {
-                Console.WriteLine("KltUtils: " + format, args);
+                //Console.WriteLine("KltUtils: " + format, args);
                 //    }
             }
             catch

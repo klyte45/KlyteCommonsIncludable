@@ -118,6 +118,11 @@ namespace Klyte.Commons.Extensors
             }
         }
 
+        public void AddLabel(object p)
+        {
+            throw new NotImplementedException();
+        }
+
         public UIDropDown AddDropdownLocalized(string text, string[] options, int defaultSelection, OnDropdownSelectionChanged eventCallback)
         {
             UIDropDown uIDropDown = AddDropdownBaseLocalized(text, options, eventCallback, defaultSelection);

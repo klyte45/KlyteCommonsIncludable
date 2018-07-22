@@ -1,12 +1,9 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Globalization;
-using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -17,6 +14,7 @@ namespace Klyte.Commons.Interfaces
         protected const string LIST_SEPARATOR = "∂";
         public const string GLOBAL_CONFIG_INDEX = "DEFAULT";
         public abstract string ConfigFilename { get; }
+        public virtual string ConfigPath => "";
         protected const int TYPE_STRING = 0x100;
         protected const int TYPE_INT = 0x200;
         protected const int TYPE_BOOL = 0x300;
@@ -33,6 +31,7 @@ namespace Klyte.Commons.Interfaces
         protected string currentCityName => isCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_CityName : GLOBAL_CONFIG_INDEX;
 
         protected string thisFileName => ConfigFilename + "_" + cityId;
+        public string thisPathName => ConfigPath + thisFileName;
 
 
         public static bool getCurrentConfigBool(T i) => instance.currentLoadedCityConfig.getBool(i);
@@ -79,7 +78,7 @@ namespace Klyte.Commons.Interfaces
             };
             SettingsFile settingFile = new SettingsFile
             {
-                fileName = result.thisFileName
+                pathName = result.thisPathName
             };
             GameSettings.AddSettingsFile(settingFile);
 
