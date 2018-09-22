@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-[assembly: AssemblyVersion("1.1.4.0")]
+[assembly: AssemblyVersion("1.1.5.0")]
 namespace Klyte.Commons
 {
     public class KlyteCommonsMod : IUserMod, ILoadingExtension

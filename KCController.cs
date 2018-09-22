@@ -1,16 +1,11 @@
 using ColossalFramework;
-using ColossalFramework.Plugins;
 using ColossalFramework.UI;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using ColossalFramework.Globalization;
-using System.Reflection;
-using System.Linq;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
-using Klyte.Commons.UI;
+using System;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
 
 namespace Klyte.Commons
 {

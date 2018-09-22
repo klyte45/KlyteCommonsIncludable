@@ -30,7 +30,7 @@ namespace Klyte.Commons.Interfaces
         protected string currentCityId => isCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_gameInstanceIdentifier : GLOBAL_CONFIG_INDEX;
         protected string currentCityName => isCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_CityName : GLOBAL_CONFIG_INDEX;
 
-        protected string thisFileName => ConfigFilename + "_" + cityId;
+        protected string thisFileName => ConfigFilename + "_" + (cityId ?? GLOBAL_CONFIG_INDEX);
         public string thisPathName => ConfigPath + thisFileName;
 
 
