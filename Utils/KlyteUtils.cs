@@ -1378,6 +1378,49 @@ namespace Klyte.Commons.Utils
                 calculatePathNet(firstSegmentID, segment, otherEdgeNode, insertOnEnd, ref segmentOrder, strict);
             }
         }
+
+        public static List<ushort> GetCrossingPath(ushort relSegId)
+        {
+            ushort nodeCurr = NetManager.instance.m_segments.m_buffer[relSegId].m_startNode;
+            List<ushort> possibilities = new List<ushort>();
+            for (int i = 0; i < 8; i++)
+            {
+                ushort segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
+
+                if (segment != 0 && relSegId != segment && !IsSameName(relSegId, segment, false))
+                {
+                    foreach (ushort prevSeg in possibilities)
+                    {
+                        if (IsSameName(prevSeg, segment, false))
+                        {
+                            goto LoopEnd;
+                        }
+                    }
+                    possibilities.Add(segment);
+                }
+                LoopEnd: continue;
+            }
+            nodeCurr = NetManager.instance.m_segments.m_buffer[relSegId].GetOtherNode(nodeCurr);
+            for (int i = 0; i < 8; i++)
+            {
+                ushort segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
+
+                if (segment != 0 && relSegId != segment && !IsSameName(relSegId, segment, false))
+                {
+                    foreach (ushort prevSeg in possibilities)
+                    {
+                        if (IsSameName(prevSeg, segment, false))
+                        {
+                            goto LoopEnd2;
+                        }
+                    }
+                    possibilities.Add(segment);
+                }
+                LoopEnd2: continue;
+            }
+            return possibilities;
+        }
+
         public static List<ushort> getSegmentOrderRoad(ushort segmentID, bool strict, out bool startRef, out bool endRef)
         {
             var flags = NetManager.instance.m_segments.m_buffer[segmentID].m_flags;
@@ -1761,7 +1804,7 @@ namespace Klyte.Commons.Utils
             }
             return true;
         }
-        protected static void GetNearestSegment(Vector3 sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId)
+        public static void GetNearestSegment(Vector3 sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId)
         {
             NetManager.instance.GetClosestSegments(sidewalk, m_closestSegsFind, out int found);
             targetPosition = default(Vector3);
