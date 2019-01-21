@@ -9,6 +9,7 @@ using System.Threading;
 using System;
 using System.Linq;
 using System.Reflection;
+using Klyte.Commons.Utils;
 
 namespace Klyte.Commons.Extensors
 {
@@ -106,10 +107,15 @@ namespace Klyte.Commons.Extensors
 
         public object AddDropdown(string text, string[] options, int defaultSelection, OnDropdownSelectionChanged eventCallback)
         {
-            UIDropDown uIDropDown = AddDropdownBase(text, options, eventCallback);
+            return AddDropdown(text, options, defaultSelection, eventCallback, false);
+        }
+
+        public UIDropDown AddDropdown(string text, string[] options, int defaultSelection, OnDropdownSelectionChanged eventCallback, bool limitLabelByPanelWidth = false)
+        {
+            UIDropDown uIDropDown = AddDropdownBase(text, options, eventCallback, limitLabelByPanelWidth);
             if (uIDropDown != null)
             {
-                uIDropDown.selectedIndex = defaultSelection;                
+                uIDropDown.selectedIndex = defaultSelection;
                 return uIDropDown;
             }
             else
@@ -123,9 +129,9 @@ namespace Klyte.Commons.Extensors
             throw new NotImplementedException();
         }
 
-        public UIDropDown AddDropdownLocalized(string text, string[] options, int defaultSelection, OnDropdownSelectionChanged eventCallback)
+        public UIDropDown AddDropdownLocalized(string text, string[] options, int defaultSelection, OnDropdownSelectionChanged eventCallback, bool limitLabelByPanelWidth = false)
         {
-            UIDropDown uIDropDown = AddDropdownBaseLocalized(text, options, eventCallback, defaultSelection);
+            UIDropDown uIDropDown = AddDropdownBaseLocalized(text, options, eventCallback, defaultSelection, limitLabelByPanelWidth);
             if (uIDropDown != null)
             {
                 return uIDropDown;
@@ -136,9 +142,9 @@ namespace Klyte.Commons.Extensors
             }
         }
 
-        public UIDropDown AddDropdown(string text, string[] options, string defaultSelection, OnDropdownSelectionChanged eventCallback)
+        public UIDropDown AddDropdown(string text, string[] options, string defaultSelection, OnDropdownSelectionChanged eventCallback, bool limitLabelByPanelWidth = false)
         {
-            UIDropDown uIDropDown = AddDropdownBase(text, options, eventCallback);
+            UIDropDown uIDropDown = AddDropdownBase(text, options, eventCallback, limitLabelByPanelWidth);
             if (uIDropDown != null)
             {
                 bool hasIdx = options.Contains(defaultSelection);
@@ -154,17 +160,18 @@ namespace Klyte.Commons.Extensors
             }
         }
 
-        private UIDropDown AddDropdownBase(string text, string[] options, OnDropdownSelectionChanged eventCallback)
+        private UIDropDown AddDropdownBase(string text, string[] options, OnDropdownSelectionChanged eventCallback, bool limitLabelByPanelWidth = false)
         {
-            return CloneBasicDropDown(text, options, eventCallback, this.m_Root);
+            return CloneBasicDropDown(text, options, eventCallback, this.m_Root, limitLabelByPanelWidth);
         }
 
-        public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent, out UILabel label)
+        public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent, out UILabel label, bool limitLabelByPanelWidth = false)
         {
             if (eventCallback != null && !string.IsNullOrEmpty(text))
             {
                 UIPanel uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 label = uIPanel.Find<UILabel>("Label");
+                if (limitLabelByPanelWidth) { KlyteUtils.LimitWidth(label, (uint)uIPanel.width); }
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -178,24 +185,25 @@ namespace Klyte.Commons.Extensors
             label = null;
             return null;
         }
-        public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent)
+        public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent, bool limitLabelByPanelWidth = false)
         {
-            return CloneBasicDropDown(text, options, eventCallback, parent, out UILabel l);
+            return CloneBasicDropDown(text, options, eventCallback, parent, out UILabel l, limitLabelByPanelWidth);
         }
 
 
-        private UIDropDown AddDropdownBaseLocalized(string text, string[] options, OnDropdownSelectionChanged eventCallback, int defaultSelection)
+        private UIDropDown AddDropdownBaseLocalized(string text, string[] options, OnDropdownSelectionChanged eventCallback, int defaultSelection, bool limitLabelByPanelWidth = false)
         {
-            return CloneBasicDropDownLocalized(text, options, eventCallback, defaultSelection, this.m_Root);
+            return CloneBasicDropDownLocalized(text, options, eventCallback, defaultSelection, this.m_Root, limitLabelByPanelWidth);
         }
 
-        public static UIDropDown CloneBasicDropDownLocalized(string text, string[] options, OnDropdownSelectionChanged eventCallback, int defaultSelection, UIComponent parent)
+        public static UIDropDown CloneBasicDropDownLocalized(string text, string[] options, OnDropdownSelectionChanged eventCallback, int defaultSelection, UIComponent parent, bool limitLabelByPanelWidth = false)
         {
             if (eventCallback != null && !string.IsNullOrEmpty(text))
             {
                 UIPanel uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 uIPanel.Find<UILabel>("Label").localeID = text;
                 uIPanel.Find<UILabel>("Label").isLocalized = true;
+                if (limitLabelByPanelWidth) { KlyteUtils.LimitWidth(uIPanel.Find<UILabel>("Label"), (uint)uIPanel.width); }
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
                 uIDropDown.selectedIndex = defaultSelection;
@@ -286,7 +294,7 @@ namespace Klyte.Commons.Extensors
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create group with no name");
             return null;
         }
-                
+
         public object AddTextfield(string text, string defaultContent, OnTextChanged eventChangedCallback, OnTextSubmitted eventSubmittedCallback)
         {
             if ((eventChangedCallback != null || eventSubmittedCallback != null) && !string.IsNullOrEmpty(text))

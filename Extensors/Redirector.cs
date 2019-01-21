@@ -10,7 +10,13 @@ namespace Klyte.Commons.Extensors
     {
         public static readonly BindingFlags allFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.GetField | BindingFlags.GetProperty;
     }
-    public abstract class Redirector<T> : MonoBehaviour where T : Redirector<T>
+
+    public abstract class Redirector : MonoBehaviour
+    {
+        public static readonly BindingFlags allFlags = RedirectorUtils.allFlags;
+    }
+
+    public abstract class Redirector<T> : Redirector where T : Redirector<T>
     {
         #region Class Base
         private readonly HarmonyInstance harmony = HarmonyInstance.Create("com.klyte.commons." + typeof(T).Name);
@@ -36,7 +42,7 @@ namespace Klyte.Commons.Extensors
             }
             return true;
         }
-        protected MethodInfo semiPreventDefaultMI = typeof(Redirector<T>).GetMethod("semiPreventDefault", allFlags);
+        protected MethodInfo semiPreventDefaultMI = typeof(T).GetMethod("semiPreventDefault", allFlags);
 
         public void Awake()
         {
@@ -47,7 +53,6 @@ namespace Klyte.Commons.Extensors
         public abstract void AwakeBody();
         public abstract void doLog(string text, params object[] param);
 
-        public static readonly BindingFlags allFlags = RedirectorUtils.allFlags;
 
         public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null)
         {

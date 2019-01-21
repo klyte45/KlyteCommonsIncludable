@@ -29,6 +29,7 @@ namespace Klyte.Commons.Interfaces
             }
             return 0xFFFFFFFF;
         }
+
         protected Dictionary<T, string> GetValueFromStringArray(string x)
         {
             var saida = new Dictionary<T, string>();
@@ -228,8 +229,50 @@ namespace Klyte.Commons.Interfaces
             }
             return result;
         }
-        #endregion        
+
+        #endregion
+
+        #region  Utils I/O - Single
+
+        protected void SaveConfig(Dictionary<T, string> target, K idx, bool global = false)
+        {
+            I loadedConfig;
+            if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER SALVA COMO GLOBAL: " + typeof(U)); }
+            if (global)
+            {
+                loadedConfig = Singleton<I>.instance.getConfig2();
+            }
+            else
+            {
+                loadedConfig = Singleton<I>.instance.currentLoadedCityConfig;
+            }
+            var value = RecursiveEncode(target, 1);
+            KlyteUtils.doLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
+            loadedConfig.setString(idx, value);
+        }
+
+        protected Dictionary<T, string> LoadConfigSingle(K idx, bool global = false)
+        {
+            var result = new Dictionary<T, string>();
+            KlyteUtils.doLog("{0} load()", idx);
+            string itemList;
+            if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER CARREGADA COMO GLOBAL: " + typeof(U)); }
+            if (global)
+            {
+                itemList = Singleton<I>.instance.getConfig2().getString(idx);
+            }
+            else
+            {
+                itemList = Singleton<I>.instance.currentLoadedCityConfig.getString(idx);
+            }
+
+            return GetValueFromStringArray(itemList);
+
+        }
+        #endregion
     }
 
     public delegate void OnExtensionPropertyChanged<X, Y>(X idx, Y? property, string value) where X : struct where Y : struct, IConvertible;
+
+    public delegate void OnExtensionPropertyChanged<Y>(Y? property, string value) where Y : struct, IConvertible;
 }

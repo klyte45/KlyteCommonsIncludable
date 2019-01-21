@@ -109,6 +109,7 @@ namespace Klyte.Commons.UI
     {
         TransportLinesManager,
         ServiceVehiclesManager,
-        Addresses
+        Addresses,
+        VehicleWealthier
     }
 }
