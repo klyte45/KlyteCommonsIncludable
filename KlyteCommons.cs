@@ -1,5 +1,9 @@
+using ColossalFramework.Globalization;
+using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
+using Klyte.Commons.i18n;
+using Klyte.Commons.Interfaces;
 using Klyte.Commons.Overrides;
 using Klyte.Commons.Utils;
 using System;
@@ -7,15 +11,36 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-[assembly: AssemblyVersion("1.1.6.0")]
+[assembly: AssemblyVersion("1.1.6.9999")]
 namespace Klyte.Commons
 {
-    public class KlyteCommonsMod : IUserMod, ILoadingExtension
+    public class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCLocaleUtils, KCResourceLoader>
     {
-        public string Name => "Klyte Commons " + KlyteCommonsMod.version;
-        public string Description => "Base mod for Klyte45 mods. Required dependency";
+        public override string SimpleName => "Klyte Commons";
+        public override string Description => "Base mod for Klyte45 mods. Required dependency";
 
-        public void OnCreated(ILoading loading)
+
+        public override void doErrorLog(string fmt, params object[] args)
+        {
+            KlyteUtils.doErrorLog(fmt, args);
+        }
+
+        public override void doLog(string fmt, params object[] args)
+        {
+            KlyteUtils.doLog(fmt, args);
+        }
+
+        public override void LoadSettings()
+        {
+
+        }
+
+        public KlyteCommonsMod()
+        {
+            Construct();
+        }
+
+        public override void OnCreated(ILoading loading)
         {
             GameObject gameObject = new GameObject
             {
@@ -23,7 +48,7 @@ namespace Klyte.Commons
             };
         }
 
-        public void OnLevelLoaded(LoadMode mode)
+        public override void OnLevelLoaded(LoadMode mode)
         {
             if (mode != LoadMode.LoadGame && mode != LoadMode.NewGame && mode != LoadMode.NewGameFromScenario)
             {
@@ -32,48 +57,17 @@ namespace Klyte.Commons
             KCController.Ensure();
         }
 
-        public void OnLevelUnloading()
+        public override void OnLevelUnloading()
         {
         }
 
-        public void OnReleased()
+        public override void OnReleased()
         {
         }
 
-        public static string minorVersion
+        public override void TopSettingsUI(UIHelperExtension ext)
         {
-            get {
-                return majorVersion + "." + typeof(KlyteCommonsMod).Assembly.GetName().Version.Build;
-            }
-        }
-        public static string majorVersion
-        {
-            get {
-                return typeof(KlyteCommonsMod).Assembly.GetName().Version.Major + "." + typeof(KlyteCommonsMod).Assembly.GetName().Version.Minor;
-            }
-        }
-        public static string fullVersion
-        {
-            get {
-                return minorVersion + " r" + typeof(KlyteCommonsMod).Assembly.GetName().Version.Revision;
-            }
-        }
-        public static string version
-        {
-            get {
-                if (typeof(KlyteCommonsMod).Assembly.GetName().Version.Minor == 0 && typeof(KlyteCommonsMod).Assembly.GetName().Version.Build == 0)
-                {
-                    return typeof(KlyteCommonsMod).Assembly.GetName().Version.Major.ToString();
-                }
-                if (typeof(KlyteCommonsMod).Assembly.GetName().Version.Build > 0)
-                {
-                    return minorVersion;
-                }
-                else
-                {
-                    return majorVersion;
-                }
-            }
+
         }
     }
 }

@@ -99,7 +99,7 @@ namespace Klyte.Commons.Utils
         }
     }
 
-    internal sealed class KCResourceLoader : KlyteResourceLoader<KCResourceLoader>
+    public sealed class KCResourceLoader : KlyteResourceLoader<KCResourceLoader>
     {
         protected override string prefix => "Klyte.Commons.";
     }

@@ -15,7 +15,7 @@ namespace Klyte.Commons.i18n
         private const string ignorePrefixChar = "%";
         private static string language = "";
         protected abstract string[] locales { get; }
-        protected abstract string prefix { get; }
+        public abstract string prefix { get; }
         protected abstract string packagePrefix { get; }
 
         public string loadedLanguage

@@ -34,7 +34,7 @@ namespace Klyte.Commons
                 var typeTarg = typeof(Redirector<>);
                 var instances = from t in Assembly.GetAssembly(typeof(KCController)).GetTypes()
                                 let y = t.BaseType
-                                where t.IsClass && !t.IsAbstract && y != null && t != typeof(LoadingProfilerOverrides) && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
+                                where t.IsClass && !t.IsAbstract && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
                                 select t;
 
                 foreach (Type t in instances)

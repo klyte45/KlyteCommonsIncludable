@@ -85,6 +85,12 @@ namespace Klyte.Commons.Extensors
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create checkbox with no name or no event");
             return null;
         }
+
+        internal void AddDropdownLocalized(string v, object p1, object value, Action<int> p2)
+        {
+            throw new NotImplementedException();
+        }
+
         public UICheckBox AddCheckboxLocale(string text, bool defaultValue, OnCheckChanged eventCallback = null)
         {
             if (!string.IsNullOrEmpty(text))

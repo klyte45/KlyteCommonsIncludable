@@ -1,5 +1,6 @@
 ﻿using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
+using System;
 using System.Reflection;
 
 namespace Klyte.Commons.Overrides
@@ -14,7 +15,14 @@ namespace Klyte.Commons.Overrides
 
         private static void OnDistrictRenamed()
         {
-            eventOnDistrictRenamed?.Invoke();
+            try
+            {
+                eventOnDistrictRenamed?.Invoke();
+            }
+            catch (Exception e)
+            {
+                KlyteUtils.doErrorLog(e.Message + "\n" + e.StackTrace);
+            }
         }
         #endregion
 
