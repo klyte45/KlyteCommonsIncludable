@@ -1,5 +1,7 @@
 using ICities;
 using Klyte.Commons.Extensors;
+using Klyte.Commons.Overrides;
+using Klyte.Commons.Utils;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -10,11 +12,16 @@ namespace Klyte.Commons
 {
     public class KlyteCommonsMod : IUserMod, ILoadingExtension
     {
-
         public string Name => "Klyte Commons " + KlyteCommonsMod.version;
         public string Description => "Base mod for Klyte45 mods. Required dependency";
 
-        public void OnCreated(ILoading loading) { }
+        public void OnCreated(ILoading loading)
+        {
+            GameObject gameObject = new GameObject
+            {
+                name = "KlyteCommons"
+            };
+        }
 
         public void OnLevelLoaded(LoadMode mode)
         {
@@ -23,24 +30,6 @@ namespace Klyte.Commons
                 return;
             }
             KCController.Ensure();
-
-
-            GameObject gameObject = new GameObject
-            {
-                name = "KlyteCommons"
-            };
-
-            var typeTarg = typeof(Redirector<>);
-            var instances = from t in Assembly.GetAssembly(typeof(KlyteCommonsMod)).GetTypes()
-                            let y = t.BaseType
-                            where t.IsClass && !t.IsAbstract && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
-                            select t;
-
-            foreach (Type t in instances)
-            {
-                gameObject.AddComponent(t);
-            }
-
         }
 
         public void OnLevelUnloading()

@@ -1586,7 +1586,7 @@ namespace Klyte.Commons.Utils
                 {
                     return false;
                 }
-                if (((RoadBaseAI)info.GetAI()).m_highwayRules != ((RoadBaseAI)info2.GetAI()).m_highwayRules)
+                if ((info.GetAI() as RoadBaseAI)?.m_highwayRules != (info2.GetAI() as RoadBaseAI)?.m_highwayRules)
                 {
                     return false;
                 }
