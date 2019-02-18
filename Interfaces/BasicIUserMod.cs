@@ -18,6 +18,7 @@ namespace Klyte.Commons.Interfaces
     {
 
         public abstract string SimpleName { get; }
+        public virtual bool UseGroup9 => true;
         public abstract void LoadSettings();
         public abstract void doLog(string fmt, params object[] args);
         public abstract void doErrorLog(string fmt, params object[] args);
@@ -51,6 +52,9 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
+        private static T m_instance;
+        public static T instance => m_instance;
+
         private static SavedBool m_debugMode = new SavedBool(Singleton<L>.instance.prefix + "DebugMode", Settings.gameSettingsFile, false, true);
         public bool needShowPopup;
         private static bool isLocaleLoaded = false;
@@ -79,7 +83,6 @@ namespace Klyte.Commons.Interfaces
 
         public static SavedBool debugMode => m_debugMode;
         private SavedString currentSaveVersion => new SavedString(Singleton<L>.instance.prefix + "SaveVersion", Settings.gameSettingsFile, "null", true);
-        private SavedInt currentLanguageId => new SavedInt(Singleton<L>.instance.prefix + "Language", Settings.gameSettingsFile, 0, true);
         public static bool isCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
 
 
@@ -87,6 +90,7 @@ namespace Klyte.Commons.Interfaces
 
         protected void Construct()
         {
+            m_instance = this as T;
             Debug.LogWarningFormat(Singleton<L>.instance.prefix + "v" + majorVersion + " LOADING ");
             LoadSettings();
             Debug.LogWarningFormat(Singleton<L>.instance.prefix + "v" + majorVersion + " SETTING FILES");
@@ -96,60 +100,70 @@ namespace Klyte.Commons.Interfaces
             {
                 needShowPopup = true;
             }
-            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(autoLoadLocale);
             loadLocale(false);
         }
 
-        public virtual void OnSettingsUI(UIHelperBase helperDefault)
+        UIComponent onSettingsUiComponent;
+
+        public void OnSettingsUI(UIHelperBase helperDefault)
         {
-            UIHelperExtension helper = new UIHelperExtension((UIHelper)helperDefault);
+            onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).self;
             void ev()
             {
-
-                doLog("End asLoading Options");
-                foreach (Transform child in helper.self.transform)
-                {
-                    GameObject.Destroy(child?.gameObject);
-                }
-
-
-                doLog("End Loadinasdadg Options");
-                helper.self.eventVisibilityChanged += delegate (UIComponent component, bool b)
-                {
-                    if (b)
-                    {
-                        showVersionInfoPopup();
-                    }
-                };
-
-
-                doLog("End dadadasdLoading Options");
-                TopSettingsUI(helper);
-
-
-                doLog("End Loadasdadadasdaading Options");
-                UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("KCM_BETAS_EXTRA_INFO"));
-                group9.AddDropdownLocalized("KCM_MOD_LANG", Singleton<L>.instance.getLanguageIndex(), currentLanguageId.value, delegate (int idx)
-                 {
-                     currentLanguageId.value = idx;
-                     loadLocale(true);
-                 });
-                group9.AddCheckbox(Locale.Get("KCM_DEBUG_MODE"), m_debugMode.value, delegate (bool val) { m_debugMode.value = val; });
-                group9.AddLabel(String.Format(Locale.Get("KCM_VERSION_SHOW"), fullVersion));
-                if (typeof(R) != typeof(KCResourceLoader)) group9.AddLabel(Locale.Get("KCM_ORIGINAL_TLM_VERSION") + " " + string.Join(".", Singleton<R>.instance.loadResourceString("TLMVersion.txt").Split(".".ToCharArray()).Take(3).ToArray()));
-                group9.AddButton(Locale.Get("KCM_RELEASE_NOTES"), delegate ()
-                {
-                    showVersionInfoPopup(true);
-                });
-
-                doLog("End Loading Options");
+                DoWithSettingsUI(new UIHelperExtension(onSettingsUiComponent));
             }
-            eventOnLoadLocaleEnd = null;
             eventOnLoadLocaleEnd += ev;
-            loadLocale(false);
+            if (typeof(T) == typeof(KlyteCommonsMod))
+            {
+                loadLocale(false);
+            }
+            else
+            {
+                KlyteCommonsMod.instance.eventOnLoadLocaleEnd += delegate ()
+                {
+                    loadLocale(false);
+                };
+            }
 
         }
 
+        private void DoWithSettingsUI(UIHelperExtension helper)
+        {
+            foreach (Transform child in helper.self?.transform)
+            {
+                GameObject.Destroy(child?.gameObject);
+            }
+
+            helper.self.eventVisibilityChanged += delegate (UIComponent component, bool b)
+            {
+                if (b)
+                {
+                    showVersionInfoPopup();
+                }
+            };
+
+            TopSettingsUI(helper);
+
+            if (UseGroup9) CreateGroup9(helper);
+
+            doLog("End Loading Options");
+        }
+
+        protected void CreateGroup9(UIHelperExtension helper)
+        {
+            UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("KCM_BETAS_EXTRA_INFO"));
+            Group9SettingsUI(group9);
+
+            group9.AddCheckbox(Locale.Get("KCM_DEBUG_MODE"), m_debugMode.value, delegate (bool val) { m_debugMode.value = val; });
+            group9.AddLabel(String.Format(Locale.Get("KCM_VERSION_SHOW"), fullVersion));
+            if (typeof(R) != typeof(KCResourceLoader)) group9.AddLabel(Locale.Get("KCM_ORIGINAL_TLM_VERSION") + " " + string.Join(".", Singleton<R>.instance.loadResourceString("TLMVersion.txt").Split(".".ToCharArray()).Take(3).ToArray()));
+            group9.AddButton(Locale.Get("KCM_RELEASE_NOTES"), delegate ()
+            {
+                showVersionInfoPopup(true);
+            });
+        }
+
+        public virtual void Group9SettingsUI(UIHelperExtension group9) { }
 
         public bool showVersionInfoPopup(bool force = false)
         {
@@ -165,9 +179,9 @@ namespace Klyte.Commons.Interfaces
                         BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
                         if (component != null)
                         {
-                            string title = $"{SimpleName} v{version}";
+                            string title = $"{SimpleName.Replace("&", "and")} v{version}";
                             string notes = Singleton<R>.instance.loadResourceString("UI.VersionNotes.txt");
-                            string text = $"{SimpleName} was updated! Release notes:\r\n\r\n" + notes;
+                            string text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
                             string img = "IconMessage";
                             component.SetProperties(TooltipHelper.Format(new string[]
                             {
@@ -198,64 +212,16 @@ namespace Klyte.Commons.Interfaces
             return false;
         }
 
-        public void autoLoadLocale()
-        {
-            if (currentLanguageId.value == 0)
-            {
-                loadLocale(false);
-            }
-        }
         public void loadLocale(bool force)
         {
             if (SingletonLite<LocaleManager>.exists && IsKlyteCommonsEnabled() && (!isLocaleLoaded || force))
             {
-                Singleton<L>.instance.loadLocale(currentLanguageId.value == 0 ? SingletonLite<LocaleManager>.instance.language : Singleton<L>.instance.getSelectedLocaleByIndex(currentLanguageId.value), force);
-                if (!isLocaleLoaded)
-                {
-                    isLocaleLoaded = true;
-                    eventOnLoadLocaleEnd?.Invoke();
-                }
+                Singleton<L>.instance.loadCurrentLocale(force);
+                eventOnLoadLocaleEnd?.Invoke();
             }
         }
         private delegate void OnLocaleLoadedFirstTime();
         private event OnLocaleLoadedFirstTime eventOnLoadLocaleEnd;
-
-        private bool m_loaded = false;
-
-
-
-        UITextureAtlas CreateTextureAtlas(string textureFile, string atlasName, Material baseMaterial, int spriteWidth, int spriteHeight, string[] spriteNames)
-        {
-            Texture2D tex = new Texture2D(spriteWidth * spriteNames.Length, spriteHeight, TextureFormat.ARGB32, false)
-            {
-                filterMode = FilterMode.Bilinear
-            };
-            { // LoadTexture
-                tex.LoadImage(Singleton<R>.instance.loadResourceData(textureFile));
-                tex.Apply(true, true);
-            }
-            UITextureAtlas atlas = ScriptableObject.CreateInstance<UITextureAtlas>();
-            { // Setup atlas
-                Material material = (Material)Material.Instantiate(baseMaterial);
-                material.mainTexture = tex;
-                atlas.material = material;
-                atlas.name = atlasName;
-            }
-            // Add sprites
-            for (int i = 0; i < spriteNames.Length; ++i)
-            {
-                float uw = 1.0f / spriteNames.Length;
-                var spriteInfo = new UITextureAtlas.SpriteInfo()
-                {
-                    name = spriteNames[i],
-                    texture = tex,
-                    region = new Rect(i * uw, 0, uw, 1),
-                };
-                atlas.AddSprite(spriteInfo);
-            }
-            return atlas;
-        }
-
 
     }
 

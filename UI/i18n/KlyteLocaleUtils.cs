@@ -7,6 +7,9 @@ namespace Klyte.Commons.i18n
 {
     public abstract class KlyteLocaleUtils<T, R> : Singleton<T> where T : KlyteLocaleUtils<T, R> where R : KlyteResourceLoader<R>
     {
+
+        internal static SavedInt currentLanguageId => new SavedInt("KlyteCommonsLanguage", Settings.gameSettingsFile, 0, true);
+
         private const string lineSeparator = "\r\n";
         private const string kvSeparator = "=";
         private const string idxSeparator = ">";
@@ -14,7 +17,7 @@ namespace Klyte.Commons.i18n
         private const string commentChar = "#";
         private const string ignorePrefixChar = "%";
         private static string language = "";
-        protected abstract string[] locales { get; }
+        protected readonly string[] locales = new string[] { "en", "pt", "ko", "de", "cn", "pl", "nl", "fr", "es", "ru" };
         public abstract string prefix { get; }
         protected abstract string packagePrefix { get; }
 
@@ -43,16 +46,26 @@ namespace Klyte.Commons.i18n
             return saida.m_buffer;
         }
 
-        public string getSelectedLocaleByIndex(int idx)
+        public string getSelectedLocaleByIndex()
         {
-            if (idx <= 0 || idx > locales.Length)
+            var idx = currentLanguageId.value;
+            if (idx == 0)
+            {
+                return SingletonLite<LocaleManager>.instance.language;
+            }
+            if (idx < 0 || idx > locales.Length)
             {
                 return "en";
             }
             return locales[idx - 1];
         }
 
-        public void loadLocale(string localeId, bool force, string prefix = null, string packagePrefix = null)
+        public void loadCurrentLocale(bool force, string prefix = null, string packagePrefix = null)
+        {
+            loadLocale(getSelectedLocaleByIndex(), force, prefix ?? this.prefix, packagePrefix ?? this.packagePrefix);
+        }
+
+        private void loadLocale(string localeId, bool force, string prefix = null, string packagePrefix = null)
         {
             if (force)
             {
@@ -68,14 +81,8 @@ namespace Klyte.Commons.i18n
             string load = Singleton<R>.instance.loadResourceString("UI.i18n." + localeId + ".properties");
             if (load == null)
             {
-                KlyteUtils.doErrorLog("FILE " + "UI.i18n." + localeId + ".properties" + " NOT LOADED!!!!");
-                load = Singleton<R>.instance.loadResourceString("UI.i18n.en.properties");
-                if (load == null)
-                {
-                    KlyteUtils.doErrorLog("LOCALE NOT LOADED!!!!");
-                    return;
-                }
-                localeId = "en";
+                KlyteUtils.doLog("File UI.i18n." + localeId + ".properties not found. Probably this translation doesn't exists for this mod.");
+                load = "";
             }
             var locale = KlyteUtils.GetPrivateField<Locale>(LocaleManager.instance, "m_Locale");
             Locale.Key k;

@@ -1,3 +1,4 @@
+using ColossalFramework;
 using ColossalFramework.Globalization;
 using ColossalFramework.UI;
 using ICities;
@@ -14,10 +15,11 @@ using UnityEngine;
 [assembly: AssemblyVersion("1.1.6.9999")]
 namespace Klyte.Commons
 {
-    public class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCLocaleUtils, KCResourceLoader>
+    public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCLocaleUtils, KCResourceLoader>
     {
         public override string SimpleName => "Klyte Commons";
         public override string Description => "Base mod for Klyte45 mods. Required dependency";
+
 
 
         public override void doErrorLog(string fmt, params object[] args)
@@ -38,6 +40,7 @@ namespace Klyte.Commons
         public KlyteCommonsMod()
         {
             Construct();
+            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(autoLoadLocale);
         }
 
         public override void OnCreated(ILoading loading)
@@ -68,6 +71,21 @@ namespace Klyte.Commons
         public override void TopSettingsUI(UIHelperExtension ext)
         {
 
+        }
+
+        public override void Group9SettingsUI(UIHelperExtension group9)
+        {
+            group9.AddDropdownLocalized("KCM_MOD_LANG", KCLocaleUtils.instance.getLanguageIndex(), KCLocaleUtils.currentLanguageId.value, delegate (int idx)
+            {
+                KCLocaleUtils.currentLanguageId.value = idx;
+                loadLocale(true);
+            });
+            group9.AddLabel(Locale.Get("KCM_LANG_NOTICE"));
+        }
+
+        public void autoLoadLocale()
+        {
+            loadLocale(false);
         }
     }
 }
