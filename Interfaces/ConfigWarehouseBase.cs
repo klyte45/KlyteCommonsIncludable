@@ -20,6 +20,7 @@ namespace Klyte.Commons.Interfaces
         protected const int TYPE_BOOL = 0x300;
         protected const int TYPE_LIST = 0x400;
         protected const int TYPE_PART = 0xF00;
+        protected const int TYPE_DICTIONARY = 0x500;
 
         protected static Dictionary<string, I> loadedCities = new Dictionary<string, I>();
 
@@ -89,19 +90,26 @@ namespace Klyte.Commons.Interfaces
                     I defaultFile = getConfig(GLOBAL_CONFIG_INDEX, GLOBAL_CONFIG_INDEX);
                     foreach (string key in GameSettings.FindSettingsFileByName(defaultFile.thisFileName).ListKeys())
                     {
-                        T ci = (T)Enum.Parse(typeof(T), key);
-                        switch (ci.ToInt32(CultureInfo.CurrentCulture.NumberFormat) & TYPE_PART)
+                        try
                         {
-                            case TYPE_BOOL:
-                                result.setBool(ci, defaultFile.getBool(ci));
-                                break;
-                            case TYPE_STRING:
-                            case TYPE_LIST:
-                                result.setString(ci, defaultFile.getString(ci));
-                                break;
-                            case TYPE_INT:
-                                result.setInt(ci, defaultFile.getInt(ci));
-                                break;
+                            T ci = (T)Enum.Parse(typeof(T), key);
+                            switch (ci.ToInt32(CultureInfo.CurrentCulture.NumberFormat) & TYPE_PART)
+                            {
+                                case TYPE_BOOL:
+                                    result.setBool(ci, defaultFile.getBool(ci));
+                                    break;
+                                case TYPE_STRING:
+                                case TYPE_LIST:
+                                    result.setString(ci, defaultFile.getString(ci));
+                                    break;
+                                case TYPE_INT:
+                                    result.setInt(ci, defaultFile.getInt(ci));
+                                    break;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            KlyteUtils.doErrorLog($"Erro copiando propriedade \"{key}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
                         }
                     }
                 }
