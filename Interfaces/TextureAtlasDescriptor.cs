@@ -19,7 +19,7 @@ namespace Klyte.Commons.Interfaces
         protected virtual int Height => 64;
         protected abstract string ResourceName { get; }
         protected abstract string CommonName { get; }
-        protected abstract string[] SpriteNames { get; }
+        public abstract string[] SpriteNames { get; }
         protected UITextureAtlas m_atlas;
 
         public void Awake()

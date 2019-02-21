@@ -22,7 +22,7 @@ namespace Klyte.Commons.UI
                 if (m_instance == null)
                 {
                     KlyteUtils.doLog("Creating KlyteModsPanel");
-                    UIComponent view = KCController.instance.kcPanelContainer;
+                    UIComponent view = KlyteCommonsMod.instance.kcPanelContainer;
                     KlyteUtils.createUIElement(out UIPanel panelObj, view.transform);
 
                     m_instance = panelObj.gameObject.AddComponent<KlyteModsPanel>();
@@ -53,11 +53,11 @@ namespace Klyte.Commons.UI
             controlContainer.absolutePosition = new Vector3(0, 0, 0);
         }
 
-        public UIPanel AddTab(ModTab cat, Type customControl, UITextureAtlas atlas, string fgTexture, string tooltip)
+        internal void AddTab(ModTab cat, Type customControl, UITextureAtlas atlas, string fgTexture, string tooltip, PropertyChangedEventHandler<bool> onVisibilityChanged, float? width = null)
         {
             if (m_StripMain.Find<UIComponent>(cat.ToString()) != null)
             {
-                return null;
+                return;
             }
 
             UIButton superTab = CreateTabTemplate();
@@ -73,17 +73,17 @@ namespace Klyte.Commons.UI
 
             KlyteUtils.createUIElement(out UIPanel content, null);
             content.name = "Container";
-            content.area = new Vector4(0, 0, mainPanel.width, mainPanel.height);
+            content.area = new Vector4(0, 0, width ?? mainPanel.width, mainPanel.height);
 
             m_StripMain.AddTab(cat.ToString(), superTab.gameObject, content.gameObject, customControl);
 
-            return content;
+            content.eventVisibilityChanged += onVisibilityChanged;
         }
 
         public void OpenAt(ModTab cat)
         {
             m_StripMain.selectedIndex = m_StripMain.Find<UIComponent>(cat.ToString())?.zOrder ?? -1;
-            KCController.instance.OpenKCPanel();
+            KlyteCommonsMod.OpenKCPanel();
         }
 
         private static UIButton CreateTabTemplate()
@@ -107,9 +107,12 @@ namespace Klyte.Commons.UI
     }
     public enum ModTab
     {
+        KlyteCommons,
         TransportLinesManager,
         ServiceVehiclesManager,
         Addresses,
-        VehicleWealthier
+        VehicleWealthizer,
+        TouchThis,
+        KCAI
     }
 }

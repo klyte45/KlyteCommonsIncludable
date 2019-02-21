@@ -5,6 +5,7 @@ using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
+using Klyte.Commons.UI;
 using Klyte.Commons.Utils;
 using System;
 using System.IO;
@@ -14,7 +15,13 @@ using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserMod<T, L, R> : IUserMod, ILoadingExtension where T : BasicIUserMod<T, L, R>, new() where L : KlyteLocaleUtils<L, R> where R : KlyteResourceLoader<R>
+    public abstract class BasicIUserMod<U, L, R, C, A, T> : IUserMod, ILoadingExtension
+        where U : BasicIUserMod<U, L, R, C, A, T>, new()
+        where L : KlyteLocaleUtils<L, R>
+        where R : KlyteResourceLoader<R>
+        where C : MonoBehaviour
+        where A : TextureAtlasDescriptor<A, R>
+        where T : UICustomControl
     {
 
         public abstract string SimpleName { get; }
@@ -24,24 +31,66 @@ namespace Klyte.Commons.Interfaces
         public abstract void doErrorLog(string fmt, params object[] args);
         public abstract void TopSettingsUI(UIHelperExtension ext);
 
+        private GameObject topObj;
+        public Transform refTransform => topObj?.transform;
+
+        protected virtual ModTab? Tab => null;
+        protected virtual float? TabWidth => null;
+
+
         public string Name => $"{SimpleName} {version}";
         public abstract string Description { get; }
-        public abstract void OnCreated(ILoading loading);
-        public abstract void OnLevelLoaded(LoadMode mode);
-        public abstract void OnLevelUnloading();
-        public abstract void OnReleased();
 
-        public static string minorVersion => majorVersion + "." + typeof(T).Assembly.GetName().Version.Build;
-        public static string majorVersion => typeof(T).Assembly.GetName().Version.Major + "." + typeof(T).Assembly.GetName().Version.Minor;
-        public static string fullVersion => minorVersion + " r" + typeof(T).Assembly.GetName().Version.Revision;
+        private C m_controller;
+        public C controller => m_controller;
+
+        public void OnCreated(ILoading loading)
+        {
+
+        }
+        public void OnLevelLoaded(LoadMode mode)
+        {
+            topObj = new GameObject(typeof(U).ToString());
+            var typeTarg = typeof(Redirector<>);
+            var instances = from t in Assembly.GetAssembly(typeof(U)).GetTypes()
+                            let y = t.BaseType
+                            where t.IsClass && !t.IsAbstract && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
+                            select t;
+
+            foreach (Type t in instances)
+            {
+                topObj.AddComponent(t);
+            }
+            if (typeof(C) != typeof(MonoBehaviour))
+            {
+                m_controller = topObj.AddComponent<C>();
+            }
+            if (Tab != null)
+            {
+                KlyteModsPanel.instance.AddTab((ModTab)Tab, typeof(T), Singleton<A>.instance.atlas, Singleton<A>.instance.SpriteNames[0], $"{SimpleName} (v{version})", (x, y) => { if (y) showVersionInfoPopup(); }, TabWidth);
+            }
+
+        }
+        public void OnLevelUnloading()
+        {
+
+        }
+        public void OnReleased()
+        {
+
+        }
+
+        public static string minorVersion => majorVersion + "." + typeof(U).Assembly.GetName().Version.Build;
+        public static string majorVersion => typeof(U).Assembly.GetName().Version.Major + "." + typeof(U).Assembly.GetName().Version.Minor;
+        public static string fullVersion => minorVersion + " r" + typeof(U).Assembly.GetName().Version.Revision;
         public static string version
         {
             get {
-                if (typeof(T).Assembly.GetName().Version.Minor == 0 && typeof(T).Assembly.GetName().Version.Build == 0)
+                if (typeof(U).Assembly.GetName().Version.Minor == 0 && typeof(U).Assembly.GetName().Version.Build == 0)
                 {
-                    return typeof(T).Assembly.GetName().Version.Major.ToString();
+                    return typeof(U).Assembly.GetName().Version.Major.ToString();
                 }
-                if (typeof(T).Assembly.GetName().Version.Build > 0)
+                if (typeof(U).Assembly.GetName().Version.Build > 0)
                 {
                     return minorVersion;
                 }
@@ -52,8 +101,8 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
-        private static T m_instance;
-        public static T instance => m_instance;
+        private static U m_instance;
+        public static U instance => m_instance;
 
         private static SavedBool m_debugMode = new SavedBool(Singleton<L>.instance.prefix + "DebugMode", Settings.gameSettingsFile, false, true);
         public bool needShowPopup;
@@ -90,7 +139,7 @@ namespace Klyte.Commons.Interfaces
 
         protected void Construct()
         {
-            m_instance = this as T;
+            m_instance = this as U;
             Debug.LogWarningFormat(Singleton<L>.instance.prefix + "v" + majorVersion + " LOADING ");
             LoadSettings();
             Debug.LogWarningFormat(Singleton<L>.instance.prefix + "v" + majorVersion + " SETTING FILES");
@@ -113,7 +162,7 @@ namespace Klyte.Commons.Interfaces
                 DoWithSettingsUI(new UIHelperExtension(onSettingsUiComponent));
             }
             eventOnLoadLocaleEnd += ev;
-            if (typeof(T) == typeof(KlyteCommonsMod))
+            if (typeof(U) == typeof(KlyteCommonsMod))
             {
                 loadLocale(false);
             }
