@@ -1,6 +1,7 @@
 ﻿using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
 using System;
+using System.Collections;
 using System.Reflection;
 
 namespace Klyte.Commons.Overrides
@@ -15,6 +16,12 @@ namespace Klyte.Commons.Overrides
 
         private static void OnDistrictRenamed()
         {
+            DistrictManager.instance.StartCoroutine(RunEvent());
+        }
+
+        private static IEnumerator RunEvent()
+        {
+            yield return null;
             try
             {
                 eventOnDistrictRenamed?.Invoke();
@@ -25,6 +32,8 @@ namespace Klyte.Commons.Overrides
             }
         }
         #endregion
+
+
 
         #region Hooking
 

@@ -625,12 +625,12 @@ namespace Klyte.Commons.Utils
         {
             return FindNearStops(position, ItemClass.Service.PublicTransport, true, 24f, out List<float> distanceSqrA);
         }
-        public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, bool allowUnderground, float maxDistance, out List<float> distanceSqrA)
+        public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, bool allowUnderground, float maxDistance, out List<float> distanceSqrA, Quad2? boundaries = null)
         {
-            return FindNearStops(position, service, service, VehicleInfo.VehicleType.None, allowUnderground, maxDistance, out distanceSqrA);
+            return FindNearStops(position, service, service, VehicleInfo.VehicleType.None, allowUnderground, maxDistance, out distanceSqrA, boundaries);
         }
         public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, ItemClass.Service service2, VehicleInfo.VehicleType stopType, bool allowUnderground, float maxDistance,
-             out List<float> distanceSqrA)
+             out List<float> distanceSqrA, Quad2? boundaries = null)
         {
 
 
@@ -657,12 +657,12 @@ namespace Klyte.Commons.Utils
                         while (num6 != 0)
                         {
                             NetInfo info = instance.m_nodes.m_buffer[(int)num6].Info;
-                            if (info != null && (info.m_class.m_service == service || info.m_class.m_service == service2) && (instance.m_nodes.m_buffer[(int)num6].m_flags & (NetNode.Flags.Collapsed)) == NetNode.Flags.None && (allowUnderground || !info.m_netAI.IsUnderground()))
+                            if (info != null && (info.m_class.m_service == service || info.m_class.m_service == service2) && (instance.m_nodes.m_buffer[(int)num6].m_flags & (NetNode.Flags.Collapsed)) == NetNode.Flags.None && (instance.m_nodes.m_buffer[(int)num6].m_flags & (NetNode.Flags.Created)) != NetNode.Flags.None && instance.m_nodes.m_buffer[(int)num6].m_transportLine > 0 && (allowUnderground || !info.m_netAI.IsUnderground()))
                             {
                                 var node = instance.m_nodes.m_buffer[(int)num6];
                                 Vector3 nodePos = node.m_position;
                                 float delta = Mathf.Max(Mathf.Max(bounds.min.x - 64f - nodePos.x, bounds.min.z - 64f - nodePos.z), Mathf.Max(nodePos.x - bounds.max.x - 64f, nodePos.z - bounds.max.z - 64f));
-                                if (delta < 0f && instance.m_nodes.m_buffer[(int)num6].m_bounds.Intersects(bounds))
+                                if (delta < 0f && instance.m_nodes.m_buffer[(int)num6].m_bounds.Intersects(bounds) && (boundaries == null || !boundaries.HasValue || boundaries.Value.Intersect(VectorUtils.XZ(nodePos))))
                                 {
                                     float num14 = Vector3.SqrMagnitude(position - nodePos);
                                     if (num14 < maxDistSqr)
@@ -719,6 +719,20 @@ namespace Klyte.Commons.Utils
 
         }
 
+        public static T RunPrivateStaticMethod<T>(Type t, string methodName, params object[] paramList)
+        {
+            if ((methodName ?? "") != string.Empty)
+            {
+                var method = t.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                if (method != null)
+                {
+                    return (T)method.Invoke(null, paramList);
+                }
+            }
+            return default(T);
+
+        }
+
         public static object GetPrivateStaticField(string fieldName, Type type)
         {
             if (fieldName != null)
@@ -732,6 +746,19 @@ namespace Klyte.Commons.Utils
             return null;
 
         }
+
+        public static void SetPrivateStaticField(string fieldName, Type type, object newValue)
+        {
+            if (fieldName != null)
+            {
+                FieldInfo field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+                if (field != null)
+                {
+                    field.SetValue(null, newValue);
+                }
+            }
+        }
+
         public static object GetPrivateStaticProperty(string fieldName, Type type)
         {
             if (fieldName != null)
@@ -1273,17 +1300,11 @@ namespace Klyte.Commons.Utils
         {
             try
             {
-                //    if (TLMSingleton.instance != null)
-                //    {
-                //        if (TLMSingleton.debugMode)
-                //        {
-                //            Debug.LogWarningFormat("TLMRv" + TLMSingleton.version + " " + format, args);
-                //        }
-                //    }
-                //    else
-                //    {
-                //Console.WriteLine("KltUtils: " + format, args);
-                //    }
+                if (KlyteCommonsMod.debugMode)
+                {
+                    Debug.LogWarningFormat("KCv" + KlyteCommonsMod.version + " " + format, args);
+                }
+
             }
             catch
             {

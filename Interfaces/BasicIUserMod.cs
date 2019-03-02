@@ -56,7 +56,7 @@ namespace Klyte.Commons.Interfaces
                             let y = t.BaseType
                             where t.IsClass && !t.IsAbstract && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
                             select t;
-
+            doLog($"{SimpleName} Redirectors: {instances.Count()}");
             foreach (Type t in instances)
             {
                 topObj.AddComponent(t);
@@ -156,10 +156,11 @@ namespace Klyte.Commons.Interfaces
 
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
-            onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).self;
+            onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).self ?? onSettingsUiComponent;
             void ev()
             {
-                DoWithSettingsUI(new UIHelperExtension(onSettingsUiComponent));
+                if (onSettingsUiComponent != null)
+                    DoWithSettingsUI(new UIHelperExtension(onSettingsUiComponent));
             }
             eventOnLoadLocaleEnd += ev;
             if (typeof(U) == typeof(KlyteCommonsMod))

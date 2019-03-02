@@ -1,10 +1,11 @@
 ﻿using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
+using System.Collections;
 using System.Reflection;
 
 namespace Klyte.Commons.Overrides
 {
-    public class BuildingManagerOverrides : Redirector<DistrictManagerOverrides>
+    public class BuildingManagerOverrides : Redirector<BuildingManagerOverrides>
     {
 
 
@@ -29,7 +30,6 @@ namespace Klyte.Commons.Overrides
             AddRedirect(typeof(BuildingManager).GetMethod("SetBuildingName", allFlags), null, posRename);
             #endregion
 
-
         }
         #endregion
 
@@ -40,6 +40,16 @@ namespace Klyte.Commons.Overrides
 
         public static void CallBuildRenamedEvent(ushort building)
         {
+            BuildingManager.instance.StartCoroutine(CallBuildRenamedEvent_impl(building));
+        }
+        private static IEnumerator CallBuildRenamedEvent_impl(ushort building)
+        {
+
+            //returning 0 will make it wait 1 frame
+            yield return 0;
+
+            //code goes here
+
             eventOnBuildingRenamed?.Invoke(building);
         }
 
