@@ -47,6 +47,9 @@ namespace Klyte.Commons.Overrides
 
             //returning 0 will make it wait 1 frame
             yield return 0;
+            yield return 0;
+            yield return 0;
+            yield return 0;
 
             //code goes here
 

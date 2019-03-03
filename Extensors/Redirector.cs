@@ -20,7 +20,8 @@ namespace Klyte.Commons.Extensors
     {
         #region Class Base
         private readonly HarmonyInstance harmony = HarmonyInstance.Create("com.klyte.commons." + typeof(T).Name);
-        private static Redirector<T> instance;
+        private static T m_instance;
+        public static T instance => m_instance;
 
         public HarmonyInstance GetHarmonyInstance()
         {
@@ -32,7 +33,7 @@ namespace Klyte.Commons.Extensors
         {
             StackTrace stackTrace = new StackTrace();
             StackFrame[] stackFrames = stackTrace.GetFrames();
-            instance?.doLog($"SemiPreventDefault fullStackTrace: \r\n {Environment.StackTrace}");
+            m_instance?.doLog($"SemiPreventDefault fullStackTrace: \r\n {Environment.StackTrace}");
             for (int i = 2; i < stackFrames.Length; i++)
             {
                 if (stackFrames[i].GetMethod().DeclaringType.ToString().StartsWith("Klyte."))
@@ -46,8 +47,8 @@ namespace Klyte.Commons.Extensors
 
         public void Awake()
         {
+            m_instance = (T)this;
             AwakeBody();
-            instance = this;
         }
 
         public abstract void AwakeBody();

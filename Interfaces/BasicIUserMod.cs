@@ -50,7 +50,7 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnLevelLoaded(LoadMode mode)
         {
-            topObj = new GameObject(typeof(U).ToString());
+            topObj = new GameObject(typeof(U).Name);
             var typeTarg = typeof(Redirector<>);
             var instances = from t in Assembly.GetAssembly(typeof(U)).GetTypes()
                             let y = t.BaseType
