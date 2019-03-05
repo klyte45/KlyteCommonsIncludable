@@ -52,10 +52,7 @@ namespace Klyte.Commons.Interfaces
         {
             topObj = new GameObject(typeof(U).Name);
             var typeTarg = typeof(Redirector<>);
-            var instances = from t in Assembly.GetAssembly(typeof(U)).GetTypes()
-                            let y = t.BaseType
-                            where t.IsClass && !t.IsAbstract && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
-                            select t;
+            var instances = KlyteUtils.GetSubtypesRecursive(typeTarg, typeof(U));
             doLog($"{SimpleName} Redirectors: {instances.Count()}");
             foreach (Type t in instances)
             {
@@ -73,11 +70,25 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnLevelUnloading()
         {
+            var typeTarg = typeof(Redirector<>);
+            var instances = KlyteUtils.GetSubtypesRecursive(typeTarg, typeof(U));
+            doLog($"{SimpleName} Redirectors: {instances.Count()}");
+            foreach (Type t in instances)
+            {
+                GameObject.Destroy((Redirector)KlyteUtils.GetPrivateStaticField("instance", t));
+            }
+            GameObject.Destroy(topObj);
+            typeTarg = typeof(Singleton<>);
+            instances = KlyteUtils.GetSubtypesRecursive(typeTarg, typeof(U));
 
+            foreach (Type t in instances)
+            {
+                GameObject.Destroy(((MonoBehaviour)KlyteUtils.GetPrivateStaticProperty("instance", t)));
+            }
         }
         public void OnReleased()
         {
-
+            OnLevelUnloading();
         }
 
         public static string minorVersion => majorVersion + "." + typeof(U).Assembly.GetName().Version.Build;

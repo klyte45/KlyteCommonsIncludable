@@ -14,7 +14,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-[assembly: AssemblyVersion("1.1.6.9999")]
+[assembly: AssemblyVersion("1.1.6.*")]
 namespace Klyte.Commons
 {
     public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCLocaleUtils, KCResourceLoader, MonoBehaviour, KCCommonTextureAtlas, UICustomControl>

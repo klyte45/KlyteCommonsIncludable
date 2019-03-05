@@ -235,6 +235,29 @@ public struct CardinalPoint
         }
         return 0;
     }
+    public byte getCardinalIndex8()
+    {
+        switch (InternalValue)
+        {
+            case CardinalInternal.N:
+                return 0;
+            case CardinalInternal.S:
+                return 4;
+            case CardinalInternal.E:
+                return 2;
+            case CardinalInternal.W:
+                return 6;
+            case CardinalInternal.NE:
+                return 1;
+            case CardinalInternal.NW:
+                return 7;
+            case CardinalInternal.SE:
+                return 3;
+            case CardinalInternal.SW:
+                return 5;
+        }
+        return 8;
+    }
 
     public static CardinalPoint operator ++(CardinalPoint c)
     {

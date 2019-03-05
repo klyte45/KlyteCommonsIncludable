@@ -2,7 +2,7 @@
 using System.Reflection;
 using UnityEngine;
 using System.Diagnostics;
-using Klyte.Harmony;
+using Harmony;
 
 namespace Klyte.Commons.Extensors
 {
@@ -58,6 +58,21 @@ namespace Klyte.Commons.Extensors
         public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null)
         {
             GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, null);
+        }
+
+        public void OnDestroy()
+        {
+            doLog($"Destroying {typeof(T)}");
+            GetHarmonyInstance().UnpatchAll();
+        }
+
+        public void EnableDebug()
+        {
+            HarmonyInstance.DEBUG = true;
+        }
+        public void DisableDebug()
+        {
+            HarmonyInstance.DEBUG = false;
         }
     }
 }
