@@ -19,6 +19,7 @@ namespace Klyte.Commons.Utils
     {
         protected abstract string prefix { get; }
         private Type resourceReference => typeof(T);
+        public virtual Dictionary<string, Shader> LoadedShaders => null;
 
         public byte[] loadResourceData(string name)
         {
@@ -57,6 +58,20 @@ namespace Klyte.Commons.Utils
                 Texture2D texture = new Texture2D(x, y);
                 texture.LoadImage(loadResourceData(filename));
                 return texture;
+            }
+            catch (Exception e)
+            {
+                KlyteUtils.doErrorLog("The file could not be read:" + e.Message);
+            }
+
+            return null;
+        }
+
+        public AssetBundle loadBundle(string filename)
+        {
+            try
+            {
+                return AssetBundle.LoadFromMemory(loadResourceData(filename));
             }
             catch (Exception e)
             {
