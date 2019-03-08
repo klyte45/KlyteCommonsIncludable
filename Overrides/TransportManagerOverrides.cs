@@ -14,7 +14,10 @@ namespace Klyte.Commons.Overrides
 
         private static void RunOnLineUpdated()
         {
-            eventOnLineUpdated?.Invoke();
+            new AsyncAction(() =>
+            {
+                eventOnLineUpdated?.Invoke();
+            }).Execute();
         }
         #endregion
 

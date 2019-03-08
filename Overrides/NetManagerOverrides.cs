@@ -17,23 +17,42 @@ namespace Klyte.Commons.Overrides
 
         private static void OnNodeChanged(ref ushort node)
         {
-            eventNodeChanged?.Invoke(node);
+            var node_ = node;
+            new AsyncAction(() =>
+            {
+                eventNodeChanged?.Invoke(node_);
+            }).Execute();
         }
         private static void OnSegmentCreated(ref ushort segment, ref ushort startNode, ref ushort endNode)
         {
-            eventNodeChanged?.Invoke(startNode);
-            eventNodeChanged?.Invoke(endNode);
-            eventSegmentChanged?.Invoke(segment);
+            var startNode_ = startNode;
+            var segment_ = segment;
+            var endNode_ = endNode;
+
+            new AsyncAction(() =>
+            {
+                eventNodeChanged?.Invoke(startNode_);
+                eventNodeChanged?.Invoke(endNode_);
+                eventSegmentChanged?.Invoke(segment_);
+            }).Execute();
         }
         private static void OnSegmentReleased(ref ushort segment)
         {
-            eventNodeChanged?.Invoke(NetManager.instance.m_segments.m_buffer[segment].m_startNode);
-            eventNodeChanged?.Invoke(NetManager.instance.m_segments.m_buffer[segment].m_endNode);
-            eventSegmentChanged?.Invoke(segment);
+            var segment_ = segment;
+            new AsyncAction(() =>
+            {
+                eventNodeChanged?.Invoke(NetManager.instance.m_segments.m_buffer[segment_].m_startNode);
+                eventNodeChanged?.Invoke(NetManager.instance.m_segments.m_buffer[segment_].m_endNode);
+                eventSegmentChanged?.Invoke(segment_);
+            }).Execute();
         }
         private static void OnSegmentNameChanged(ref ushort segmentID)
         {
-            eventSegmentNameChanged?.Invoke(segmentID);
+            var segment_ = segmentID;
+            new AsyncAction(() =>
+            {
+                eventSegmentNameChanged?.Invoke(segment_);
+            }).Execute();
         }
         #endregion
 

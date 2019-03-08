@@ -750,6 +750,21 @@ namespace Klyte.Commons.Utils
 
         }
 
+        public static object[] RunPrivateStaticAction(Type t, string methodName, params object[] paramList)
+        {
+            if ((methodName ?? "") != string.Empty)
+            {
+                var method = t.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                if (method != null)
+                {
+                    method.Invoke(null, paramList);
+                    return paramList;
+                }
+            }
+            return null;
+
+        }
+
         public static object GetPrivateStaticField(string fieldName, Type type)
         {
             if (fieldName != null)

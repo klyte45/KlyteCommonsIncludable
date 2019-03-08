@@ -15,7 +15,10 @@ namespace Klyte.Commons.Overrides
 
         private static void OnDistrictChanged()
         {
-            DistrictManager.instance.StartCoroutine(RunEvent(eventOnDistrictChanged));
+            new AsyncAction(() =>
+            {
+                DistrictManager.instance.StartCoroutine(RunEvent(eventOnDistrictChanged));
+            }).Execute();
         }
 
         private static IEnumerator RunEvent(Action action)
@@ -42,7 +45,7 @@ namespace Klyte.Commons.Overrides
             KlyteUtils.doLog("Loading District Manager Overrides");
             #region Release Line Hooks
             MethodInfo posChange = typeof(DistrictManagerOverrides).GetMethod("OnDistrictChanged", allFlags);
-            
+
             AddRedirect(typeof(DistrictManager).GetMethod("SetDistrictName", allFlags), null, posChange);
             AddRedirect(typeof(DistrictManager).GetMethod("AreaModified", allFlags), null, posChange);
             #endregion

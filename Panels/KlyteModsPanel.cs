@@ -113,7 +113,7 @@ namespace Klyte.Commons.UI
         Addresses,
         VehicleWealthizer,
         TouchThis,
-        KCAI,
+        DynamicTextBoards,
         SuburbStyler
     }
 }

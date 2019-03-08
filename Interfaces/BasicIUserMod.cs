@@ -64,10 +64,13 @@ namespace Klyte.Commons.Interfaces
             }
             if (Tab != null)
             {
-                KlyteModsPanel.instance.AddTab((ModTab)Tab, typeof(T), Singleton<A>.instance.atlas, Singleton<A>.instance.SpriteNames[0], $"{SimpleName} (v{version})", (x, y) => { if (y) showVersionInfoPopup(); }, TabWidth);
+                KlyteModsPanel.instance.AddTab((ModTab)Tab, typeof(T), Singleton<A>.instance.atlas, Singleton<A>.instance.SpriteNames[0], GeneralName, (x, y) => { if (y) showVersionInfoPopup(); }, TabWidth);
             }
 
         }
+
+        public string GeneralName => $"{SimpleName} (v{version})";
+
         public void OnLevelUnloading()
         {
             var typeTarg = typeof(Redirector<>);
@@ -86,7 +89,7 @@ namespace Klyte.Commons.Interfaces
                 GameObject.Destroy(((MonoBehaviour)KlyteUtils.GetPrivateStaticProperty("instance", t)));
             }
         }
-        public void OnReleased()
+        public virtual void OnReleased()
         {
             OnLevelUnloading();
         }

@@ -19,7 +19,7 @@ namespace Klyte.Commons.Utils
     {
         protected abstract string prefix { get; }
         private Type resourceReference => typeof(T);
-        public virtual Dictionary<string, Shader> LoadedShaders => null;
+        public virtual Shader GetLoadedShader(string shaderName) => null;
 
         public byte[] loadResourceData(string name)
         {

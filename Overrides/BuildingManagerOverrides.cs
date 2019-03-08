@@ -2,6 +2,7 @@
 using Klyte.Commons.Utils;
 using System.Collections;
 using System.Reflection;
+using UnityEngine;
 
 namespace Klyte.Commons.Overrides
 {
@@ -15,7 +16,10 @@ namespace Klyte.Commons.Overrides
 
         private static void OnBuildingRenamed(ushort building)
         {
-            eventOnBuildingRenamed?.Invoke(building);
+            new AsyncAction(() =>
+            {
+                eventOnBuildingRenamed?.Invoke(building);
+            }).Execute();
         }
         #endregion
 
@@ -46,10 +50,8 @@ namespace Klyte.Commons.Overrides
         {
 
             //returning 0 will make it wait 1 frame
-            yield return 0;
-            yield return 0;
-            yield return 0;
-            yield return 0;
+            yield return new WaitForSeconds(1);
+
 
             //code goes here
 
