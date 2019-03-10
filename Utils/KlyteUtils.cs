@@ -436,6 +436,7 @@ namespace Klyte.Commons.Utils
             yield return Singleton<SimulationManager>.instance.AddAction<bool>(Singleton<BuildingManager>.instance.SetBuildingName(buildingID, name));
             function();
         }
+
         public delegate void OnEndProcessingBuildingName();
         public static ushort FindBuilding(Vector3 pos, float maxDistance, ItemClass.Service service, ItemClass.SubService subService, TransferManager.TransferReason[] allowedTypes, Building.Flags flagsRequired, Building.Flags flagsForbidden)
         {
@@ -527,6 +528,84 @@ namespace Klyte.Commons.Utils
         public static ushort GetPark(Vector3 location)
         {
             return Singleton<DistrictManager>.instance.GetPark(location);
+        }
+
+
+
+        public static StopPointDescriptor[] GetAllSpawnPoints(BuildingAI buidlingAI)
+        {
+            if (!(buidlingAI is DepotAI depotAI))
+            {
+                return null;
+            }
+            List<StopPointDescriptor> stops = new List<StopPointDescriptor>();
+            if (depotAI.m_spawnPoints != null && depotAI.m_spawnPoints.Length != 0)
+            {
+                for (int i = 0; i < depotAI.m_spawnPoints.Length; i++)
+                {
+                    AddSpawnPoint(depotAI.m_transportInfo, stops, depotAI.m_spawnPoints[i].m_position, depotAI.m_spawnPoints[i].m_target, depotAI.m_canInvertTarget);
+                }
+            }
+            else
+            {
+                AddSpawnPoint(depotAI.m_transportInfo, stops, depotAI.m_spawnPosition, depotAI.m_spawnTarget, depotAI.m_canInvertTarget);
+            }
+            if (depotAI.m_secondaryTransportInfo != null)
+            {
+                if (depotAI.m_spawnPoints2 != null && depotAI.m_spawnPoints2.Length != 0)
+                {
+                    for (int i = 0; i < depotAI.m_spawnPoints2.Length; i++)
+                    {
+                        AddSpawnPoint(depotAI.m_secondaryTransportInfo, stops, depotAI.m_spawnPoints2[i].m_position, depotAI.m_spawnPoints2[i].m_target, depotAI.m_canInvertTarget);
+                    }
+                }
+                else
+                {
+                    AddSpawnPoint(depotAI.m_secondaryTransportInfo, stops, depotAI.m_spawnPosition2, depotAI.m_spawnTarget2, depotAI.m_canInvertTarget);
+                }
+            }
+            foreach (var subBuilding in depotAI.m_info.m_subBuildings)
+            {
+                var subPlats = GetAllSpawnPoints(subBuilding.m_buildingInfo.m_buildingAI);
+                if (subPlats != null)
+                {
+                    stops.AddRange(subPlats.Select(x =>
+                    {
+                        x.relativePosition -= subBuilding.m_position;
+                        return x;
+                    }));
+                }
+            }
+            stops.Sort((x, y) =>
+            {
+                if (x.relativePosition.x != y.relativePosition.x) return x.relativePosition.x.CompareTo(y.relativePosition.x);
+                if (x.relativePosition.z != y.relativePosition.z) return x.relativePosition.z.CompareTo(y.relativePosition.z);
+                return x.relativePosition.y.CompareTo(y.relativePosition.y);
+            });
+            return stops.ToArray();
+        }
+
+        private static void AddSpawnPoint(TransportInfo info, List<StopPointDescriptor> stops, Vector3 position, Vector3 target, bool canInvert)
+        {
+            stops.Add(new StopPointDescriptor
+            {
+                relativePosition = target,
+                vehicleType = info.m_vehicleType
+            });
+            if (canInvert)
+            {
+                stops.Add(new StopPointDescriptor
+                {
+                    relativePosition = position * 2 - target,
+                    vehicleType = info.m_vehicleType
+                });
+            }
+        }
+
+        public class StopPointDescriptor
+        {
+            public Vector3 relativePosition;
+            public VehicleInfo.VehicleType vehicleType;
         }
         #endregion
 
@@ -629,14 +708,14 @@ namespace Klyte.Commons.Utils
         #region Stop Search Utils
         public static List<ushort> FindNearStops(Vector3 position)
         {
-            return FindNearStops(position, ItemClass.Service.PublicTransport, true, 24f, out List<float> distanceSqrA);
+            return FindNearStops(position, ItemClass.Service.PublicTransport, true, 24f, out List<float> distanceSqrA, out List<Vector3> stopPositions);
         }
-        public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, bool allowUnderground, float maxDistance, out List<float> distanceSqrA, List<Quad2> boundaries = null)
+        public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, bool allowUnderground, float maxDistance, out List<float> distanceSqrA, out List<Vector3> stopPositions, List<Quad2> boundaries = null)
         {
-            return FindNearStops(position, service, service, VehicleInfo.VehicleType.None, allowUnderground, maxDistance, out distanceSqrA, boundaries);
+            return FindNearStops(position, service, service, VehicleInfo.VehicleType.None, allowUnderground, maxDistance, out distanceSqrA, out stopPositions, boundaries);
         }
         public static List<ushort> FindNearStops(Vector3 position, ItemClass.Service service, ItemClass.Service service2, VehicleInfo.VehicleType stopType, bool allowUnderground, float maxDistance,
-             out List<float> distanceSqrA, List<Quad2> boundaries = null)
+             out List<float> distanceSqrA, out List<Vector3> stopPositions, List<Quad2> boundaries = null)
         {
 
 
@@ -646,7 +725,7 @@ namespace Klyte.Commons.Utils
             int num3 = Mathf.Min((int)((bounds.max.x + 64f) / 64f + 135f), 269);
             int num4 = Mathf.Min((int)((bounds.max.z + 64f) / 64f + 135f), 269);
             NetManager instance = Singleton<NetManager>.instance;
-            List<Tuple<ushort, float>> result = new List<Tuple<ushort, float>>();
+            List<Tuple<ushort, float, Vector3>> result = new List<Tuple<ushort, float, Vector3>>();
 
             float maxDistSqr = maxDistance * maxDistance;
             for (int i = num2; i <= num4; i++)
@@ -683,7 +762,7 @@ namespace Klyte.Commons.Utils
                                     float num14 = Vector3.SqrMagnitude(position - nodePos);
                                     if (num14 < maxDistSqr)
                                     {
-                                        result.Add(Tuple.New(nodeId, num14));
+                                        result.Add(Tuple.New(nodeId, num14, nodePos));
                                     }
                                 }
                             }
@@ -704,7 +783,113 @@ namespace Klyte.Commons.Utils
             }
             result = result.OrderBy(x => x.First).ToList();
             distanceSqrA = result.Select(x => x.Second).ToList();
+            stopPositions = result.Select(x => x.Third).ToList();
             return result.Select(x => x.First).ToList();
+        }
+
+
+        private const float DEFAULT_STOP_OFFSET = 0.5019608f;
+
+        public class StopPointDescriptorLanes
+        {
+            public Bezier3 platformLine;
+            public float width;
+            public VehicleInfo.VehicleType vehicleType;
+        }
+
+        public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo)
+        {
+            var result = new List<StopPointDescriptorLanes>();
+            foreach (var path in buildingInfo.m_paths)
+            {
+                Vector3 position = path.m_nodes[0];
+                Vector3 position2 = path.m_nodes[1];
+                Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
+
+                doLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
+                foreach (var lane in path.m_netInfo.m_lanes)
+                {
+                    if (lane.m_stopType == VehicleInfo.VehicleType.None) continue;
+                    var lanePos = position + lane.m_position * directionPath;
+                    var lanePos2 = position2 + lane.m_position * directionPath;
+                    NetSegment.CalculateMiddlePoints(lanePos, Vector3.zero, lanePos2, Vector3.zero, true, true, out Vector3 b3, out Vector3 c);
+                    var refBezier = new Bezier3(lanePos, b3, c, lanePos2);
+                    doLog($"[{buildingInfo}]refBezier = {refBezier} ({lanePos} {b3} {c} {lanePos2})");
+
+
+                    var positionR = refBezier.Position(DEFAULT_STOP_OFFSET);
+                    var direction = refBezier.Tangent(DEFAULT_STOP_OFFSET);
+                    doLog($"[{buildingInfo}]1positionR = {positionR}; direction = {direction}");
+
+                    Vector3 normalized = Vector3.Cross(Vector3.up, direction).normalized;
+                    positionR += normalized * (MathUtils.SmootherStep(0.5f, 0f, Mathf.Abs(DEFAULT_STOP_OFFSET - 0.5f)) * lane.m_stopOffset);
+                    doLog($"[{buildingInfo}]2positionR = {positionR}; direction = {direction}; {normalized}");
+                    result.Add(new StopPointDescriptorLanes
+                    {
+                        platformLine = refBezier,
+                        width = lane.m_width,
+                        vehicleType = lane.m_stopType
+                    });
+
+                }
+            }
+            foreach (var subBuilding in buildingInfo.m_subBuildings)
+            {
+                var subPlats = MapStopPoints(subBuilding.m_buildingInfo);
+                if (subPlats != null)
+                {
+                    result.AddRange(subPlats.Select(x =>
+                    {
+                        x.platformLine.a -= subBuilding.m_position;
+                        x.platformLine.b -= subBuilding.m_position;
+                        x.platformLine.c -= subBuilding.m_position;
+                        x.platformLine.d -= subBuilding.m_position;
+                        return x;
+                    }));
+                }
+            }
+            result.Sort((x, y) =>
+            {
+                var priorityX = VehicleToPriority(x.vehicleType);
+                var priorityY = VehicleToPriority(y.vehicleType);
+                if (priorityX != priorityY) return priorityX.CompareTo(priorityY);
+                var centerX = x.platformLine.GetBounds().center;
+                var centerY = y.platformLine.GetBounds().center;
+                if (centerX.z != centerY.z) return centerX.z.CompareTo(centerY.z);
+                if (centerX.x != centerY.x) return -centerX.x.CompareTo(centerY.x);
+                return centerX.y.CompareTo(centerY.y);
+            });
+            return result.ToArray();
+        }
+        public static int VehicleToPriority(VehicleInfo.VehicleType tt)
+        {
+            switch (tt)
+            {
+                case VehicleInfo.VehicleType.Car:
+                    return 99;
+                case VehicleInfo.VehicleType.Metro:
+                case VehicleInfo.VehicleType.Train:
+                case VehicleInfo.VehicleType.Monorail:
+                    return 20;
+                case VehicleInfo.VehicleType.Ship:
+                    return 10;
+                case VehicleInfo.VehicleType.Plane:
+                    return 5;
+                case VehicleInfo.VehicleType.Tram:
+                    return 88;
+                case VehicleInfo.VehicleType.Helicopter:
+                    return 7;
+                case VehicleInfo.VehicleType.Ferry:
+                    return 15;
+
+                case VehicleInfo.VehicleType.CableCar:
+                    return 30;
+                case VehicleInfo.VehicleType.Blimp:
+                    return 12;
+                case VehicleInfo.VehicleType.Balloon:
+                    return 11;
+                default: return 9999;
+            }
         }
         #endregion
         #region Reflection
@@ -2199,6 +2384,11 @@ namespace Klyte.Commons.Utils
         public static float GetAngleXZ(this Vector3 dir)
         {
             return Mathf.Atan2(dir.z, dir.x) * Mathf.Rad2Deg;
+        }
+        public static float SqrDistance(this Vector3 a, Vector3 b)
+        {
+            Vector3 vector = new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
+            return (vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
+using System;
 using System.Reflection;
 
 namespace Klyte.Commons.Overrides
@@ -9,14 +10,14 @@ namespace Klyte.Commons.Overrides
 
 
         #region Events
-        public delegate void OnLineUpdated();
-        public static event OnLineUpdated eventOnLineUpdated;
+        public static event Action<ushort> eventOnLineUpdated;
 
-        private static void RunOnLineUpdated()
+        private static void RunOnLineUpdated(ushort lineID)
         {
+            var lineID_ = lineID;
             new AsyncAction(() =>
             {
-                eventOnLineUpdated?.Invoke();
+                eventOnLineUpdated?.Invoke(lineID_);
             }).Execute();
         }
         #endregion
