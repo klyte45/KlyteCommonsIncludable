@@ -40,12 +40,12 @@ namespace Klyte.Commons
         public KlyteCommonsMod()
         {
             Construct();
-            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(autoLoadLocale);
+
         }
 
         public override void TopSettingsUI(UIHelperExtension ext)
         {
-
+            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(autoLoadLocale);
         }
 
         public override void Group9SettingsUI(UIHelperExtension group9)
@@ -53,14 +53,14 @@ namespace Klyte.Commons
             group9.AddDropdownLocalized("KCM_MOD_LANG", KCLocaleUtils.instance.getLanguageIndex(), KCLocaleUtils.currentLanguageId.value, delegate (int idx)
             {
                 KCLocaleUtils.currentLanguageId.value = idx;
-                loadLocale(true);
+                LocaleManager.ForceReload();
             });
             group9.AddLabel(Locale.Get("KCM_LANG_NOTICE"));
         }
 
         public void autoLoadLocale()
         {
-            loadLocale(false);
+            loadLocale(true);
         }
 
         private UIButton m_openKCPanelButton;

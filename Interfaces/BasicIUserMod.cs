@@ -123,26 +123,6 @@ namespace Klyte.Commons.Interfaces
         private static bool isLocaleLoaded = false;
         public static bool LocaleLoaded => isLocaleLoaded;
 
-        private static bool m_isKlyteCommonsLoaded = false;
-        public static bool IsKlyteCommonsEnabled()
-        {
-            if (!m_isKlyteCommonsLoaded)
-            {
-                try
-                {
-                    var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                    var assembly = (from a in assemblies
-                                    where a.GetType("Klyte.Commons.KlyteCommonsMod") != null
-                                    select a).SingleOrDefault();
-                    if (assembly != null)
-                    {
-                        m_isKlyteCommonsLoaded = true;
-                    }
-                }
-                catch { }
-            }
-            return m_isKlyteCommonsLoaded;
-        }
 
         public static SavedBool debugMode => m_debugMode;
         private SavedString currentSaveVersion => new SavedString(Singleton<L>.instance.prefix + "SaveVersion", Settings.gameSettingsFile, "null", true);
@@ -163,7 +143,6 @@ namespace Klyte.Commons.Interfaces
             {
                 needShowPopup = true;
             }
-            loadLocale(false);
         }
 
         UIComponent onSettingsUiComponent;
@@ -185,8 +164,13 @@ namespace Klyte.Commons.Interfaces
             {
                 KlyteCommonsMod.instance.eventOnLoadLocaleEnd += delegate ()
                 {
-                    loadLocale(false);
+                    loadLocale(true);
                 };
+            }
+            if (KlyteCommonsMod.isLocaleLoaded)
+            {
+                loadLocale(false);
+                ev();
             }
 
         }
@@ -278,10 +262,11 @@ namespace Klyte.Commons.Interfaces
 
         public void loadLocale(bool force)
         {
-            if (SingletonLite<LocaleManager>.exists && IsKlyteCommonsEnabled() && (!isLocaleLoaded || force))
+            if (!isLocaleLoaded || force)
             {
                 Singleton<L>.instance.loadCurrentLocale(force);
                 eventOnLoadLocaleEnd?.Invoke();
+                isLocaleLoaded = true;
             }
         }
         private delegate void OnLocaleLoadedFirstTime();

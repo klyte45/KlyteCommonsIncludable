@@ -9,5 +9,6 @@ namespace Klyte.Commons.i18n
         public override string prefix => "KCM_";
 
         protected override string packagePrefix => "Klyte.Commons";
+
     }
 }

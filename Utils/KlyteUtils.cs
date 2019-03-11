@@ -2,6 +2,7 @@
 using ColossalFramework.Globalization;
 using ColossalFramework.IO;
 using ColossalFramework.Math;
+using ColossalFramework.Packaging;
 using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
@@ -1030,7 +1031,10 @@ namespace Klyte.Commons.Utils
         public static List<Type> GetSubtypesRecursive(Type typeTarg, Type refType)
         {
             //doLog($"typeTarg = {typeTarg} | IsGenType={typeTarg.IsGenericType} ");
-            var classes = from t in Assembly.GetAssembly(refType).GetTypes()
+            var classes = from t in AppDomain.CurrentDomain.GetAssemblies().Where(x => refType == null || x == refType.Assembly)?.SelectMany(x =>
+            {
+                try { return x?.GetTypes(); } catch { return new Type[0]; }
+            })
                           let y = t.BaseType
                           where t.IsClass && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
                           select t;
@@ -1040,7 +1044,7 @@ namespace Klyte.Commons.Utils
             {
                 if (!t.IsSealed)
                 {
-                    result.AddRange(GetSubtypesRecursive(t, refType));
+                    result.AddRange(GetSubtypesRecursive(t, t));
                 }
                 if (!t.IsAbstract)
                 {
@@ -1459,6 +1463,38 @@ namespace Klyte.Commons.Utils
         public static bool IsFileCreated(string fileName)
         {
             return File.Exists(fileName);
+        }
+
+        public static void ScanPrefabsFolders(string filenameToSearch, Action<FileStream> action)
+        {
+            List<string> list = new List<string>();
+            for (uint i = 0; i < PrefabCollection<BuildingInfo>.LoadedCount(); i++)
+            {
+                BuildingInfo loaded = PrefabCollection<BuildingInfo>.GetLoaded(i);
+                if (!(loaded == null))
+                {
+                    Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
+                    if (!(asset == null) && !(asset.package == null))
+                    {
+                        string packagePath = asset.package.packagePath;
+                        if (packagePath != null)
+                        {
+                            string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
+                            if (!list.Contains(filePath))
+                            {
+                                list.Add(filePath);
+                                if (File.Exists(filePath))
+                                {
+                                    using (var stream = File.OpenRead(filePath))
+                                    {
+                                        action(stream);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         #endregion
 
@@ -1910,7 +1946,7 @@ namespace Klyte.Commons.Utils
                 endRef = default(ComparableRoad);
                 return null;
             }
-            doLog($"[{segmentId}-> sd {requireSameDirection} rsst {requireSameSizeAndType} la {localAdjust}] segs = [{string.Join(",", accessSegments.Select(x => x.ToString()).ToArray())}]; start={nodeStartS}; end={nodeStartE}");
+            //doLog($"[{segmentId}-> sd {requireSameDirection} rsst {requireSameSizeAndType} la {localAdjust}] segs = [{string.Join(",", accessSegments.Select(x => x.ToString()).ToArray())}]; start={nodeStartS}; end={nodeStartE}");
             startRef = new ComparableRoad(accessSegments[0], nodeStartS);
             endRef = new ComparableRoad(accessSegments[accessSegments.Count - 1], nodeStartE);
             return accessSegments.Select(x => Tuple.New(x, NetManager.instance.m_segments.m_buffer[x].m_averageLength));

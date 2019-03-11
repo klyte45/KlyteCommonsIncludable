@@ -65,16 +65,9 @@ namespace Klyte.Commons.i18n
             loadLocale(getSelectedLocaleByIndex(), force, prefix ?? this.prefix, packagePrefix ?? this.packagePrefix);
         }
 
-        private void loadLocale(string localeId, bool force, string prefix = null, string packagePrefix = null)
+        internal virtual void loadLocale(string localeId, bool force, string prefix = null, string packagePrefix = null)
         {
-            if (force)
-            {
-                LocaleManager.ForceReload();
-            }
-            else
-            {
-                loadLocaleIntern(localeId, true, prefix ?? this.prefix, packagePrefix ?? this.packagePrefix);
-            }
+            loadLocaleIntern(localeId, true, prefix ?? this.prefix, packagePrefix ?? this.packagePrefix);
         }
         private void loadLocaleIntern(string localeId, bool setLocale, string prefix, string packagePrefix)
         {
