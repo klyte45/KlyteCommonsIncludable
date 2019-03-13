@@ -323,6 +323,51 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
+        public UITextField[] AddVector3Field(string name, Vector3 defaultValue, Action<Vector3> eventSubmittedCallback)
+        {
+            if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
+            {
+                UITextField[] result = new UITextField[3];
+                UIPanel uIPanel = this.m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.Find<UILabel>("Label").text = name;
+                uIPanel.autoLayout = true;
+                uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
+                uIPanel.wrapLayout = false;
+                uIPanel.autoFitChildrenVertically = true;
+                result[0] = uIPanel.Find<UITextField>("Text Field");
+                result[0].numericalOnly = true;
+                result[0].width = 60;
+                result[0].allowNegative = true;
+                result[0].allowFloats = true;
+                result[1] = GameObject.Instantiate(result[0]);
+                result[2] = GameObject.Instantiate(result[0]);
+                result[1].transform.SetParent(result[0].transform.parent);
+                result[2].transform.SetParent(result[0].transform.parent);
+
+                void textSubmitAction(UIComponent c, string sel)
+                {
+                    Vector3 resultV3 = new Vector3();
+                    float.TryParse(result[0].text, out resultV3.x);
+                    float.TryParse(result[1].text, out resultV3.y);
+                    float.TryParse(result[2].text, out resultV3.z);
+                    eventSubmittedCallback?.Invoke(resultV3);
+                }
+                result[0].eventTextSubmitted += textSubmitAction;
+                result[1].eventTextSubmitted += textSubmitAction;
+                result[2].eventTextSubmitted += textSubmitAction;
+                result[0].text = defaultValue.x.ToString();
+                result[1].text = defaultValue.y.ToString();
+                result[2].text = defaultValue.z.ToString();
+                result[1].text = defaultValue.y.ToString();
+                result[0].zOrder = 1;
+                result[1].zOrder = 2;
+                result[2].zOrder = 3;
+                return result;
+            }
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            return null;
+        }
+
         public UITextField AddTextField(string name, OnTextChanged eventCallback, string defaultValue = "", OnTextSubmitted eventSubmit = null)
         {
             return (UITextField)AddTextfield(name, defaultValue, eventCallback, eventSubmit);

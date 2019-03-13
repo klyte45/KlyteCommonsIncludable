@@ -13,6 +13,7 @@ namespace Klyte.Commons.Overrides
         #region Events
         public static event Action<ushort> eventNodeChanged;
         public static event Action<ushort> eventSegmentChanged;
+        public static event Action<ushort> eventSegmentReleased;
         public static event Action<ushort> eventSegmentNameChanged;
 
         private static void OnNodeChanged(ref ushort node)
@@ -44,6 +45,7 @@ namespace Klyte.Commons.Overrides
                 eventNodeChanged?.Invoke(NetManager.instance.m_segments.m_buffer[segment_].m_startNode);
                 eventNodeChanged?.Invoke(NetManager.instance.m_segments.m_buffer[segment_].m_endNode);
                 eventSegmentChanged?.Invoke(segment_);
+                eventSegmentReleased?.Invoke(segment_);
             }).Execute();
         }
         private static void OnSegmentNameChanged(ref ushort segmentID)

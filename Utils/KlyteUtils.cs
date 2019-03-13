@@ -221,10 +221,11 @@ namespace Klyte.Commons.Utils
         }
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x)
         {
-            return LimitWidth(x, (uint)x.minimumSize.x);
+            return LimitWidth(x, x.minimumSize.x);
         }
-        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, uint maxWidth, bool alsoMinSize = false)
+        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false)
         {
+            x.autoSize = true;
             void callback(UIComponent y, Vector2 z)
             {
                 x.transform.localScale = new Vector3(Math.Min(1, maxWidth / x.width), x.transform.localScale.y, x.transform.localScale.z);
@@ -1445,7 +1446,7 @@ namespace Klyte.Commons.Utils
 
         #endregion
 
-        #region File Utils
+        #region File & Prefab Utils
         public static readonly string BASE_FOLDER_PATH = DataLocation.localApplicationData + Path.DirectorySeparatorChar + "Klyte45Mods" + Path.DirectorySeparatorChar;
 
         public static FileInfo EnsureFolderCreation(string folderName)
@@ -1468,31 +1469,40 @@ namespace Klyte.Commons.Utils
         public static void ScanPrefabsFolders(string filenameToSearch, Action<FileStream> action)
         {
             List<string> list = new List<string>();
-            for (uint i = 0; i < PrefabCollection<BuildingInfo>.LoadedCount(); i++)
+            ForEachLoadedPrefab<BuildingInfo>((loaded) =>
             {
-                BuildingInfo loaded = PrefabCollection<BuildingInfo>.GetLoaded(i);
-                if (!(loaded == null))
+                Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
+                if (!(asset == null) && !(asset.package == null))
                 {
-                    Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
-                    if (!(asset == null) && !(asset.package == null))
+                    string packagePath = asset.package.packagePath;
+                    if (packagePath != null)
                     {
-                        string packagePath = asset.package.packagePath;
-                        if (packagePath != null)
+                        string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
+                        if (!list.Contains(filePath))
                         {
-                            string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
-                            if (!list.Contains(filePath))
+                            list.Add(filePath);
+                            if (File.Exists(filePath))
                             {
-                                list.Add(filePath);
-                                if (File.Exists(filePath))
+                                using (var stream = File.OpenRead(filePath))
                                 {
-                                    using (var stream = File.OpenRead(filePath))
-                                    {
-                                        action(stream);
-                                    }
+                                    action(stream);
                                 }
                             }
                         }
                     }
+                }
+            });
+        }
+
+        public static void ForEachLoadedPrefab<PI>(Action<PI> action) where PI : PrefabInfo
+        {
+            List<string> list = new List<string>();
+            for (uint i = 0; i < PrefabCollection<PI>.LoadedCount(); i++)
+            {
+                PI loaded = PrefabCollection<PI>.GetLoaded(i);
+                if (!(loaded == null))
+                {
+                    action(loaded);
                 }
             }
         }
@@ -1599,6 +1609,46 @@ namespace Klyte.Commons.Utils
             float x = (pos.x + 8640f) / 1920f;
             float z = (pos.z + 8640f) / 1920f;
             return new Vector2(x, z);
+        }
+
+        public static Vector3 CalculatePositionRelative(Vector3 absolutePos, float angle, Vector3 reference)
+        {
+            Vector3 relativePos = new Vector3
+            {
+                y = absolutePos.y - reference.y
+            };
+
+            var cos = Mathf.Cos(angle);
+            var sin = Mathf.Sin(angle);
+
+            //           position.x = original.x +              cos * offset.x +  sin   * offset.z;
+            //position.z            =              original.z + sin * offset.x + (-cos) * offset.z;
+
+            //                   cos * position.x = cos * original.x +                                  cos * cos * offset.x  + sin *   cos  * offset.z;
+            //sin * position.z                    =                    sin * original.z +               sin * sin * offset.x  + sin * (-cos) * offset.z;
+            //==========================================================================================================================================
+            //sin * position.z + cos * position.x = cos * original.x + sin * original.z + (cos * cos + sin * sin) * offset.x;
+
+            relativePos.x = -(cos * reference.x + sin * reference.z - sin * absolutePos.z - cos * absolutePos.x);
+            relativePos.z = (-absolutePos.x + reference.x + cos * relativePos.x) / -sin;
+
+            return relativePos;
+        }
+
+        public static Vector3 OffsetWithRotation(Vector3 offset, float angle)
+        {
+            Vector3 position = new Vector3
+            {
+                y = offset.y
+            };
+
+            var cos = Mathf.Cos(angle);
+            var sin = Mathf.Sin(angle);
+
+            position.x = cos * offset.x + sin * offset.z;
+            position.z = sin * offset.x + (-cos) * offset.z;
+
+            return position;
         }
 
         #endregion
