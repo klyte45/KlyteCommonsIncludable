@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
@@ -280,6 +281,63 @@ namespace Klyte.Commons.Utils
             createUIElement(out UISlicedSprite scrollFg, scrollBg.transform);
             scrollFg.relativePosition = Vector2.zero;
             scrollFg.fillDirection = UIFillDirection.Vertical;
+            scrollFg.autoSize = true;
+            scrollFg.width = scrollFg.parent.width - 4f;
+            scrollFg.spriteName = "ScrollbarThumb";
+            scrollbar.thumbObject = scrollFg;
+            scrollablePanel.verticalScrollbar = scrollbar;
+            scrollablePanel.eventMouseWheel += delegate (UIComponent component, UIMouseEventParameter param)
+            {
+                ((UIScrollablePanel)component).scrollPosition += new Vector2(0f, Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).verticalScrollbar.incrementAmount);
+            };
+
+            return new UIHelperExtension(scrollablePanel);
+        }
+
+        public static UIHelperExtension CreateHorizontalScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition)
+        {
+            createUIElement(out scrollablePanel, parent?.transform);
+            scrollablePanel.width = width;
+            scrollablePanel.height = height;
+            scrollablePanel.autoLayoutDirection = LayoutDirection.Horizontal;
+            scrollablePanel.wrapLayout = false;
+            scrollablePanel.autoLayoutStart = LayoutStart.TopLeft;
+            scrollablePanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
+            scrollablePanel.autoLayout = true;
+            scrollablePanel.clipChildren = true;
+            scrollablePanel.relativePosition = relativePosition;
+
+            createUIElement(out UIPanel trackballPanel, parent?.transform);
+            trackballPanel.height = 10f;
+            trackballPanel.width = scrollablePanel.width;
+            trackballPanel.autoLayoutDirection = LayoutDirection.Vertical;
+            trackballPanel.autoLayoutStart = LayoutStart.TopLeft;
+            trackballPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
+            trackballPanel.autoLayout = true;
+            trackballPanel.relativePosition = new Vector3(relativePosition.x, relativePosition.y + height + 5);
+
+
+            createUIElement(out scrollbar, trackballPanel.transform);
+            scrollbar.height = 10f;
+            scrollbar.width = scrollbar.parent.width;
+            scrollbar.orientation = UIOrientation.Horizontal;
+            scrollbar.pivot = UIPivotPoint.BottomLeft;
+            scrollbar.AlignTo(trackballPanel, UIAlignAnchor.TopLeft);
+            scrollbar.minValue = 0f;
+            scrollbar.value = 0f;
+            scrollbar.incrementAmount = 25f;
+
+            createUIElement(out UISlicedSprite scrollBg, scrollbar.transform);
+            scrollBg.relativePosition = Vector2.zero;
+            scrollBg.autoSize = true;
+            scrollBg.size = scrollBg.parent.size;
+            scrollBg.fillDirection = UIFillDirection.Horizontal;
+            scrollBg.spriteName = "ScrollbarTrack";
+            scrollbar.trackObject = scrollBg;
+
+            createUIElement(out UISlicedSprite scrollFg, scrollBg.transform);
+            scrollFg.relativePosition = Vector2.zero;
+            scrollFg.fillDirection = UIFillDirection.Horizontal;
             scrollFg.autoSize = true;
             scrollFg.width = scrollFg.parent.width - 4f;
             scrollFg.spriteName = "ScrollbarThumb";
@@ -894,7 +952,9 @@ namespace Klyte.Commons.Utils
             }
         }
         #endregion
+
         #region Reflection
+        #region Deprecated
         public static T GetPrivateField<T>(object o, string fieldName)
         {
             if (fieldName != null)
@@ -1017,6 +1077,259 @@ namespace Klyte.Commons.Utils
                 return null;
             }
         }
+        #endregion
+        #region Extract Properties
+        public static void GetPropertyDelegates<CL, PT>(string propertyName, out Action<CL, PT> setter, out Func<CL, PT> getter)
+        {
+            setter = (Action<CL, PT>)Delegate.CreateDelegate(typeof(Action<CL, PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetSetMethod());
+            getter = (Func<CL, PT>)Delegate.CreateDelegate(typeof(Func<CL, PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod());
+        }
+        public static void GetStaticPropertyDelegates<CL, PT>(string propertyName, out Action<PT> setter, out Func<PT> getter)
+        {
+            setter = (Action<PT>)Delegate.CreateDelegate(typeof(Action<PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).GetSetMethod());
+            getter = (Func<PT>)Delegate.CreateDelegate(typeof(Func<PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).GetGetMethod());
+        }
+
+        #endregion
+        #region Field Access
+
+        /// <summary>
+        /// Gets a strong typed delegate to a generated method that allows you to get the field value, that is represented
+        /// by the given <paramref name="fieldInfo"/>. The delegate is instance independend, means that you pass the source 
+        /// of the field as a parameter to the method and get back the value of it's field.
+        /// </summary>
+        /// <typeparam name="TSource">The reflecting type. This can be an interface that is implemented by the field's declaring type
+        /// or an derrived type of the field's declaring type.</typeparam>
+        /// <typeparam name="TValue">The type of the field value.</typeparam>
+        /// <param name="fieldInfo">Provides the metadata of the field.</param>
+        /// <returns>A strong typed delegeate that can be cached to get the field's value with high performance.</returns>
+        public Func<TSource, TValue> GetGetFieldDelegate<TSource, TValue>(FieldInfo fieldInfo)
+        {
+            if (fieldInfo == null) throw new ArgumentNullException("fieldInfo");
+
+            Type fieldDeclaringType = fieldInfo.DeclaringType;
+
+            ParameterExpression sourceParameter =
+             Expression.Parameter(typeof(TSource), "source");
+
+
+            Expression sourceExpression = this.GetCastOrConvertExpression(
+                sourceParameter, fieldDeclaringType);
+
+            MemberExpression fieldExpression = Expression.Field(sourceExpression, fieldInfo);
+
+            Expression resultExpression = this.GetCastOrConvertExpression(
+            fieldExpression, typeof(TValue));
+
+            LambdaExpression lambda =
+                Expression.Lambda(typeof(Func<TSource, TValue>), resultExpression, sourceParameter);
+
+            Func<TSource, TValue> compiled = (Func<TSource, TValue>)lambda.Compile();
+            return compiled;
+        }
+
+        /// <summary>
+        /// Gets a strong typed delegate to a generated method that allows you to get the field value, that is represented
+        /// by the given <paramref name="fieldName"/>. The delegate is instance independend, means that you pass the source 
+        /// of the field as a parameter to the method and get back the value of it's field.
+        /// </summary>
+        /// <typeparam name="TSource">The reflecting type. This can be an interface that is implemented by the field's declaring type
+        /// or an derrived type of the field's declaring type.</typeparam>
+        /// <typeparam name="TValue">The type of the field value.</typeparam>
+        /// <param name="fieldName">The name of the field.</param>
+        /// <param name="fieldType">The type of the field.</param>
+        /// <param name="fieldDeclaringType">The type that declares the field.</param>
+        /// <returns>A strong typed delegeate that can be cached to get the field's value with high performance.</returns>
+        public Func<TSource, TValue> GetGetFieldDelegate<TSource, TValue>(string fieldName, Type fieldDeclaringType)
+        {
+            if (fieldName == null) throw new ArgumentNullException("fieldName");
+            if (fieldDeclaringType == null) throw new ArgumentNullException("fieldDeclaringType");
+
+            FieldInfo fieldInfo = fieldDeclaringType.GetField(fieldName,
+                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
+
+            return this.GetGetFieldDelegate<TSource, TValue>(fieldInfo);
+        }
+
+        /// <summary>
+        /// Gets a strong typed delegate to a generated method that allows you to set the field value, that is represented
+        /// by the given <paramref name="fieldInfo"/>. The delegate is instance independend, means that you pass the source 
+        /// of the field as a parameter to the generated method and get back the value of it's field.
+        /// </summary>
+        /// <typeparam name="TSource">The reflecting type. This can be an interface that is implemented by the field's declaring type
+        /// or an derrived type of the field's declaring type.</typeparam>
+        /// <typeparam name="TValue">The type of the field value.</typeparam>
+        /// <param name="fieldInfo">Provides the metadata of the field.</param>
+        /// <returns>A strong typed delegeate that can be cached to set the field's value with high performance.</returns>
+        public Action<TSource, TValue> GetSetFieldDelegate<TSource, TValue>(FieldInfo fieldInfo)
+        {
+            if (fieldInfo == null) throw new ArgumentNullException("fieldInfo");
+
+            Type fieldDeclaringType = fieldInfo.DeclaringType;
+            //Type fieldType = fieldInfo.FieldType;
+            //String fieldName = fieldInfo.Name;
+
+            // Define the parameters of the lambda expression: (source,value) =>
+            ParameterExpression sourceParameter = Expression.Parameter(typeof(TSource), "source");
+            ParameterExpression valueParameter = Expression.Parameter(typeof(TValue), "value");
+
+
+
+            // Add cast or convert expression if necessary. (e.g. when fieldDeclaringType is not assignable from typeof(TSource)
+            Expression sourceExpression = this.GetCastOrConvertExpression(sourceParameter, fieldDeclaringType);
+
+            // Get the field access expression.
+            Expression fieldExpression = Expression.Field(sourceExpression, fieldInfo);
+
+            // Add cast or convert expression if necessary.
+            Expression valueExpression = this.GetCastOrConvertExpression(valueParameter, fieldExpression.Type);
+
+            // Get the generic method that assigns the field value.
+            var genericSetFieldMethodInfo = setFieldMethod.MakeGenericMethod(fieldExpression.Type);
+
+            // get the set field expression 
+            // e.g. source.SetField(ref (arg as MyClass).integerProperty, Convert(value)
+            MethodCallExpression setFieldMethodCallExpression = Expression.Call(
+                null, genericSetFieldMethodInfo, fieldExpression, valueExpression);
+
+            // Create the final lambda expression
+            // e.g. (source,value) => SetField(ref (arg as MyClass).integerProperty, Convert(value))
+            LambdaExpression lambda = Expression.Lambda(typeof(Action<TSource, TValue>),
+                                                        setFieldMethodCallExpression, sourceParameter, valueParameter);
+
+            Action<TSource, TValue> result = (Action<TSource, TValue>)lambda.Compile();
+            return result;
+        }
+
+        /// <summary>
+        /// Gets a strong typed delegate to a generated method that allows you to set the field value, that is represented
+        /// by the given <paramref name="fieldName"/>. The delegate is instance independend, means that you pass the source 
+        /// of the field as a parameter to the generated method and get back the value of it's field.
+        /// </summary>
+        /// <typeparam name="TSource">The reflecting type. This can be an interface that is implemented by the field's declaring type
+        /// or an derrived type of the field's declaring type.</typeparam>
+        /// <typeparam name="TValue">The type of the field value.</typeparam>
+        /// <param name="fieldName">The name of the field.</param>
+        /// <param name="fieldType">The type of the field.</param>
+        /// <param name="fieldDeclaringType">The type that declares the field.</param>
+        /// <returns>A strong typed delegeate that can be cached to set the field's value with high performance.</returns>
+        public Action<TSource, TValue> GetSetFieldDelegate<TSource, TValue>(string fieldName, Type fieldType, Type fieldDeclaringType)
+        {
+            if (fieldName == null) throw new ArgumentNullException("fieldName");
+            if (fieldType == null) throw new ArgumentNullException("fieldType");
+            if (fieldDeclaringType == null) throw new ArgumentNullException("fieldDeclaringType");
+
+            // Define the parameters of the lambda expression: (source,value) =>
+            ParameterExpression sourceParameter = Expression.Parameter(typeof(TSource), "source");
+            ParameterExpression valueParameter = Expression.Parameter(typeof(TValue), "value");
+
+
+            // Add cast or convert expression if necessary. (e.g. when fieldDeclaringType is not assignable from typeof(TSource)
+            Expression sourceExpression = this.GetCastOrConvertExpression(sourceParameter, fieldDeclaringType);
+            Expression valueExpression = this.GetCastOrConvertExpression(valueParameter, fieldType);
+
+            // Get the field access expression.
+            MemberExpression fieldExpression = Expression.Field(sourceExpression, fieldName);
+
+            // Get the generic method that assigns the field value.
+            var genericSetFieldMethodInfo = setFieldMethod.MakeGenericMethod(fieldType);
+
+            // get the set field expression 
+            // e.g. source.SetField(ref (arg as MyClass).integerProperty, Convert(value)
+            MethodCallExpression setFieldMethodCallExpression = Expression.Call(
+                null, genericSetFieldMethodInfo, fieldExpression, valueExpression);
+
+            // Create the final lambda expression
+            // e.g. (source,value) => SetField(ref (arg as MyClass).integerProperty, Convert(value))
+            LambdaExpression lambda = Expression.Lambda(typeof(Action<TSource, TValue>),
+                                                        setFieldMethodCallExpression, sourceParameter, valueParameter);
+
+            Action<TSource, TValue> result = (Action<TSource, TValue>)lambda.Compile();
+            return result;
+        }
+
+        /// <summary>
+        /// Gets an expression that can be assigned to the given target type. 
+        /// Creates a new expression when a cast or conversion is required, 
+        /// or returns the given <paramref name="expression"/> if no cast or conversion is required.
+        /// </summary>
+        /// <param name="expression">The expression which resulting value should be passed to a 
+        /// parameter with a different type.</param>
+        /// <param name="targetType">The target parameter type.</param>
+        /// <returns>The <paramref name="expression"/> if no cast or conversion is required, 
+        /// otherwise a new expression instance that wraps the the given <paramref name="expression"/> 
+        /// inside the required cast or conversion.</returns>
+        private Expression GetCastOrConvertExpression(Expression expression, Type targetType)
+        {
+            Expression result;
+            Type expressionType = expression.Type;
+
+            // Check if a cast or conversion is required.
+            if (targetType.IsAssignableFrom(expressionType))
+            {
+                result = expression;
+            }
+            else
+            {
+                // Check if we can use the as operator for casting or if we must use the convert method
+                if (targetType.IsValueType && !IsNullableType(targetType))
+                {
+                    result = Expression.Convert(expression, targetType);
+                }
+                else
+                {
+                    result = Expression.TypeAs(expression, targetType);
+                }
+            }
+
+            return result;
+        }
+
+
+        #region Called by reflection - Don't delete.
+
+        /// <summary>
+        /// Stores the method info for the method that performs the assignment of the field value.
+        /// Note: There is no assign expression in .NET 3.0/3.5. With .NET 4.0 this method becomes obsolete.
+        /// </summary>
+        private static readonly MethodInfo setFieldMethod =
+            typeof(KlyteUtils).GetMethod("SetField",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        /// <summary>
+        /// A strong type method that assigns the given value to the field that is represented by the given field reference.
+        /// Note: .NET 4.0 provides an assignment expression. This method is just required for .NET 3.0/3.5.
+        /// </summary>
+        /// <typeparam name="TValue">The type of the field.</typeparam>
+        /// <param name="field">A reference to the field.</param>
+        /// <param name="newValue">The new value that should be assigned to the field.</param>
+        private static void SetField<TValue>(ref TValue field, TValue newValue)
+        {
+            field = newValue;
+        }
+
+        #endregion Called by reflection - Don't delete.
+
+        #endregion Field Access
+
+        /// <summary>
+        /// Determines whether the given type is a nullable type.
+        /// </summary>
+        /// <param name="type">The type to check.</param>
+        /// <returns>true if the given type is a nullable type, otherwise false.</returns>
+        public static bool IsNullableType(Type type)
+        {
+            if (type == null) throw new ArgumentNullException("type");
+
+            bool result = false;
+            if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+            {
+                result = true;
+            }
+
+            return result;
+        }
+
         public static bool HasField(object o, string fieldName)
         {
             var fields = o.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

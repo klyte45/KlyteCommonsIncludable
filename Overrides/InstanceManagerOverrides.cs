@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Klyte.Commons.Overrides
 {
-    public class BuildingManagerOverrides : Redirector<BuildingManagerOverrides>
+    public class InstanceManagerOverrides : Redirector<InstanceManagerOverrides>
     {
 
 
@@ -14,12 +14,13 @@ namespace Klyte.Commons.Overrides
         public delegate void OnBuildingNameChanged(ushort buildingID);
         public static event OnBuildingNameChanged eventOnBuildingRenamed;
 
-        private static void OnBuildingRenamed(ushort building)
+        private static void OnInstanceRenamed(ref InstanceID id)
         {
-            new AsyncAction(() =>
+            if (id.Building > 0)
             {
-                eventOnBuildingRenamed?.Invoke(building);
-            }).Execute();
+                CallBuildRenamedEvent(id.Building);
+            }
+
         }
         #endregion
 
@@ -27,11 +28,11 @@ namespace Klyte.Commons.Overrides
 
         public override void AwakeBody()
         {
-            KlyteUtils.doLog("Loading Building Manager Overrides");
+            KlyteUtils.doLog("Loading Instance Manager Overrides");
             #region Release Line Hooks
-            MethodInfo posRename = typeof(BuildingManagerOverrides).GetMethod("OnBuildingRenamed", allFlags);
+            MethodInfo posRename = typeof(InstanceManagerOverrides).GetMethod("OnInstanceRenamed", allFlags);
 
-            AddRedirect(typeof(BuildingManager).GetMethod("SetBuildingName", allFlags), null, posRename);
+            AddRedirect(typeof(InstanceManager).GetMethod("SetName", allFlags), null, posRename);
             #endregion
 
         }

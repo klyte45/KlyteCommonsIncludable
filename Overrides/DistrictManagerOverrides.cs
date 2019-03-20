@@ -12,28 +12,27 @@ namespace Klyte.Commons.Overrides
 
         #region Events
         public static event Action eventOnDistrictChanged;
+        private int m_cooldown;
 
         private static void OnDistrictChanged()
         {
-            new AsyncAction(() =>
-            {
-                DistrictManager.instance.StartCoroutine(RunEvent(eventOnDistrictChanged));
-            }).Execute();
+            instance.m_cooldown = 15;
         }
 
-        private static IEnumerator RunEvent(Action action)
+        private void Update()
         {
-            yield return null;
-            yield return null;
-            try
+            if (m_cooldown == 1)
             {
-                action?.Invoke();
+
+                eventOnDistrictChanged?.Invoke();
+
             }
-            catch (Exception e)
+            if (m_cooldown > 0)
             {
-                KlyteUtils.doErrorLog(e.Message + "\n" + e.StackTrace);
+                m_cooldown--;
             }
         }
+
         #endregion
 
 

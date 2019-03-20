@@ -25,6 +25,7 @@ namespace Klyte.Commons.Extensors
         public static readonly string kCheckBoxTemplate = "OptionsCheckBoxTemplate";
         public static readonly string kSliderTemplate = "OptionsSliderTemplate";
         public static readonly string kTextfieldTemplate = "OptionsTextfieldTemplate";
+        public static readonly string kGroupPropertyTemplate = "GroupPropertySet";
 
         public static readonly UIFont defaultFontCheckbox = ((UITemplateManager.GetAsGameObject(kCheckBoxTemplate)).GetComponent<UICheckBox>()).label.font;
 
@@ -286,18 +287,25 @@ namespace Klyte.Commons.Extensors
 
         public UIHelperExtension AddGroupExtended(string text)
         {
-            return (UIHelperExtension)AddGroup(text);
+            return AddGroupExtended(text, out UILabel label);
         }
 
         public UIHelperBase AddGroup(string text)
         {
+            return AddGroupExtended(text, out UILabel label);
+        }
+
+        public UIHelperExtension AddGroupExtended(string text, out UILabel label)
+        {
             if (!string.IsNullOrEmpty(text))
             {
                 UIPanel uIPanel = this.m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kGroupTemplate)) as UIPanel;
-                uIPanel.Find<UILabel>("Label").text = text;
+                label = uIPanel.Find<UILabel>("Label");
+                label.text = text;
                 return new UIHelperExtension(uIPanel.Find("Content"));
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create group with no name");
+            label = null;
             return null;
         }
 
@@ -362,6 +370,36 @@ namespace Klyte.Commons.Extensors
                 result[0].zOrder = 1;
                 result[1].zOrder = 2;
                 result[2].zOrder = 3;
+                return result;
+            }
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            return null;
+        }
+
+        public UITextField AddFloatField(string name, float defaultValue, Action<float> eventSubmittedCallback, bool acceptNegative = true)
+        {
+            if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
+            {
+                UITextField result;
+                UIPanel uIPanel = this.m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.Find<UILabel>("Label").text = name;
+                uIPanel.autoLayout = true;
+                uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
+                uIPanel.wrapLayout = false;
+                uIPanel.autoFitChildrenVertically = true;
+                result = uIPanel.Find<UITextField>("Text Field");
+                result.numericalOnly = true;
+                result.width = 60;
+                result.allowNegative = acceptNegative;
+                result.allowFloats = true;
+
+                void textSubmitAction(UIComponent c, string sel)
+                {
+                    float.TryParse(result.text, out float val);
+                    eventSubmittedCallback?.Invoke(val);
+                }
+                result.eventTextSubmitted += textSubmitAction;
+                result.text = defaultValue.ToString();
                 return result;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
@@ -440,6 +478,30 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
+        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback)
+        {
+            if (eventCallback != null && !string.IsNullOrEmpty(name))
+            {
+                UIPanel panel = m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+                panel.name = "DropDownColorSelector";
+                panel.Find<UILabel>("Label").text = name;
+                panel.autoLayoutDirection = LayoutDirection.Horizontal;
+                panel.wrapLayout = false;
+                panel.autoFitChildrenVertically = true;
+                GameObject.Destroy(panel.Find<UIDropDown>("Dropdown").gameObject);
+                var colorField = KlyteUtils.CreateColorField(panel);
+
+                colorField.eventSelectedColorReleased += (cp, value) =>
+                {
+                    eventCallback(value);
+                };
+
+                return colorField;
+            }
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name or no event");
+            return null;
+        }
+
         public NumberedColorList AddNumberedColorList(string name, List<Color32> defaultValues, OnButtonSelect<int> eventCallback, UIComponent addButtonContainer, OnButtonClicked eventAdd)
         {
             if (eventCallback != null)
@@ -501,7 +563,118 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
+        #region Property Group
+        private void OnGroupClicked(UIComponent comp, UIMouseEventParameter p)
+        {
+            UILabel uibutton = p.source as UILabel;
+            if (uibutton != null && !string.IsNullOrEmpty(uibutton.stringUserData))
+            {
+                if (this.m_GroupStates.TryGetValue(uibutton.stringUserData, out DecorationPropertiesPanel.GroupInfo groupInfo))
+                {
+                    uibutton.backgroundSprite = ((!groupInfo.m_Folded) ? "PropertyGroupClosed" : "PropertyGroupOpen");
+                    groupInfo.m_Folded = !groupInfo.m_Folded;
+                    RecalculateHeight(groupInfo);
+                    this.m_GroupStates[uibutton.stringUserData] = groupInfo;
+                }
+            }
+        }
+
+        public void RecalculateHeight(UIComponent toggleComponent)
+        {
+            if (this.m_GroupStates.TryGetValue(toggleComponent.stringUserData, out DecorationPropertiesPanel.GroupInfo groupInfo))
+            {
+                RecalculateHeight(groupInfo);
+            }
+        }
+
+        private void RecalculateHeight(DecorationPropertiesPanel.GroupInfo groupInfo)
+        {
+            if (!groupInfo.m_Folded)
+            {
+                UIPanel propertyContainer = groupInfo.m_PropertyContainer;
+                propertyContainer.Show();
+                float endValue = this.CalculateHeight(propertyContainer);
+                ValueAnimator.Animate("PropGroupProp general", delegate (float val)
+                {
+                    Vector2 size = groupInfo.m_Container.size;
+                    size.y = val;
+                    groupInfo.m_Container.size = size;
+                }, new AnimatedFloat(m_DefaultGroupHeight, endValue, 0.2f));
+            }
+            else
+            {
+                UIPanel container = groupInfo.m_PropertyContainer;
+                float startValue = this.CalculateHeight(container);
+                ValueAnimator.Animate("PropGroupProp general", delegate (float val)
+                {
+                    Vector2 size = groupInfo.m_Container.size;
+                    size.y = val;
+                    groupInfo.m_Container.size = size;
+                }, new AnimatedFloat(startValue, m_DefaultGroupHeight, 0.2f), delegate ()
+                {
+                    container.Hide();
+                });
+            }
+        }
+
+
+        // Token: 0x0600125B RID: 4699 RVA: 0x000FA85C File Offset: 0x000F8C5C
+        private float CalculatePropertiesHeight(UIPanel comp)
+        {
+            float num = 0f;
+            for (int i = 0; i < comp.childCount; i++)
+            {
+                num += comp.components[i].size.y + (float)comp.autoLayoutPadding.vertical;
+            }
+            return num;
+        }
+
+        // Token: 0x0600125C RID: 4700 RVA: 0x000FA8B0 File Offset: 0x000F8CB0
+        private float CalculateHeight(UIPanel container)
+        {
+            float num = 0f;
+            num += this.m_DefaultGroupHeight;
+            num += container.padding.top + container.padding.bottom;
+            return num + this.CalculatePropertiesHeight(container);
+        }
+
+        public UIHelperExtension AddTogglableGroup(string title)
+        {
+            return AddTogglableGroup(title, out UILabel toggleLabel);
+        }
+
+        public UIHelperExtension AddTogglableGroup(string title, out UILabel toggleLabel)
+        {
+            if (m_GroupStates == null) m_GroupStates = new Dictionary<string, DecorationPropertiesPanel.GroupInfo>();
+            var newGroup = AddGroupExtended(title, out toggleLabel);
+            toggleLabel.text = title;
+            toggleLabel.stringUserData = title;
+            toggleLabel.eventClick += new MouseEventHandler(OnGroupClicked);
+            toggleLabel.backgroundSprite = "PropertyGroupClosed";
+            var uipanel = (UIPanel)newGroup.self;
+            uipanel.Hide();
+            uipanel.autoFitChildrenVertically = false;
+            uipanel.clipChildren = true;
+            uipanel.autoFitChildrenHorizontally = true;
+            uipanel.backgroundSprite = "OptionsDropboxListboxHovered";
+            uipanel.minimumSize = new Vector2(self.width, 0);
+            uipanel.maximumSize = uipanel.minimumSize;
+            uipanel.padding = new RectOffset(10, 10, 10, 10);
+            uipanel.size = new Vector2(newGroup.self.size.x, 0f);
+
+            m_GroupStates.Add(title, new DecorationPropertiesPanel.GroupInfo
+            {
+                m_Folded = true,
+                m_Container = newGroup.self,
+                m_PropertyContainer = uipanel
+            });
+            return newGroup;
+        }
+        private Dictionary<string, DecorationPropertiesPanel.GroupInfo> m_GroupStates = null;
+        private float m_DefaultGroupHeight = 0;
+        #endregion
     }
+
 
     public delegate void OnColorChanged(Color val);
 

@@ -63,7 +63,7 @@ namespace Klyte.Commons.Overrides
         public override void AwakeBody()
         {
             KlyteUtils.doLog("Loading Net Manager Overrides");
-            #region Release Line Hooks
+            #region Net Manager Hooks
             MethodInfo OnNodeChanged = GetType().GetMethod("OnNodeChanged", allFlags);
             MethodInfo OnSegmentCreated = GetType().GetMethod("OnSegmentCreated", allFlags);
             MethodInfo OnSegmentReleased = GetType().GetMethod("OnSegmentReleased", allFlags);
