@@ -657,7 +657,7 @@ namespace Klyte.Commons.Extensors
             uipanel.clipChildren = true;
             uipanel.autoFitChildrenHorizontally = true;
             uipanel.backgroundSprite = "OptionsDropboxListboxHovered";
-            uipanel.minimumSize = new Vector2(self.width, 0);
+            uipanel.minimumSize = new Vector2(self.width - 20, 0);
             uipanel.maximumSize = uipanel.minimumSize;
             uipanel.padding = new RectOffset(10, 10, 10, 10);
             uipanel.size = new Vector2(newGroup.self.size.x, 0f);

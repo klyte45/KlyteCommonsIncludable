@@ -14,6 +14,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -310,7 +312,7 @@ namespace Klyte.Commons.Utils
             createUIElement(out UIPanel trackballPanel, parent?.transform);
             trackballPanel.height = 10f;
             trackballPanel.width = scrollablePanel.width;
-            trackballPanel.autoLayoutDirection = LayoutDirection.Vertical;
+            trackballPanel.autoLayoutDirection = LayoutDirection.Horizontal;
             trackballPanel.autoLayoutStart = LayoutStart.TopLeft;
             trackballPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
             trackballPanel.autoLayout = true;
@@ -342,10 +344,10 @@ namespace Klyte.Commons.Utils
             scrollFg.width = scrollFg.parent.width - 4f;
             scrollFg.spriteName = "ScrollbarThumb";
             scrollbar.thumbObject = scrollFg;
-            scrollablePanel.verticalScrollbar = scrollbar;
+            scrollablePanel.horizontalScrollbar = scrollbar;
             scrollablePanel.eventMouseWheel += delegate (UIComponent component, UIMouseEventParameter param)
             {
-                ((UIScrollablePanel)component).scrollPosition += new Vector2(0f, Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).verticalScrollbar.incrementAmount);
+                ((UIScrollablePanel)component).scrollPosition += new Vector2(Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).horizontalScrollbar.incrementAmount, 0);
             };
 
             return new UIHelperExtension(scrollablePanel);
@@ -1383,6 +1385,60 @@ namespace Klyte.Commons.Utils
             Type targetType = instances.First();
             return targetType;
         }
+        #endregion
+
+        #region XML Utils
+
+        public static T DefaultXmlDeserialize<T>(string s)
+        {
+            XmlSerializer xmlser = new XmlSerializer(typeof(T));
+            try
+            {
+                using (TextReader tr = new StringReader(s))
+                {
+                    using (XmlReader reader = XmlReader.Create(tr))
+                    {
+                        if (xmlser.CanDeserialize(reader))
+                        {
+                            var val = (T)xmlser.Deserialize(reader);
+                            return val;
+                        }
+                        else
+                        {
+                            doErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}");
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                doErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.Message}\n{e.StackTrace}");
+            }
+            return default(T);
+        }
+
+        public static string DefaultXmlSerialize<T>(T targetObj, bool indent = true)
+        {
+            XmlSerializer xmlser = new XmlSerializer(typeof(T));
+            XmlWriterSettings settings = new XmlWriterSettings { Indent = indent };
+            using (StringWriter textWriter = new StringWriter())
+            {
+                using (XmlWriter xw = XmlWriter.Create(textWriter, settings))
+                {
+                    XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+                    ns.Add("", "");
+                    xmlser.Serialize(xw, targetObj, ns);
+                    return textWriter.ToString();
+                }
+            }
+        }
+
+        public class ListWrapper<T>
+        {
+            [XmlElement("item")]
+            public List<T> listVal = new List<T>();
+        }
+
         #endregion
 
         public static void doLocaleDump()
