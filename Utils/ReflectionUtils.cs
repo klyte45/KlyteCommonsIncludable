@@ -384,7 +384,12 @@ namespace Klyte.Commons.Utils
         #region Extract Method
         public static Delegate GetMethodDelegate(string propertyName, Type targetType, Type actionType)
         {
-            return Delegate.CreateDelegate(actionType, null, targetType.GetMethod(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static));
+            return GetMethodDelegate(targetType.GetMethod(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static), actionType);
+        }
+
+        public static Delegate GetMethodDelegate(MethodInfo method, Type actionType)
+        {
+            return Delegate.CreateDelegate(actionType, null, method);
         }
 
         #endregion

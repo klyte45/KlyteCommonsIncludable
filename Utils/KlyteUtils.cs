@@ -1928,6 +1928,7 @@ namespace Klyte.Commons.Utils
         #endregion
 
         #region Log Utils
+
         internal static void doLog(string format, params object[] args)
         {
             try
@@ -2253,7 +2254,11 @@ namespace Klyte.Commons.Utils
         {
             return IsSameName(segment1, segment2, strict, strict);
         }
-        public static bool IsSameName(ushort segment1, ushort segment2, bool requireSameDirection, bool requireSameSizeAndType)
+        public static bool IsSameName(ushort segment1, ushort segment2, bool requireSameDirection, bool requireSameSizeAndHighway)
+        {
+            return IsSameName(segment1, segment2, requireSameDirection, requireSameSizeAndHighway, requireSameSizeAndHighway);
+        }
+        public static bool IsSameName(ushort segment1, ushort segment2, bool requireSameDirection, bool requireSameSize, bool requireSameHigwayFlag, bool requireSameDistrict = false, bool requireSameAI = false)
         {
             NetManager nm = NetManager.instance;
             NetInfo info = nm.m_segments.m_buffer[(int)segment1].Info;
@@ -2266,7 +2271,7 @@ namespace Klyte.Commons.Utils
             {
                 return false;
             }
-            if (requireSameSizeAndType)
+            if (requireSameDirection)
             {
                 var seg1 = nm.m_segments.m_buffer[(int)segment1];
                 var seg2 = nm.m_segments.m_buffer[(int)segment2];
@@ -2280,14 +2285,33 @@ namespace Klyte.Commons.Utils
                 }
             }
 
-            if (requireSameDirection)
+            if (requireSameSize)
             {
                 if (!((info.m_forwardVehicleLaneCount == info2.m_backwardVehicleLaneCount && info2.m_forwardVehicleLaneCount == info.m_backwardVehicleLaneCount)
                     || (info2.m_forwardVehicleLaneCount == info.m_forwardVehicleLaneCount && info2.m_backwardVehicleLaneCount == info.m_backwardVehicleLaneCount)))
                 {
                     return false;
                 }
+            }
+            if (requireSameAI)
+            {
+                if (info.GetAI().GetType() != info2.GetAI().GetType())
+                {
+                    return false;
+                }
+            }
+            else if (requireSameHigwayFlag)
+            {
                 if ((info.GetAI() as RoadBaseAI)?.m_highwayRules != (info2.GetAI() as RoadBaseAI)?.m_highwayRules)
+                {
+                    return false;
+                }
+            }
+            if (requireSameDistrict)
+            {
+                var pos1 = nm.m_segments.m_buffer[(int)segment1].m_middlePosition;
+                var pos2 = nm.m_segments.m_buffer[(int)segment2].m_middlePosition;
+                if (DistrictManager.instance.GetDistrict(pos1) != DistrictManager.instance.GetDistrict(pos2))
                 {
                     return false;
                 }

@@ -73,6 +73,10 @@ namespace Klyte.Commons.Interfaces
 
         public void OnLevelUnloading()
         {
+            if (typeof(U).Assembly.GetName().Version.Revision != 9999)
+            {
+                Application.Quit();
+            }
             var typeTarg = typeof(Redirector<>);
             var instances = KlyteUtils.GetSubtypesRecursive(typeTarg, typeof(U));
             doLog($"{SimpleName} Redirectors: {instances.Count()}");

@@ -71,6 +71,7 @@ namespace Klyte.Commons.i18n
         }
         private void loadLocaleIntern(string localeId, bool setLocale, string prefix, string packagePrefix)
         {
+            KlyteUtils.doLog($"{GetType()} localeId: {localeId}");
             string load = Singleton<R>.instance.loadResourceString("UI.i18n." + localeId + ".properties");
             if (load == null)
             {
@@ -81,7 +82,7 @@ namespace Klyte.Commons.i18n
             Locale.Key k;
 
 
-            foreach (var myString in load.Split(new string[] { lineSeparator }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var myString in load.Split(lineSeparator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
             {
                 if (myString.StartsWith(commentChar)) continue;
                 if (!myString.Contains(kvSeparator)) continue;

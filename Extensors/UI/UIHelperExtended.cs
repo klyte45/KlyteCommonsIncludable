@@ -287,25 +287,26 @@ namespace Klyte.Commons.Extensors
 
         public UIHelperExtension AddGroupExtended(string text)
         {
-            return AddGroupExtended(text, out UILabel label);
+            return AddGroupExtended(text, out UILabel label, out UIPanel parentPanel);
         }
 
         public UIHelperBase AddGroup(string text)
         {
-            return AddGroupExtended(text, out UILabel label);
+            return AddGroupExtended(text, out UILabel label, out UIPanel parentPanel);
         }
 
-        public UIHelperExtension AddGroupExtended(string text, out UILabel label)
+        public UIHelperExtension AddGroupExtended(string text, out UILabel label, out UIPanel parentPanel)
         {
             if (!string.IsNullOrEmpty(text))
             {
-                UIPanel uIPanel = this.m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kGroupTemplate)) as UIPanel;
-                label = uIPanel.Find<UILabel>("Label");
+                parentPanel = this.m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kGroupTemplate)) as UIPanel;
+                label = parentPanel.Find<UILabel>("Label");
                 label.text = text;
-                return new UIHelperExtension(uIPanel.Find("Content"));
+                return new UIHelperExtension(parentPanel.Find("Content"));
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create group with no name");
             label = null;
+            parentPanel = null;
             return null;
         }
 
@@ -480,11 +481,17 @@ namespace Klyte.Commons.Extensors
 
         public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback)
         {
+            return AddColorPicker(name, defaultValue, eventCallback, out UILabel title);
+        }
+
+        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback, out UILabel title)
+        {
             if (eventCallback != null && !string.IsNullOrEmpty(name))
             {
                 UIPanel panel = m_Root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
                 panel.name = "DropDownColorSelector";
-                panel.Find<UILabel>("Label").text = name;
+                title = panel.Find<UILabel>("Label");
+                title.text = name;
                 panel.autoLayoutDirection = LayoutDirection.Horizontal;
                 panel.wrapLayout = false;
                 panel.autoFitChildrenVertically = true;
@@ -499,6 +506,7 @@ namespace Klyte.Commons.Extensors
                 return colorField;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name or no event");
+            title = null;
             return null;
         }
 
@@ -571,7 +579,7 @@ namespace Klyte.Commons.Extensors
             {
                 if (this.m_GroupStates.TryGetValue(uibutton.stringUserData, out DecorationPropertiesPanel.GroupInfo groupInfo))
                 {
-                    uibutton.backgroundSprite = ((!groupInfo.m_Folded) ? "PropertyGroupClosed" : "PropertyGroupOpen");
+                    uibutton.backgroundSprite = ((!groupInfo.m_Folded) ? "OptionsDropbox" : "OptionsDropboxFocused");
                     groupInfo.m_Folded = !groupInfo.m_Folded;
                     RecalculateHeight(groupInfo);
                     this.m_GroupStates[uibutton.stringUserData] = groupInfo;
@@ -646,11 +654,12 @@ namespace Klyte.Commons.Extensors
         public UIHelperExtension AddTogglableGroup(string title, out UILabel toggleLabel)
         {
             if (m_GroupStates == null) m_GroupStates = new Dictionary<string, DecorationPropertiesPanel.GroupInfo>();
-            var newGroup = AddGroupExtended(title, out toggleLabel);
+            var newGroup = AddGroupExtended(title, out toggleLabel, out UIPanel parentPanel);
             toggleLabel.text = title;
             toggleLabel.stringUserData = title;
             toggleLabel.eventClick += new MouseEventHandler(OnGroupClicked);
-            toggleLabel.backgroundSprite = "PropertyGroupClosed";
+            toggleLabel.backgroundSprite = "OptionsDropbox";
+            toggleLabel.padding = new RectOffset(10, 10, 10, 10);
             var uipanel = (UIPanel)newGroup.self;
             uipanel.Hide();
             uipanel.autoFitChildrenVertically = false;
@@ -661,6 +670,10 @@ namespace Klyte.Commons.Extensors
             uipanel.maximumSize = uipanel.minimumSize;
             uipanel.padding = new RectOffset(10, 10, 10, 10);
             uipanel.size = new Vector2(newGroup.self.size.x, 0f);
+
+            KlyteUtils.LimitWidth(toggleLabel, uipanel.width, true);
+
+            parentPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
 
             m_GroupStates.Add(title, new DecorationPropertiesPanel.GroupInfo
             {

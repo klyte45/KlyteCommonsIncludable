@@ -14,7 +14,7 @@ namespace Klyte.Commons.Overrides
         public static event Action eventOnDistrictChanged;
         private int m_cooldown;
 
-        private static void OnDistrictChanged()
+        public static void OnDistrictChanged()
         {
             instance.m_cooldown = 15;
         }

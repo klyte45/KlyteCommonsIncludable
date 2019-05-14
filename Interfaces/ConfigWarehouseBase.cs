@@ -36,9 +36,9 @@ namespace Klyte.Commons.Interfaces
 
 
         public static bool getCurrentConfigBool(T i) => instance.currentLoadedCityConfig.getBool(i);
-        public static void setCurrentConfigBool(T i, bool value) => instance.currentLoadedCityConfig.setBool(i, value);
+        public static void setCurrentConfigBool(T i, bool? value) => instance.currentLoadedCityConfig.setBool(i, value);
         public static int getCurrentConfigInt(T i) => instance.currentLoadedCityConfig.getInt(i);
-        public static void setCurrentConfigInt(T i, int value) => instance.currentLoadedCityConfig.setInt(i, value);
+        public static void setCurrentConfigInt(T i, int? value) => instance.currentLoadedCityConfig.setInt(i, value);
         public static string getCurrentConfigString(T i) => instance.currentLoadedCityConfig.getString(i);
         public static void setCurrentConfigString(T i, string value) => instance.currentLoadedCityConfig.setString(i, value);
         public static List<int> getCurrentConfigListInt(T i) => instance.currentLoadedCityConfig.getListInt(i);
@@ -125,8 +125,8 @@ namespace Klyte.Commons.Interfaces
         public bool getBool(T i) => getFromFileBool(i);
         public int getInt(T i) => getFromFileInt(i);
         public void setString(T i, string value) => setToFile(i, value);
-        public void setBool(T idx, bool newVal) => setToFile(idx, newVal);
-        public void setInt(T idx, int value) => setToFile(idx, value);
+        public void setBool(T idx, bool? newVal) => setToFile(idx, newVal);
+        public void setInt(T idx, int? value) => setToFile(idx, value);
 
         #region List Edition
         public List<int> getListInt(T i)
@@ -156,27 +156,64 @@ namespace Klyte.Commons.Interfaces
         }
         #endregion
 
+
+        private Dictionary<T, SavedString> cachedStringSaved = new Dictionary<T, SavedString>();
+        private Dictionary<T, SavedInt> cachedIntSaved = new Dictionary<T, SavedInt>();
+        private Dictionary<T, SavedBool> cachedBoolSaved = new Dictionary<T, SavedBool>();
+
+
         protected string serializeList<K>(List<K> l) => string.Join(LIST_SEPARATOR, l.Select(x => x.ToString()).ToArray());
-        protected string getFromFileString(T i) => new SavedString(i.ToString(), thisFileName, getDefaultStringValueForProperty(i), false).value;
-        protected int getFromFileInt(T i) => new SavedInt(i.ToString(), thisFileName, getDefaultIntValueForProperty(i), false).value;
-        protected bool getFromFileBool(T i) => new SavedBool(i.ToString(), thisFileName, getDefaultBoolValueForProperty(i), false).value;
+
+        private SavedString GetSavedString(T i)
+        {
+            if (!cachedStringSaved.ContainsKey(i))
+            {
+                cachedStringSaved[i] = new SavedString(i.ToString(), thisFileName, getDefaultStringValueForProperty(i), true);
+            }
+            return cachedStringSaved[i];
+        }
+        private SavedBool GetSavedBool(T i)
+        {
+            if (!cachedBoolSaved.ContainsKey(i))
+            {
+                cachedBoolSaved[i] = new SavedBool(i.ToString(), thisFileName, getDefaultBoolValueForProperty(i), true);
+            }
+            return cachedBoolSaved[i];
+        }
+        private SavedInt GetSavedInt(T i)
+        {
+            if (!cachedIntSaved.ContainsKey(i))
+            {
+                cachedIntSaved[i] = new SavedInt(i.ToString(), thisFileName, getDefaultIntValueForProperty(i), true);
+            }
+            return cachedIntSaved[i];
+        }
+
+        protected string getFromFileString(T i) => GetSavedString(i).value;
+        protected int getFromFileInt(T i) => GetSavedInt(i).value;
+        protected bool getFromFileBool(T i) => GetSavedBool(i).value;
+
         protected void setToFile(T i, string value)
         {
-            var data = new SavedString(i.ToString(), thisFileName, value, true);
+            var data = GetSavedString(i);
             if (value == null) data.Delete();
             else data.value = value;
 
             eventOnPropertyChanged?.Invoke(i, null, null, value);
         }
-        protected void setToFile(T i, bool value)
+        protected void setToFile(T i, bool? value)
         {
-            new SavedBool(i.ToString(), thisFileName, value, true).value = value;
+            var data = GetSavedBool(i);
+            if (value == null) data.Delete();
+            else data.value = value.Value;
             eventOnPropertyChanged?.Invoke(i, value, null, null);
         }
 
-        protected void setToFile(T i, int value)
+        protected void setToFile(T i, int? value)
         {
-            new SavedInt(i.ToString(), thisFileName, value, true).value = value;
+            var data = GetSavedInt(i);
+            if (value == null) data.Delete();
+            else data.value = value.Value;
             eventOnPropertyChanged?.Invoke(i, null, value, null);
         }
 
