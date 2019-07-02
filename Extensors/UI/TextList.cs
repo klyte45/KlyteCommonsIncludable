@@ -13,24 +13,24 @@ namespace Klyte.Commons.Extensors
 {
     public class TextList<T>
     {
-        private UIScrollablePanel linesListPanel;
-        private UIComponent m_parent;
+        private readonly UIScrollablePanel m_linesListPanel;
+        private readonly UIComponent m_parent;
         private Dictionary<T, string> m_itemsList;
-        private T _selectedItem;
+        private T m_selectedItem;
         public string name;
-        public T selectedItem
+        public T SelectedItem
         {
             get {
-                return _selectedItem;
+                return m_selectedItem;
             }
             internal set {
-                _selectedItem = value;
-                refreshSelection();
+                m_selectedItem = value;
+                RefreshSelection();
             }
         }
 
 
-        public Dictionary<T, string> itemsList
+        public Dictionary<T, string> ItemsList
         {
             get {
                 return m_itemsList;
@@ -41,49 +41,49 @@ namespace Klyte.Commons.Extensors
                     value = new Dictionary<T, string>();
                 }
                 m_itemsList = value;
-                selectedItem = default(T);
-                redrawButtons();
+                SelectedItem = default;
+                RedrawButtons();
             }
         }
 
-        public UIPanel root
+        public UIPanel Root
         {
             get {
-                return linesListPanel.transform.GetComponentInParent<UIPanel>();
+                return m_linesListPanel.transform.GetComponentInParent<UIPanel>();
             }
         }
 
         public void Enable()
         {
-            linesListPanel.enabled = true;
-            redrawButtons();
+            m_linesListPanel.enabled = true;
+            RedrawButtons();
         }
         public void Disable()
         {
-            foreach (Transform t in linesListPanel.transform)
+            foreach (Transform t in m_linesListPanel.transform)
             {
                 GameObject.Destroy(t.gameObject);
             }
-            linesListPanel.enabled = false;
+            m_linesListPanel.enabled = false;
         }
 
-        public KeyValuePair<T, string> popSelected()
+        public KeyValuePair<T, string> PopSelected()
         {
-            KeyValuePair<T, string> saida = default(KeyValuePair<T, string>);
-            if (m_itemsList.ContainsKey(selectedItem))
+            KeyValuePair<T, string> saida = default;
+            if (m_itemsList.ContainsKey(SelectedItem))
             {
-                saida = m_itemsList.First(x => x.Key.Equals(selectedItem));
-                m_itemsList.Remove(selectedItem);
+                saida = m_itemsList.First(x => x.Key.Equals(SelectedItem));
+                m_itemsList.Remove(SelectedItem);
             }
-            selectedItem = default(T);
-            redrawButtons();
+            SelectedItem = default;
+            RedrawButtons();
             return saida;
         }
 
-        public void addItemToList(T id, string name)
+        public void AddItemToList(T id, string name)
         {
             m_itemsList[id] = name;
-            redrawButtons();
+            RedrawButtons();
         }
 
         public TextList(UIComponent parent, Dictionary<T, string> initiaItemList, int width, int height, string name)
@@ -111,37 +111,37 @@ namespace Klyte.Commons.Extensors
 
             GameObject scrollObj = new GameObject("Lines Listing Scroll", new Type[] { typeof(UIScrollablePanel) });
             //			DebugOutputPanel.AddMessage (PluginManager.MessageType.Message, "SCROLL LOADED");
-            linesListPanel = scrollObj.GetComponent<UIScrollablePanel>();
-            linesListPanel.autoLayout = false;
-            linesListPanel.width = width;
-            linesListPanel.height = height;
-            linesListPanel.useTouchMouseScroll = true;
-            linesListPanel.scrollWheelAmount = 20;
-            linesListPanel.eventMouseWheel += (UIComponent component, UIMouseEventParameter eventParam) =>
+            m_linesListPanel = scrollObj.GetComponent<UIScrollablePanel>();
+            m_linesListPanel.autoLayout = false;
+            m_linesListPanel.width = width;
+            m_linesListPanel.height = height;
+            m_linesListPanel.useTouchMouseScroll = true;
+            m_linesListPanel.scrollWheelAmount = 20;
+            m_linesListPanel.eventMouseWheel += (UIComponent component, UIMouseEventParameter eventParam) =>
             {
-                linesListPanel.scrollPosition -= new Vector2(0, eventParam.wheelDelta * linesListPanel.scrollWheelAmount);
+                m_linesListPanel.scrollPosition -= new Vector2(0, eventParam.wheelDelta * m_linesListPanel.scrollWheelAmount);
             };
-            panelListing.AttachUIComponent(linesListPanel.gameObject);
-            linesListPanel.autoLayout = true;
-            linesListPanel.autoLayoutDirection = LayoutDirection.Vertical;
+            panelListing.AttachUIComponent(m_linesListPanel.gameObject);
+            m_linesListPanel.autoLayout = true;
+            m_linesListPanel.autoLayoutDirection = LayoutDirection.Vertical;
 
-            linesListPanel.useTouchMouseScroll = true;
-            linesListPanel.scrollWheelAmount = 20;
-            linesListPanel.eventMouseWheel += (UIComponent component, UIMouseEventParameter eventParam) =>
+            m_linesListPanel.useTouchMouseScroll = true;
+            m_linesListPanel.scrollWheelAmount = 20;
+            m_linesListPanel.eventMouseWheel += (UIComponent component, UIMouseEventParameter eventParam) =>
             {
-                linesListPanel.scrollPosition -= new Vector2(0, eventParam.wheelDelta * linesListPanel.scrollWheelAmount);
+                m_linesListPanel.scrollPosition -= new Vector2(0, eventParam.wheelDelta * m_linesListPanel.scrollWheelAmount);
                 eventParam.Use();
             };
 
-            foreach (Transform t in linesListPanel.transform)
+            foreach (Transform t in m_linesListPanel.transform)
             {
                 GameObject.Destroy(t.gameObject);
             }
 
-            itemsList = initiaItemList;
+            ItemsList = initiaItemList;
         }
 
-        private static void initButton(UIButton button, string baseSprite)
+        private static void InitButton(UIButton button, string baseSprite)
         {
             string sprite = baseSprite;//"ButtonMenu";
             string spriteHov = baseSprite;
@@ -157,12 +157,12 @@ namespace Klyte.Commons.Extensors
 
         public void Redraw()
         {
-            redrawButtons();
+            RedrawButtons();
         }
 
-        private void redrawButtons()
+        private void RedrawButtons()
         {
-            foreach (Transform t in linesListPanel.transform)
+            foreach (Transform t in m_linesListPanel.transform)
             {
                 GameObject.Destroy(t.gameObject);
             }
@@ -170,13 +170,13 @@ namespace Klyte.Commons.Extensors
             {
                 GameObject itemContainer = new GameObject();
 
-                itemContainer.transform.parent = linesListPanel.transform;
+                itemContainer.transform.parent = m_linesListPanel.transform;
                 UIButtonWithId itemButton = itemContainer.AddComponent<UIButtonWithId>();
 
-                itemButton.width = linesListPanel.width;
+                itemButton.width = m_linesListPanel.width;
                 itemButton.height = 35;
 
-                initButton(itemButton, "EmptySprite");
+                InitButton(itemButton, "EmptySprite");
                 itemButton.hoveredColor = Color.gray;
                 itemButton.pressedColor = Color.black;
                 itemButton.focusedColor = Color.black;
@@ -190,8 +190,8 @@ namespace Klyte.Commons.Extensors
                 itemButton.id = entry.Key;
                 itemButton.eventClick += (component, eventParam) =>
                 {
-                    selectedItem = (T)itemButton.id;
-                    EventOnSelect(selectedItem);
+                    SelectedItem = (T)itemButton.id;
+                    EventOnSelect(SelectedItem);
                     eventParam.Use();
                 };
                 itemButton.text = entry.Value;
@@ -200,12 +200,12 @@ namespace Klyte.Commons.Extensors
             }
         }
 
-        private void refreshSelection()
+        private void RefreshSelection()
         {
-            foreach (Transform t in linesListPanel.transform)
+            foreach (Transform t in m_linesListPanel.transform)
             {
                 var b = t.GetComponent<UIButtonWithId>();
-                if (b.id.Equals(selectedItem))
+                if (b.id.Equals(SelectedItem))
                 {
                     b.color = new Color(255, 255, 255, 1f);
                     b.textColor = Color.black;
@@ -228,15 +228,15 @@ namespace Klyte.Commons.Extensors
         }
 
 
-        public void unselect()
+        public void Unselect()
         {
-            selectedItem = default(T);
+            SelectedItem = default;
         }
 
-        public bool unselected
+        public bool Unselected
         {
             get {
-                return selectedItem == null || selectedItem.Equals(default(T));
+                return SelectedItem == null || SelectedItem.Equals(default(T));
             }
         }
 

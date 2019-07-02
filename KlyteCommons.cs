@@ -5,7 +5,6 @@ using ICities;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
 using Klyte.Commons.Interfaces;
-using Klyte.Commons.Overrides;
 using Klyte.Commons.TextureAtlas;
 using Klyte.Commons.UI;
 using Klyte.Commons.Utils;
@@ -14,7 +13,6 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-[assembly: AssemblyVersion("1.1.6.*")]
 namespace Klyte.Commons
 {
     public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCLocaleUtils, KCResourceLoader, MonoBehaviour, KCCommonTextureAtlas, UICustomControl>
@@ -22,14 +20,14 @@ namespace Klyte.Commons
         public override string SimpleName => "Klyte Commons";
         public override string Description => "Base mod for Klyte45 mods. Required dependency";
 
-        public override void doErrorLog(string fmt, params object[] args)
+        public override void DoErrorLog(string fmt, params object[] args)
         {
-            KlyteUtils.doErrorLog(fmt, args);
+            LogUtils.DoErrorLog(fmt, args);
         }
 
-        public override void doLog(string fmt, params object[] args)
+        public override void DoLog(string fmt, params object[] args)
         {
-            KlyteUtils.doLog(fmt, args);
+            LogUtils.DoLog(fmt, args);
         }
 
         public override void LoadSettings()
@@ -45,38 +43,38 @@ namespace Klyte.Commons
 
         public override void TopSettingsUI(UIHelperExtension ext)
         {
-            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(autoLoadLocale);
+            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(AutoLoadLocale);
         }
 
         public override void Group9SettingsUI(UIHelperExtension group9)
         {
-            group9.AddDropdownLocalized("KCM_MOD_LANG", KCLocaleUtils.instance.getLanguageIndex(), KCLocaleUtils.currentLanguageId.value, delegate (int idx)
+            group9.AddDropdownLocalized("KCM_MOD_LANG", KCLocaleUtils.instance.GetLanguageIndex(), KCLocaleUtils.CurrentLanguageId.value, delegate (int idx)
             {
-                KCLocaleUtils.currentLanguageId.value = idx;
+                KCLocaleUtils.CurrentLanguageId.value = idx;
                 LocaleManager.ForceReload();
             });
             group9.AddLabel(Locale.Get("KCM_LANG_NOTICE"));
         }
 
-        public void autoLoadLocale()
+        public void AutoLoadLocale()
         {
-            loadLocale(true);
+            LoadLocale(true);
         }
 
         private UIButton m_openKCPanelButton;
-        private UIPanel m_KCPanelContainer;
+        private UIPanel m_kCPanelContainer;
 
 
-        internal UIPanel kcPanelContainer
+        internal UIPanel KcPanelContainer
         {
             get {
-                if (m_KCPanelContainer == null)
+                if (m_kCPanelContainer == null)
                 {
                     UITabstrip toolStrip = ToolsModifierControl.mainToolbar.GetComponentInChildren<UITabstrip>();
-                    KlyteUtils.createUIElement(out m_openKCPanelButton, null);
+                    KlyteUiUtils.CreateUIElement(out m_openKCPanelButton, null);
                     m_openKCPanelButton.size = new Vector2(43f, 49f);
-                    m_openKCPanelButton.tooltip = "Klyte45's Mods (v" + KlyteCommonsMod.version + ")";
-                    m_openKCPanelButton.atlas = KCCommonTextureAtlas.instance.atlas;
+                    m_openKCPanelButton.tooltip = "Klyte45's Mods (v" + KlyteCommonsMod.Version + ")";
+                    m_openKCPanelButton.atlas = KCCommonTextureAtlas.instance.Atlas;
                     m_openKCPanelButton.focusedColor = new Color32(128, 183, 240, 255);
                     m_openKCPanelButton.hoveredColor = new Color32(128, 240, 183, 255);
                     m_openKCPanelButton.disabledColor = new Color32(0, 0, 0, 255);
@@ -93,31 +91,31 @@ namespace Klyte.Commons
                     m_openKCPanelButton.playAudioEvents = true;
                     m_openKCPanelButton.tabStrip = true;
 
-                    KlyteUtils.createUIElement(out m_KCPanelContainer, null);
+                    KlyteUiUtils.CreateUIElement(out m_kCPanelContainer, null);
 
-                    toolStrip.AddTab("Klyte45Button", m_openKCPanelButton.gameObject, m_KCPanelContainer.gameObject);
+                    toolStrip.AddTab("Klyte45Button", m_openKCPanelButton.gameObject, m_kCPanelContainer.gameObject);
 
-                    m_KCPanelContainer.absolutePosition = new Vector3();
-                    m_KCPanelContainer.clipChildren = false;
+                    m_kCPanelContainer.absolutePosition = new Vector3();
+                    m_kCPanelContainer.clipChildren = false;
                 }
 
-                return m_KCPanelContainer;
+                return m_kCPanelContainer;
             }
         }
 
 
         public static void OpenKCPanel()
         {
-            if (instance.m_openKCPanelButton.state != UIButton.ButtonState.Focused)
+            if (Instance.m_openKCPanelButton.state != UIButton.ButtonState.Focused)
             {
-                instance.m_openKCPanelButton.SimulateClick();
+                Instance.m_openKCPanelButton.SimulateClick();
             }
         }
         public static void CloseKCPanel()
         {
-            if (instance.m_openKCPanelButton.state == UIButton.ButtonState.Focused)
+            if (Instance.m_openKCPanelButton.state == UIButton.ButtonState.Focused)
             {
-                instance.m_openKCPanelButton.SimulateClick();
+                Instance.m_openKCPanelButton.SimulateClick();
             }
         }
     }

@@ -34,7 +34,7 @@ namespace Klyte.Commons.Utils
                     return (T)field.GetValue(o);
                 }
             }
-            return default(T);
+            return default;
 
         }
 
@@ -48,7 +48,7 @@ namespace Klyte.Commons.Utils
                     return (T)method.Invoke(o, paramList);
                 }
             }
-            return default(T);
+            return default;
 
         }
 
@@ -62,7 +62,7 @@ namespace Klyte.Commons.Utils
                     return (T)method.Invoke(null, paramList);
                 }
             }
-            return default(T);
+            return default;
 
         }
 
@@ -129,7 +129,7 @@ namespace Klyte.Commons.Utils
             }
             catch (Exception e)
             {
-                KlyteUtils.doErrorLog("ERROR REFLECTING METHOD: {0} ({1}) => {2}\r\n{3}\r\n{4}", o, methodName, args, e.Message, e.StackTrace);
+                LogUtils.DoErrorLog("ERROR REFLECTING METHOD: {0} ({1}) => {2}\r\n{3}\r\n{4}", o, methodName, args, e.Message, e.StackTrace);
                 return null;
             }
         }
@@ -142,7 +142,7 @@ namespace Klyte.Commons.Utils
             }
             catch (Exception e)
             {
-                KlyteUtils.doErrorLog("ERROR REFLECTING METHOD: {0} ({1}) => {2}\r\n{3}\r\n{4}", null, methodName, args, e.Message, e.StackTrace);
+                LogUtils.DoErrorLog("ERROR REFLECTING METHOD: {0} ({1}) => {2}\r\n{3}\r\n{4}", null, methodName, args, e.Message, e.StackTrace);
                 return null;
             }
         }
@@ -260,7 +260,7 @@ namespace Klyte.Commons.Utils
             Expression valueExpression = GetCastOrConvertExpression(valueParameter, fieldExpression.Type);
 
             // Get the generic method that assigns the field value.
-            var genericSetFieldMethodInfo = setFieldMethod.MakeGenericMethod(fieldExpression.Type);
+            var genericSetFieldMethodInfo = m_setFieldMethod.MakeGenericMethod(fieldExpression.Type);
 
             // get the set field expression 
             // e.g. source.SetField(ref (arg as MyClass).integerProperty, Convert(value)
@@ -307,7 +307,7 @@ namespace Klyte.Commons.Utils
             MemberExpression fieldExpression = Expression.Field(sourceExpression, fieldName);
 
             // Get the generic method that assigns the field value.
-            var genericSetFieldMethodInfo = setFieldMethod.MakeGenericMethod(fieldType);
+            var genericSetFieldMethodInfo = m_setFieldMethod.MakeGenericMethod(fieldType);
 
             // get the set field expression 
             // e.g. source.SetField(ref (arg as MyClass).integerProperty, Convert(value)
@@ -367,7 +367,7 @@ namespace Klyte.Commons.Utils
         /// Stores the method info for the method that performs the assignment of the field value.
         /// Note: There is no assign expression in .NET 3.0/3.5. With .NET 4.0 this method becomes obsolete.
         /// </summary>
-        private static readonly MethodInfo setFieldMethod = typeof(ReflectionUtils).GetMethod("SetField", BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo m_setFieldMethod = typeof(ReflectionUtils).GetMethod("SetField", BindingFlags.NonPublic | BindingFlags.Static);
 
         /// <summary>
         /// A strong type method that assigns the given value to the field that is represented by the given field reference.
@@ -376,7 +376,7 @@ namespace Klyte.Commons.Utils
         /// <typeparam name="TValue">The type of the field.</typeparam>
         /// <param name="field">A reference to the field.</param>
         /// <param name="newValue">The new value that should be assigned to the field.</param>
-        private static void SetField<TValue>(ref TValue field, TValue newValue) => field = newValue;
+        public static void SetField<TValue>(ref TValue field, TValue newValue) => field = newValue;
 
         #endregion Called by reflection - Don't delete.
 

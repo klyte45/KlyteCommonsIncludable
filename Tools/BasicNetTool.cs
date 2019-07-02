@@ -32,7 +32,6 @@ namespace Klyte.Commons
             InfoManager.InfoMode currentMode = Singleton<InfoManager>.instance.CurrentMode;
             InfoManager.SubInfoMode currentSubMode = Singleton<InfoManager>.instance.CurrentSubMode;
             this.m_prevRenderZones = Singleton<TerrainManager>.instance.RenderZones;
-            this.m_prevTool = this.m_toolController.CurrentTool;
             this.m_toolController.CurrentTool = this;
             Singleton<InfoManager>.instance.SetCurrentMode(currentMode, currentSubMode);
             Singleton<TerrainManager>.instance.RenderZones = false;
@@ -173,8 +172,7 @@ namespace Klyte.Commons
             output.m_disaster = 0;
             output.m_currentEditObject = false;
             Segment3 ray = new Segment3(origin, vector);
-
-            RayCastSegmentAndNode(input.m_buildObject as NetInfo, ray, input.m_netSnap, input.m_segmentNameOnly, input.m_netService.m_service, input.m_netService2.m_service, input.m_netService.m_subService, input.m_netService2.m_subService, input.m_netService.m_itemLayers, input.m_netService2.m_itemLayers, input.m_ignoreNodeFlags, input.m_ignoreSegmentFlags, out Vector3 vector2, out output.m_netNode, out output.m_netSegment);
+            RayCastSegmentAndNode(input.m_buildObject as NetInfo, ray, input.m_netSnap, input.m_segmentNameOnly, input.m_netService.m_service, input.m_netService2.m_service, input.m_netService.m_subService, input.m_netService2.m_subService, input.m_netService.m_itemLayers, input.m_netService2.m_itemLayers, input.m_ignoreNodeFlags, input.m_ignoreSegmentFlags, out _, out output.m_netNode, out output.m_netSegment);
 
             this.m_hoverSegment = output.m_netSegment;
 
@@ -184,16 +182,6 @@ namespace Klyte.Commons
 
             }
         }
-
-        private Vector3 RaycastMouseLocation(Ray mouseRay)
-        {
-            ToolBase.RayCast(new ToolBase.RaycastInput(mouseRay, Camera.main.farClipPlane)
-            {
-                m_ignoreTerrain = false
-            }, out RaycastOutput raycastOutput);
-            return raycastOutput.m_hitPos;
-        }
-
 
         private long ElapsedMilliseconds(long startTime)
         {
@@ -210,29 +198,29 @@ namespace Klyte.Commons
             return num / (Stopwatch.Frequency / 1000L);
         }
 
-        protected static NetSegment[] segmentBuffer => Singleton<NetManager>.instance.m_segments.m_buffer;
-        protected static NetNode[] nodeBuffer => Singleton<NetManager>.instance.m_nodes.m_buffer;
+        protected static NetSegment[] SegmentBuffer => Singleton<NetManager>.instance.m_segments.m_buffer;
+        protected static NetNode[] NodeBuffer => Singleton<NetManager>.instance.m_nodes.m_buffer;
 
-        public void RenderOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor, Color despawnColor, ushort netSegment)
+        public void RenderOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor,  ushort netSegment)
         {
             if (netSegment == 0)
             {
                 return;
             }
-            NetInfo info = segmentBuffer[(int)netSegment].Info;
-            ushort startNode = segmentBuffer[(int)netSegment].m_startNode;
-            ushort endNode = segmentBuffer[(int)netSegment].m_endNode;
-            bool smoothStart = (nodeBuffer[(int)startNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
-            bool smoothEnd = (nodeBuffer[(int)endNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
+            NetInfo info = SegmentBuffer[(int)netSegment].Info;
+            ushort startNode = SegmentBuffer[(int)netSegment].m_startNode;
+            ushort endNode = SegmentBuffer[(int)netSegment].m_endNode;
+            bool smoothStart = (NodeBuffer[(int)startNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
+            bool smoothEnd = (NodeBuffer[(int)endNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
             Bezier3 bezier;
-            bezier.a = nodeBuffer[(int)startNode].m_position;
-            bezier.d = nodeBuffer[(int)endNode].m_position;
-            NetSegment.CalculateMiddlePoints(bezier.a, segmentBuffer[(int)netSegment].m_startDirection, bezier.d, segmentBuffer[(int)netSegment].m_endDirection, smoothStart, smoothEnd, out bezier.b, out bezier.c);
+            bezier.a = NodeBuffer[(int)startNode].m_position;
+            bezier.d = NodeBuffer[(int)endNode].m_position;
+            NetSegment.CalculateMiddlePoints(bezier.a, SegmentBuffer[(int)netSegment].m_startDirection, bezier.d, SegmentBuffer[(int)netSegment].m_endDirection, smoothStart, smoothEnd, out bezier.b, out bezier.c);
             Singleton<RenderManager>.instance.OverlayEffect.DrawBezier(cameraInfo, toolColor, bezier, info.m_halfWidth * 4f / 3f, 100000f, -100000f, -1f, 1280f, false, true);
             Segment3 segment;
-            segment.a = nodeBuffer[(int)startNode].m_position;
+            segment.a = NodeBuffer[(int)startNode].m_position;
             Segment3 segment2;
-            segment2.a = nodeBuffer[(int)endNode].m_position;
+            segment2.a = NodeBuffer[(int)endNode].m_position;
             segment.b = this.GetControlPoint(netSegment);
             segment2.b = segment.b;
             toolColor.a /= 2f;
@@ -242,18 +230,18 @@ namespace Klyte.Commons
 
         private Vector3 GetControlPoint(ushort segment)
         {
-            Vector3 position = nodeBuffer[(int)segmentBuffer[(int)segment].m_startNode].m_position;
-            Vector3 startDirection = segmentBuffer[(int)segment].m_startDirection;
-            Vector3 position2 = nodeBuffer[(int)segmentBuffer[(int)segment].m_endNode].m_position;
-            Vector3 endDirection = segmentBuffer[(int)segment].m_endDirection;
-            if (!NetSegment.IsStraight(position, startDirection, position2, endDirection, out float num))
+            Vector3 position = NodeBuffer[(int)SegmentBuffer[(int)segment].m_startNode].m_position;
+            Vector3 startDirection = SegmentBuffer[(int)segment].m_startDirection;
+            Vector3 position2 = NodeBuffer[(int)SegmentBuffer[(int)segment].m_endNode].m_position;
+            Vector3 endDirection = SegmentBuffer[(int)segment].m_endDirection;
+            if (!NetSegment.IsStraight(position, startDirection, position2, endDirection, out _))
             {
                 float num2 = startDirection.x * endDirection.x + startDirection.z * endDirection.z;
-                if (num2 >= -0.999f && Line2.Intersect(VectorUtils.XZ(position), VectorUtils.XZ(position + startDirection), VectorUtils.XZ(position2), VectorUtils.XZ(position2 + endDirection), out float d, out float num3))
+                if (num2 >= -0.999f && Line2.Intersect(VectorUtils.XZ(position), VectorUtils.XZ(position + startDirection), VectorUtils.XZ(position2), VectorUtils.XZ(position2 + endDirection), out float d, out _))
                 {
                     return position + startDirection * d;
                 }
-                KlyteUtils.doErrorLog("Warning! Invalid segment directions!");
+                LogUtils.DoErrorLog("Warning! Invalid segment directions!");
             }
             return (position + position2) / 2f;
         }
@@ -274,8 +262,6 @@ namespace Klyte.Commons
         protected ushort m_hoverSegment;
 
         private bool m_prevRenderZones;
-
-        private ToolBase m_prevTool;
 
         private long m_rightClickTime;
 
@@ -382,24 +368,24 @@ namespace Klyte.Commons
                             int num23 = 0;
                             while (num22 != 0)
                             {
-                                NetNode.Flags flags = nodeBuffer[(int)num22].m_flags;
-                                NetInfo info = nodeBuffer[(int)num22].Info;
+                                NetNode.Flags flags = NodeBuffer[(int)num22].m_flags;
+                                NetInfo info = NodeBuffer[(int)num22].Info;
                                 ItemClass connectionClass = info.GetConnectionClass();
                                 if ((((service == ItemClass.Service.None || connectionClass.m_service == service) && (subService == ItemClass.SubService.None || connectionClass.m_subService == subService) && (itemLayers == ItemClass.Layer.None || (connectionClass.m_layer & itemLayers) != ItemClass.Layer.None)) || (info.m_intersectClass != null && (service == ItemClass.Service.None || info.m_intersectClass.m_service == service) && (subService == ItemClass.SubService.None || info.m_intersectClass.m_subService == subService) && (itemLayers == ItemClass.Layer.None || (info.m_intersectClass.m_layer & itemLayers) != ItemClass.Layer.None)) || (info.m_netAI.CanIntersect(connectedType) && connectionClass.m_service == service2 && (subService2 == ItemClass.SubService.None || connectionClass.m_subService == subService2) && (itemLayers2 == ItemClass.Layer.None || (connectionClass.m_layer & itemLayers2) != ItemClass.Layer.None))) && (flags & ignoreNodeFlags) == NetNode.Flags.None && (connectedType == null || (info.m_netAI.CanConnect(connectedType) && connectedType.m_netAI.CanConnect(info))))
                                 {
                                     bool flag = false;
-                                    if ((flags & (NetNode.Flags.Middle | NetNode.Flags.Untouchable)) == (NetNode.Flags.Middle | NetNode.Flags.Untouchable) && nodeBuffer[(int)num22].CountSegments(NetSegment.Flags.Untouchable, 0) >= 2)
+                                    if ((flags & (NetNode.Flags.Middle | NetNode.Flags.Untouchable)) == (NetNode.Flags.Middle | NetNode.Flags.Untouchable) && NodeBuffer[(int)num22].CountSegments(NetSegment.Flags.Untouchable, 0) >= 2)
                                     {
                                         flag = true;
                                     }
-                                    if (!flag && nodeBuffer[(int)num22].RayCast(ray, snapElevation, out float num24, out float num25) && (num25 < num12 || (num25 == num12 && num24 < num11)))
+                                    if (!flag && NodeBuffer[(int)num22].RayCast(ray, snapElevation, out float num24, out float num25) && (num25 < num12 || (num25 == num12 && num24 < num11)))
                                     {
                                         num11 = num24;
                                         num12 = num25;
                                         num14 = num22;
                                     }
                                 }
-                                num22 = nodeBuffer[(int)num22].m_nextGridNode;
+                                num22 = NodeBuffer[(int)num22].m_nextGridNode;
                                 if (++num23 > 32768)
                                 {
                                     CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
@@ -416,29 +402,29 @@ namespace Klyte.Commons
                             int num27 = 0;
                             while (num26 != 0)
                             {
-                                NetSegment.Flags flags2 = segmentBuffer[(int)num26].m_flags;
-                                NetInfo info2 = segmentBuffer[(int)num26].Info;
+                                NetSegment.Flags flags2 = SegmentBuffer[(int)num26].m_flags;
+                                NetInfo info2 = SegmentBuffer[(int)num26].Info;
                                 ItemClass connectionClass2 = info2.GetConnectionClass();
                                 if (((service == ItemClass.Service.None || connectionClass2.m_service == service) && (subService == ItemClass.SubService.None || connectionClass2.m_subService == subService) && (itemLayers == ItemClass.Layer.None || (connectionClass2.m_layer & itemLayers) != ItemClass.Layer.None || nameOnly)) || (info2.m_intersectClass != null && (service == ItemClass.Service.None || info2.m_intersectClass.m_service == service) && (subService == ItemClass.SubService.None || info2.m_intersectClass.m_subService == subService) && (itemLayers == ItemClass.Layer.None || (info2.m_intersectClass.m_layer & itemLayers) != ItemClass.Layer.None || nameOnly)) || (info2.m_netAI.CanIntersect(connectedType) && connectionClass2.m_service == service2 && (subService2 == ItemClass.SubService.None || connectionClass2.m_subService == subService2) && (itemLayers2 == ItemClass.Layer.None || (connectionClass2.m_layer & itemLayers2) != ItemClass.Layer.None || nameOnly)))
                                 {
                                     bool flag2 = (flags2 & ignoreSegmentFlags) != NetSegment.Flags.None && !nameOnly;
-                                    if ((flags2 & ignoreSegmentFlags) == NetSegment.Flags.None && (connectedType == null || (info2.m_netAI.CanConnect(connectedType) && connectedType.m_netAI.CanConnect(info2))) && segmentBuffer[(int)num26].RayCast(num26, ray, snapElevation, nameOnly, out float num28, out float num29) && (num29 < num10 || (num29 == num10 && num28 < num9)))
+                                    if ((flags2 & ignoreSegmentFlags) == NetSegment.Flags.None && (connectedType == null || (info2.m_netAI.CanConnect(connectedType) && connectedType.m_netAI.CanConnect(info2))) && SegmentBuffer[(int)num26].RayCast(num26, ray, snapElevation, nameOnly, out float num28, out float num29) && (num29 < num10 || (num29 == num10 && num28 < num9)))
                                     {
-                                        ushort startNode = segmentBuffer[(int)num26].m_startNode;
-                                        ushort endNode = segmentBuffer[(int)num26].m_endNode;
-                                        Vector3 position = nodeBuffer[(int)startNode].m_position;
-                                        Vector3 position2 = nodeBuffer[(int)endNode].m_position;
-                                        float num30 = nodeBuffer[(int)startNode].Info.GetMinNodeDistance();
-                                        float num31 = nodeBuffer[(int)endNode].Info.GetMinNodeDistance();
+                                        ushort startNode = SegmentBuffer[(int)num26].m_startNode;
+                                        ushort endNode = SegmentBuffer[(int)num26].m_endNode;
+                                        Vector3 position = NodeBuffer[(int)startNode].m_position;
+                                        Vector3 position2 = NodeBuffer[(int)endNode].m_position;
+                                        float num30 = NodeBuffer[(int)startNode].Info.GetMinNodeDistance();
+                                        float num31 = NodeBuffer[(int)endNode].Info.GetMinNodeDistance();
                                         num10 = num29;
                                         num9 = num28;
                                         Vector3 a = ray.a + (ray.b - ray.a) * num28;
-                                        NetNode.Flags flags3 = nodeBuffer[(int)startNode].m_flags;
+                                        NetNode.Flags flags3 = NodeBuffer[(int)startNode].m_flags;
                                         if ((flags3 & NetNode.Flags.End) != NetNode.Flags.None)
                                         {
                                             flags3 &= ~NetNode.Flags.Moveable;
                                         }
-                                        NetNode.Flags flags4 = nodeBuffer[(int)endNode].m_flags;
+                                        NetNode.Flags flags4 = NodeBuffer[(int)endNode].m_flags;
                                         if ((flags4 & NetNode.Flags.End) != NetNode.Flags.None)
                                         {
                                             flags4 &= ~NetNode.Flags.Moveable;
@@ -475,7 +461,7 @@ namespace Klyte.Commons
                                         }
                                     }
                                 }
-                                num26 = segmentBuffer[(int)num26].m_nextGridSegment;
+                                num26 = SegmentBuffer[(int)num26].m_nextGridSegment;
                                 if (++num27 > 36864)
                                 {
                                     CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);

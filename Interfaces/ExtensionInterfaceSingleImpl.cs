@@ -6,21 +6,23 @@ namespace Klyte.Commons.Interfaces
     public abstract class ExtensionInterfaceSingleImpl<I, K, T, U> : BasicExtensionInterface<I, K, T, U, int> where I : ConfigWarehouseBase<K, I>, new() where K : struct, IConvertible where T : struct, IConvertible where U : ExtensionInterfaceSingleImpl<I, K, T, U>
     {
         public abstract K ConfigIndexKey { get; }
-        private Dictionary<T, string> cachedValuesLocal;
-        private Dictionary<T, string> cachedValuesGlobal;
+#pragma warning disable IDE0044 // Adicionar modificador somente leitura
+        private Dictionary<T, string> m_cachedValuesLocal;
+        private Dictionary<T, string> m_cachedValuesGlobal;
+#pragma warning restore IDE0044 // Adicionar modificador somente leitura
 
-        public event OnExtensionPropertyChanged<T> eventOnValueChanged;
+        public event OnExtensionPropertyChanged<T> EventOnValueChanged;
 
         private ref Dictionary<T, string> GetListData(bool global)
         {
             if (!AllowGlobal && global) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER UTILIZADA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                return ref cachedValuesGlobal;
+                return ref m_cachedValuesGlobal;
             }
             else
             {
-                return ref cachedValuesLocal;
+                return ref m_cachedValuesLocal;
             }
         }
 
@@ -75,7 +77,7 @@ namespace Klyte.Commons.Interfaces
             }
             Save(global);
             Load(global);
-            eventOnValueChanged?.Invoke(key, value);
+            EventOnValueChanged?.Invoke(key, value);
         }
 
         public void SafeCleanProperty(T key, bool global = false)
@@ -91,7 +93,7 @@ namespace Klyte.Commons.Interfaces
                 cachedValues.Remove(key);
                 Save(global);
                 Load(global);
-                eventOnValueChanged?.Invoke(key, null);
+                EventOnValueChanged?.Invoke(key, null);
             }
         }
         #endregion

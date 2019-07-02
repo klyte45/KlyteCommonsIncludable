@@ -6,21 +6,23 @@ namespace Klyte.Commons.Interfaces
     public abstract class ExtensionInterfaceListImpl<I, K, T, U> : BasicExtensionInterface<I, K, T, U, int> where I : ConfigWarehouseBase<K, I>, new() where K : struct, IConvertible where T : struct, IConvertible where U : ExtensionInterfaceListImpl<I, K, T, U>
     {
         public abstract K ConfigIndexKey { get; }
-        private List<Dictionary<T, string>> cachedValuesLocal;
-        private List<Dictionary<T, string>> cachedValuesGlobal;
+#pragma warning disable IDE0044 // Adicionar modificador somente leitura
+        private List<Dictionary<T, string>> m_cachedValuesLocal;
+        private List<Dictionary<T, string>> m_cachedValuesGlobal;
+#pragma warning restore IDE0044 // Adicionar modificador somente leitura
 
-        public event OnExtensionPropertyChanged<int, T> eventOnValueChanged;
+        public event OnExtensionPropertyChanged<int, T> EventOnValueChanged;
 
         private ref List<Dictionary<T, string>> GetListData(bool global)
         {
             if (!AllowGlobal && global) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER UTILIZADA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                return ref cachedValuesGlobal;
+                return ref m_cachedValuesGlobal;
             }
             else
             {
-                return ref cachedValuesLocal;
+                return ref m_cachedValuesLocal;
             }
         }
 
@@ -80,7 +82,7 @@ namespace Klyte.Commons.Interfaces
             }
             Save(global);
             Load(global);
-            eventOnValueChanged?.Invoke(idx, key, value);
+            EventOnValueChanged?.Invoke(idx, key, value);
             return idx;
         }
 
@@ -97,7 +99,7 @@ namespace Klyte.Commons.Interfaces
                 cachedValues.RemoveAt(idx);
                 Save(global);
                 Load(global);
-                eventOnValueChanged?.Invoke(idx, null, null);
+                EventOnValueChanged?.Invoke(idx, null, null);
             }
         }
 
@@ -116,7 +118,7 @@ namespace Klyte.Commons.Interfaces
                     cachedValues[idx].Remove(key);
                     Save(global);
                     Load(global);
-                    eventOnValueChanged?.Invoke(idx, key, null);
+                    EventOnValueChanged?.Invoke(idx, key, null);
                 }
             }
         }

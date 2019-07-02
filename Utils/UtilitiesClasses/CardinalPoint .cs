@@ -6,7 +6,7 @@ using UnityEngine;
 
 public struct CardinalPoint
 {
-    private static readonly string[] CARDINAL_16 = new string[]
+    private static readonly string[] m_cardinal16 = new string[]
     {
         "N",
         "NNE",
@@ -26,26 +26,26 @@ public struct CardinalPoint
         "NNW",
     };
 
-    public static string getCardinalPoint16(float angle)
+    public static string GetCardinalPoint16(float angle)
     {
         float diagSize = 22.5f;
         angle %= 360;
         angle += 360;
         angle %= 360;
 
-        for (int i = 1; i < CARDINAL_16.Length; i++)
+        for (int i = 1; i < m_cardinal16.Length; i++)
         {
             if (Math.Abs(angle - diagSize * i) < diagSize / 2)
             {
-                return CARDINAL_16[i];
+                return m_cardinal16[i];
             }
         }
-        return CARDINAL_16[0];
+        return m_cardinal16[0];
     }
 
 
 
-    public static CardinalPoint getCardinalPoint(float angle, float diagSize = 45)
+    public static CardinalPoint GetCardinalPoint(float angle, float diagSize = 45)
     {
         angle %= 360;
         angle += 360;
@@ -85,7 +85,7 @@ public struct CardinalPoint
         }
     }
 
-    public static CardinalPoint getCardinalPoint4(float angle, bool azimutal = false)
+    public static CardinalPoint GetCardinalPoint4(float angle, bool azimutal = false)
     {
         angle %= 360;
         if (azimutal)
@@ -143,7 +143,7 @@ public struct CardinalPoint
         return otherType.InternalValue;
     }
 
-    public int stepsTo(CardinalPoint other)
+    public int StepsTo(CardinalPoint other)
     {
         if (other.InternalValue == InternalValue) return 0;
         if ((((int)other.InternalValue) & ((int)other.InternalValue - 1)) != 0 || (((int)InternalValue) & ((int)InternalValue - 1)) != 0) return int.MaxValue;
@@ -154,16 +154,16 @@ public struct CardinalPoint
             temp++;
             count++;
         }
-        if (count > 4) count = count - 8;
+        if (count > 4) count -= 8;
         return count;
     }
 
     public static int operator -(CardinalPoint c, CardinalPoint other)
     {
-        return c.stepsTo(other);
+        return c.StepsTo(other);
     }
 
-    public Vector2 getCardinalOffset()
+    public Vector2 GetCardinalOffset()
     {
         switch (InternalValue)
         {
@@ -188,7 +188,7 @@ public struct CardinalPoint
     }
 
 
-    public Vector2 getCardinalOffset2D()
+    public Vector2 GetCardinalOffset2D()
     {
         switch (InternalValue)
         {
@@ -212,7 +212,7 @@ public struct CardinalPoint
         return Vector2.zero;
     }
 
-    public int getCardinalAngle()
+    public int GetCardinalAngle()
     {
         switch (InternalValue)
         {
@@ -235,7 +235,7 @@ public struct CardinalPoint
         }
         return 0;
     }
-    public byte getCardinalIndex8()
+    public byte GetCardinalIndex8()
     {
         switch (InternalValue)
         {
@@ -354,8 +354,8 @@ public struct CardinalPoint
     public int CompareTo(CardinalPoint other)
     {
         if (this == other) return 0;
-        var a = getCardinalAngle();
-        var b = other.getCardinalAngle() + 360;
+        var a = GetCardinalAngle();
+        var b = other.GetCardinalAngle() + 360;
         if (b - a > 180)
         {
             return -1;
@@ -423,9 +423,9 @@ public struct CardinalPoint
         ZERO = 0
     }
 
-    public Vector2 getPointForAngle(Vector2 p1, float distance)
+    public Vector2 GetPointForAngle(Vector2 p1, float distance)
     {
-        return p1 + this.getCardinalOffset() * distance;
+        return p1 + this.GetCardinalOffset() * distance;
     }
 
 
@@ -434,18 +434,18 @@ public struct CardinalPoint
         return InternalValue.ToString();
     }
 
-    public static CardinalPoint getCardinal2D(Vector2 p1, Vector2 p2)
+    public static CardinalPoint GetCardinal2D(Vector2 p1, Vector2 p2)
     {
         Vector2 p1Inv = new Vector2(p1.x, -p1.y);
         Vector2 p2Inv = new Vector2(p2.x, -p2.y);
-        return getCardinalPoint((p1Inv).GetAngleToPoint(p2Inv));
+        return GetCardinalPoint((p1Inv).GetAngleToPoint(p2Inv));
     }
 
-    public static CardinalPoint getCardinal2D4(Vector2 p1, Vector2 p2)
+    public static CardinalPoint GetCardinal2D4(Vector2 p1, Vector2 p2)
     {
         Vector2 p1Inv = new Vector2(p1.x, -p1.y);
         Vector2 p2Inv = new Vector2(p2.x, -p2.y);
-        return getCardinalPoint4((p1Inv).GetAngleToPoint(p2Inv));
+        return GetCardinalPoint4((p1Inv).GetAngleToPoint(p2Inv));
     }
 
 }

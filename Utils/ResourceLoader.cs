@@ -17,18 +17,18 @@ namespace Klyte.Commons.Utils
 {
     public abstract class KlyteResourceLoader<T> : Singleton<T> where T : KlyteResourceLoader<T>
     {
-        protected abstract string prefix { get; }
-        private Type resourceReference => typeof(T);
+        protected abstract string Prefix { get; }
+        private Type ResourceReference => typeof(T);
         public virtual Shader GetLoadedShader(string shaderName) => null;
 
-        public byte[] loadResourceData(string name)
+        public byte[] LoadResourceData(string name)
         {
-            name = prefix + name;
+            name = Prefix + name;
 
-            UnmanagedMemoryStream stream = (UnmanagedMemoryStream)Assembly.GetAssembly(resourceReference).GetManifestResourceStream(name);
+            UnmanagedMemoryStream stream = (UnmanagedMemoryStream)Assembly.GetAssembly(ResourceReference).GetManifestResourceStream(name);
             if (stream == null)
             {
-                KlyteUtils.doErrorLog("Could not find resource: " + name);
+                LogUtils.DoErrorLog("Could not find resource: " + name);
                 return null;
             }
 
@@ -36,14 +36,14 @@ namespace Klyte.Commons.Utils
             return read.ReadBytes((int)stream.Length);
         }
 
-        public string loadResourceString(string name)
+        public string LoadResourceString(string name)
         {
-            name = prefix + name;
+            name = Prefix + name;
 
-            UnmanagedMemoryStream stream = (UnmanagedMemoryStream)Assembly.GetAssembly(resourceReference).GetManifestResourceStream(name);
+            UnmanagedMemoryStream stream = (UnmanagedMemoryStream)Assembly.GetAssembly(ResourceReference).GetManifestResourceStream(name);
             if (stream == null)
             {
-                KlyteUtils.doErrorLog("Could not find resource: " + name);
+                LogUtils.DoErrorLog("Could not find resource: " + name);
                 return null;
             }
 
@@ -51,31 +51,31 @@ namespace Klyte.Commons.Utils
             return read.ReadToEnd();
         }
 
-        public Texture2D loadTexture(int x, int y, string filename)
+        public Texture2D LoadTexture(int x, int y, string filename)
         {
             try
             {
                 Texture2D texture = new Texture2D(x, y);
-                texture.LoadImage(loadResourceData(filename));
+                texture.LoadImage(LoadResourceData(filename));
                 return texture;
             }
             catch (Exception e)
             {
-                KlyteUtils.doErrorLog("The file could not be read:" + e.Message);
+                LogUtils.DoErrorLog("The file could not be read:" + e.Message);
             }
 
             return null;
         }
 
-        public AssetBundle loadBundle(string filename)
+        public AssetBundle LoadBundle(string filename)
         {
             try
             {
-                return AssetBundle.LoadFromMemory(loadResourceData(filename));
+                return AssetBundle.LoadFromMemory(LoadResourceData(filename));
             }
             catch (Exception e)
             {
-                KlyteUtils.doErrorLog("The file could not be read:" + e.Message);
+                LogUtils.DoErrorLog("The file could not be read:" + e.Message);
             }
 
             return null;
@@ -88,7 +88,7 @@ namespace Klyte.Commons.Utils
                 filterMode = FilterMode.Bilinear
             };
             { // LoadTexture
-                tex.LoadImage(loadResourceData(textureFile));
+                tex.LoadImage(LoadResourceData(textureFile));
                 tex.Apply(true, true);
             }
             UITextureAtlas atlas = ScriptableObject.CreateInstance<UITextureAtlas>();
@@ -116,6 +116,6 @@ namespace Klyte.Commons.Utils
 
     public sealed class KCResourceLoader : KlyteResourceLoader<KCResourceLoader>
     {
-        protected override string prefix => "Klyte.Commons.";
+        protected override string Prefix => "Klyte.Commons.";
     }
 }

@@ -27,32 +27,32 @@ namespace Klyte.Commons.Interfaces
         protected string cityId;
         protected string cityName;
 
-        public static bool isCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
-        protected string currentCityId => isCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_gameInstanceIdentifier : GLOBAL_CONFIG_INDEX;
-        protected string currentCityName => isCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_CityName : GLOBAL_CONFIG_INDEX;
+        public static bool IsCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
+        protected string CurrentCityId => IsCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_gameInstanceIdentifier : GLOBAL_CONFIG_INDEX;
+        protected string CurrentCityName => IsCityLoaded ? Singleton<SimulationManager>.instance.m_metaData.m_CityName : GLOBAL_CONFIG_INDEX;
 
-        protected string thisFileName => ConfigFilename + "_" + (cityId ?? GLOBAL_CONFIG_INDEX);
-        public string thisPathName => ConfigPath + thisFileName;
+        protected string ThisFileName => ConfigFilename + "_" + (cityId ?? GLOBAL_CONFIG_INDEX);
+        public string ThisPathName => ConfigPath + ThisFileName;
 
 
-        public static bool getCurrentConfigBool(T i) => instance.currentLoadedCityConfig.getBool(i);
-        public static void setCurrentConfigBool(T i, bool? value) => instance.currentLoadedCityConfig.setBool(i, value);
-        public static int getCurrentConfigInt(T i) => instance.currentLoadedCityConfig.getInt(i);
-        public static void setCurrentConfigInt(T i, int? value) => instance.currentLoadedCityConfig.setInt(i, value);
-        public static string getCurrentConfigString(T i) => instance.currentLoadedCityConfig.getString(i);
-        public static void setCurrentConfigString(T i, string value) => instance.currentLoadedCityConfig.setString(i, value);
-        public static List<int> getCurrentConfigListInt(T i) => instance.currentLoadedCityConfig.getListInt(i);
-        public static void addToCurrentConfigListInt(T i, int value) => instance.currentLoadedCityConfig.addToListInt(i, value);
-        public static void removeFromCurrentConfigListInt(T i, int value) => instance.currentLoadedCityConfig.removeFromListInt(i, value);
+        public static bool GetCurrentConfigBool(T i) => instance.CurrentLoadedCityConfig.GetBool(i);
+        public static void SetCurrentConfigBool(T i, bool? value) => instance.CurrentLoadedCityConfig.SetBool(i, value);
+        public static int GetCurrentConfigInt(T i) => instance.CurrentLoadedCityConfig.GetInt(i);
+        public static void SetCurrentConfigInt(T i, int? value) => instance.CurrentLoadedCityConfig.SetInt(i, value);
+        public static string GetCurrentConfigString(T i) => instance.CurrentLoadedCityConfig.GetString(i);
+        public static void SetCurrentConfigString(T i, string value) => instance.CurrentLoadedCityConfig.SetString(i, value);
+        public static List<int> GetCurrentConfigListInt(T i) => instance.CurrentLoadedCityConfig.GetListInt(i);
+        public static void AddToCurrentConfigListInt(T i, int value) => instance.CurrentLoadedCityConfig.AddToListInt(i, value);
+        public static void RemoveFromCurrentConfigListInt(T i, int value) => instance.CurrentLoadedCityConfig.RemoveFromListInt(i, value);
 
-        public I currentLoadedCityConfig => getConfig(currentCityId, currentCityName);
+        public I CurrentLoadedCityConfig => GetConfig(CurrentCityId, CurrentCityName);
 
-        public I getConfig2(string cityId, string cityName) => getConfig(cityId, cityName);
-        public I getConfig2() => getConfig(null, null);
+        public I GetConfig2(string cityId, string cityName) => GetConfig(cityId, cityName);
+        public I GetConfig2() => GetConfig(null, null);
 
-        public static I getConfig() => getConfig(null, null);
+        public static I GetConfig() => GetConfig(null, null);
 
-        public static I getConfig(string cityId, string cityName)
+        public static I GetConfig(string cityId, string cityName)
         {
             if (cityId == null || cityName == null)
             {
@@ -61,12 +61,12 @@ namespace Klyte.Commons.Interfaces
             }
             if (!loadedCities.ContainsKey(cityId))
             {
-                loadedCities[cityId] = construct(cityId, cityName);
+                loadedCities[cityId] = Construct(cityId, cityName);
             }
             return loadedCities[cityId];
         }
 
-        protected static I construct(string cityId, string cityName)
+        protected static I Construct(string cityId, string cityName)
         {
             if (string.IsNullOrEmpty(cityId))
             {
@@ -79,7 +79,7 @@ namespace Klyte.Commons.Interfaces
             };
             SettingsFile settingFile = new SettingsFile
             {
-                pathName = result.thisPathName
+                pathName = result.ThisPathName
             };
             GameSettings.AddSettingsFile(settingFile);
 
@@ -87,8 +87,8 @@ namespace Klyte.Commons.Interfaces
             {
                 try
                 {
-                    I defaultFile = getConfig(GLOBAL_CONFIG_INDEX, GLOBAL_CONFIG_INDEX);
-                    foreach (string key in GameSettings.FindSettingsFileByName(defaultFile.thisFileName).ListKeys())
+                    I defaultFile = GetConfig(GLOBAL_CONFIG_INDEX, GLOBAL_CONFIG_INDEX);
+                    foreach (string key in GameSettings.FindSettingsFileByName(defaultFile.ThisFileName).ListKeys())
                     {
                         try
                         {
@@ -96,20 +96,20 @@ namespace Klyte.Commons.Interfaces
                             switch (ci.ToInt32(CultureInfo.CurrentCulture.NumberFormat) & TYPE_PART)
                             {
                                 case TYPE_BOOL:
-                                    result.setBool(ci, defaultFile.getBool(ci));
+                                    result.SetBool(ci, defaultFile.GetBool(ci));
                                     break;
                                 case TYPE_STRING:
                                 case TYPE_LIST:
-                                    result.setString(ci, defaultFile.getString(ci));
+                                    result.SetString(ci, defaultFile.GetString(ci));
                                     break;
                                 case TYPE_INT:
-                                    result.setInt(ci, defaultFile.getInt(ci));
+                                    result.SetInt(ci, defaultFile.GetInt(ci));
                                     break;
                             }
                         }
                         catch (Exception e)
                         {
-                            KlyteUtils.doErrorLog($"Erro copiando propriedade \"{key}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
+                            LogUtils.DoErrorLog($"Erro copiando propriedade \"{key}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
                         }
                     }
                 }
@@ -121,17 +121,17 @@ namespace Klyte.Commons.Interfaces
             return result;
         }
 
-        public string getString(T i) => getFromFileString(i);
-        public bool getBool(T i) => getFromFileBool(i);
-        public int getInt(T i) => getFromFileInt(i);
-        public void setString(T i, string value) => setToFile(i, value);
-        public void setBool(T idx, bool? newVal) => setToFile(idx, newVal);
-        public void setInt(T idx, int? value) => setToFile(idx, value);
+        public string GetString(T i) => GetFromFileString(i);
+        public bool GetBool(T i) => GetFromFileBool(i);
+        public int GetInt(T i) => GetFromFileInt(i);
+        public void SetString(T i, string value) => SetToFile(i, value);
+        public void SetBool(T idx, bool? newVal) => SetToFile(idx, newVal);
+        public void SetInt(T idx, int? value) => SetToFile(idx, value);
 
         #region List Edition
-        public List<int> getListInt(T i)
+        public List<int> GetListInt(T i)
         {
-            string listString = getFromFileString(i);
+            string listString = GetFromFileString(i);
             List<int> result = new List<int>();
             foreach (string s in listString.Split(LIST_SEPARATOR.ToCharArray()))
             {
@@ -139,89 +139,89 @@ namespace Klyte.Commons.Interfaces
             }
             return result;
         }
-        public void addToListInt(T i, int value)
+        public void AddToListInt(T i, int value)
         {
-            List<int> list = getListInt(i);
+            List<int> list = GetListInt(i);
             if (!list.Contains(value))
             {
                 list.Add(value);
-                setToFile(i, serializeList(list));
+                SetToFile(i, SerializeList(list));
             }
         }
-        public void removeFromListInt(T i, int value)
+        public void RemoveFromListInt(T i, int value)
         {
-            List<int> list = getListInt(i);
+            List<int> list = GetListInt(i);
             list.Remove(value);
-            setToFile(i, serializeList(list));
+            SetToFile(i, SerializeList(list));
         }
         #endregion
 
 
-        private Dictionary<T, SavedString> cachedStringSaved = new Dictionary<T, SavedString>();
-        private Dictionary<T, SavedInt> cachedIntSaved = new Dictionary<T, SavedInt>();
-        private Dictionary<T, SavedBool> cachedBoolSaved = new Dictionary<T, SavedBool>();
+        private readonly Dictionary<T, SavedString> m_cachedStringSaved = new Dictionary<T, SavedString>();
+        private readonly Dictionary<T, SavedInt> m_cachedIntSaved = new Dictionary<T, SavedInt>();
+        private readonly Dictionary<T, SavedBool> m_cachedBoolSaved = new Dictionary<T, SavedBool>();
 
 
-        protected string serializeList<K>(List<K> l) => string.Join(LIST_SEPARATOR, l.Select(x => x.ToString()).ToArray());
+        protected string SerializeList<K>(List<K> l) => string.Join(LIST_SEPARATOR, l.Select(x => x.ToString()).ToArray());
 
         private SavedString GetSavedString(T i)
         {
-            if (!cachedStringSaved.ContainsKey(i))
+            if (!m_cachedStringSaved.ContainsKey(i))
             {
-                cachedStringSaved[i] = new SavedString(i.ToString(), thisFileName, getDefaultStringValueForProperty(i), true);
+                m_cachedStringSaved[i] = new SavedString(i.ToString(), ThisFileName, GetDefaultStringValueForProperty(i), true);
             }
-            return cachedStringSaved[i];
+            return m_cachedStringSaved[i];
         }
         private SavedBool GetSavedBool(T i)
         {
-            if (!cachedBoolSaved.ContainsKey(i))
+            if (!m_cachedBoolSaved.ContainsKey(i))
             {
-                cachedBoolSaved[i] = new SavedBool(i.ToString(), thisFileName, getDefaultBoolValueForProperty(i), true);
+                m_cachedBoolSaved[i] = new SavedBool(i.ToString(), ThisFileName, GetDefaultBoolValueForProperty(i), true);
             }
-            return cachedBoolSaved[i];
+            return m_cachedBoolSaved[i];
         }
         private SavedInt GetSavedInt(T i)
         {
-            if (!cachedIntSaved.ContainsKey(i))
+            if (!m_cachedIntSaved.ContainsKey(i))
             {
-                cachedIntSaved[i] = new SavedInt(i.ToString(), thisFileName, getDefaultIntValueForProperty(i), true);
+                m_cachedIntSaved[i] = new SavedInt(i.ToString(), ThisFileName, GetDefaultIntValueForProperty(i), true);
             }
-            return cachedIntSaved[i];
+            return m_cachedIntSaved[i];
         }
 
-        protected string getFromFileString(T i) => GetSavedString(i).value;
-        protected int getFromFileInt(T i) => GetSavedInt(i).value;
-        protected bool getFromFileBool(T i) => GetSavedBool(i).value;
+        protected string GetFromFileString(T i) => GetSavedString(i).value;
+        protected int GetFromFileInt(T i) => GetSavedInt(i).value;
+        protected bool GetFromFileBool(T i) => GetSavedBool(i).value;
 
-        protected void setToFile(T i, string value)
+        protected void SetToFile(T i, string value)
         {
             var data = GetSavedString(i);
             if (value == null) data.Delete();
             else data.value = value;
 
-            eventOnPropertyChanged?.Invoke(i, null, null, value);
+            EventOnPropertyChanged?.Invoke(i, null, null, value);
         }
-        protected void setToFile(T i, bool? value)
+        protected void SetToFile(T i, bool? value)
         {
             var data = GetSavedBool(i);
             if (value == null) data.Delete();
             else data.value = value.Value;
-            eventOnPropertyChanged?.Invoke(i, value, null, null);
+            EventOnPropertyChanged?.Invoke(i, value, null, null);
         }
 
-        protected void setToFile(T i, int? value)
+        protected void SetToFile(T i, int? value)
         {
             var data = GetSavedInt(i);
             if (value == null) data.Delete();
             else data.value = value.Value;
-            eventOnPropertyChanged?.Invoke(i, null, value, null);
+            EventOnPropertyChanged?.Invoke(i, null, value, null);
         }
 
-        public abstract bool getDefaultBoolValueForProperty(T i);
-        public abstract int getDefaultIntValueForProperty(T i);
-        public virtual string getDefaultStringValueForProperty(T i) => string.Empty;
+        public abstract bool GetDefaultBoolValueForProperty(T i);
+        public abstract int GetDefaultIntValueForProperty(T i);
+        public virtual string GetDefaultStringValueForProperty(T i) => string.Empty;
 
-        public static event OnWarehouseConfigChanged eventOnPropertyChanged;
+        public static event OnWarehouseConfigChanged EventOnPropertyChanged;
 
 
         public delegate void OnWarehouseConfigChanged(T idx, bool? newValueBool, int? newValueInt, string newValueString);

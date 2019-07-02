@@ -27,6 +27,6 @@ namespace Klyte.Commons.Interfaces
             m_atlas = Singleton<R>.instance.CreateTextureAtlas(ResourceName, CommonName, (UIView.GetAView() ?? FindObjectOfType<UIView>()).defaultAtlas.material, Width, Height, SpriteNames);
         }
 
-        public UITextureAtlas atlas => m_atlas;
+        public UITextureAtlas Atlas => m_atlas;
     }
 }

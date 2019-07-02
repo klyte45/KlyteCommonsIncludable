@@ -6,9 +6,9 @@ namespace Klyte.Commons.i18n
 {
     public class KCLocaleUtils : KlyteLocaleUtils<KCLocaleUtils, KCResourceLoader>
     {
-        public override string prefix => "KCM_";
+        public override string Prefix => "KCM_";
 
-        protected override string packagePrefix => "Klyte.Commons";
+        protected override string PackagePrefix => "Klyte.Commons";
 
     }
 }

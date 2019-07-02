@@ -8,47 +8,47 @@ namespace Klyte.Commons.i18n
     public abstract class KlyteLocaleUtils<T, R> : Singleton<T> where T : KlyteLocaleUtils<T, R> where R : KlyteResourceLoader<R>
     {
 
-        internal static SavedInt currentLanguageId => new SavedInt("KlyteCommonsLanguage", Settings.gameSettingsFile, 0, true);
+        internal static SavedInt CurrentLanguageId => new SavedInt("KlyteCommonsLanguage", Settings.gameSettingsFile, 0, true);
 
-        private const string lineSeparator = "\r\n";
-        private const string kvSeparator = "=";
-        private const string idxSeparator = ">";
-        private const string localeKeySeparator = "|";
-        private const string commentChar = "#";
-        private const string ignorePrefixChar = "%";
-        private static string language = "";
+        private const string m_lineSeparator = "\r\n";
+        private const string m_kvSeparator = "=";
+        private const string m_idxSeparator = ">";
+        private const string m_localeKeySeparator = "|";
+        private const string m_commentChar = "#";
+        private const string m_ignorePrefixChar = "%";
+        private static string m_language = "";
         protected readonly string[] locales = new string[] { "en", "pt", "ko", "de", "cn", "pl", "nl", "fr", "es", "ru" };
-        public abstract string prefix { get; }
-        protected abstract string packagePrefix { get; }
+        public abstract string Prefix { get; }
+        protected abstract string PackagePrefix { get; }
 
-        public string loadedLanguage
+        public string LoadedLanguage
         {
             get {
-                return language;
+                return m_language;
             }
         }
 
-        public string loadedLanguageEffective
+        public string LoadedLanguageEffective
         {
             get {
-                return language.Length == 0 ? "en" : language.Substring(0, 2);
+                return m_language.Length == 0 ? "en" : m_language.Substring(0, 2);
             }
         }
 
-        public string[] getLanguageIndex()
+        public string[] GetLanguageIndex()
         {
             Array8<string> saida = new Array8<string>((uint)locales.Length + 1);
-            saida.m_buffer[0] = Locale.Get(prefix + "GAME_DEFAULT_LANGUAGE");
+            saida.m_buffer[0] = Locale.Get(Prefix + "GAME_DEFAULT_LANGUAGE");
             for (int i = 0; i < locales.Length; i++)
             {
-                saida.m_buffer[i + 1] = Locale.Get(prefix + "LANG", locales[i]);
+                saida.m_buffer[i + 1] = Locale.Get(Prefix + "LANG", locales[i]);
             }
             return saida.m_buffer;
         }
 
-        public string getSelectedLocaleByIndex()
+        public string GetSelectedLocaleByIndex()
         {
-            var idx = currentLanguageId.value;
+            var idx = CurrentLanguageId.value;
             if (idx == 0)
             {
                 return SingletonLite<LocaleManager>.instance.language;
@@ -60,40 +60,40 @@ namespace Klyte.Commons.i18n
             return locales[idx - 1];
         }
 
-        public void loadCurrentLocale(bool force, string prefix = null, string packagePrefix = null)
+        public void LoadCurrentLocale(bool force, string prefix = null, string packagePrefix = null)
         {
-            loadLocale(getSelectedLocaleByIndex(), force, prefix ?? this.prefix, packagePrefix ?? this.packagePrefix);
+            LoadLocale(GetSelectedLocaleByIndex(), force, prefix ?? this.Prefix, packagePrefix ?? this.PackagePrefix);
         }
 
-        internal virtual void loadLocale(string localeId, bool force, string prefix = null, string packagePrefix = null)
+        internal virtual void LoadLocale(string localeId, bool force, string prefix = null, string packagePrefix = null)
         {
-            loadLocaleIntern(localeId, true, prefix ?? this.prefix, packagePrefix ?? this.packagePrefix);
+            LoadLocaleIntern(localeId, true, prefix ?? this.Prefix, packagePrefix ?? this.PackagePrefix);
         }
-        private void loadLocaleIntern(string localeId, bool setLocale, string prefix, string packagePrefix)
+        private void LoadLocaleIntern(string localeId, bool setLocale, string prefix, string packagePrefix)
         {
-            KlyteUtils.doLog($"{GetType()} localeId: {localeId}");
-            string load = Singleton<R>.instance.loadResourceString("UI.i18n." + localeId + ".properties");
+            LogUtils.DoLog($"{GetType()} localeId: {localeId}");
+            string load = Singleton<R>.instance.LoadResourceString("UI.i18n." + localeId + ".properties");
             if (load == null)
             {
-                KlyteUtils.doLog("File UI.i18n." + localeId + ".properties not found. Probably this translation doesn't exists for this mod.");
+                LogUtils.DoLog("File UI.i18n." + localeId + ".properties not found. Probably this translation doesn't exists for this mod.");
                 load = "";
             }
-            var locale = KlyteUtils.GetPrivateField<Locale>(LocaleManager.instance, "m_Locale");
+            var locale = ReflectionUtils.GetPrivateField<Locale>(LocaleManager.instance, "m_Locale");
             Locale.Key k;
 
 
-            foreach (var myString in load.Split(lineSeparator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            foreach (var myString in load.Split(m_lineSeparator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
             {
-                if (myString.StartsWith(commentChar)) continue;
-                if (!myString.Contains(kvSeparator)) continue;
-                bool noPrefix = myString.StartsWith(ignorePrefixChar);
-                var array = myString.Split(kvSeparator.ToCharArray(), 2);
+                if (myString.StartsWith(m_commentChar)) continue;
+                if (!myString.Contains(m_kvSeparator)) continue;
+                bool noPrefix = myString.StartsWith(m_ignorePrefixChar);
+                var array = myString.Split(m_kvSeparator.ToCharArray(), 2);
                 string value = array[1];
                 int idx = 0;
                 string localeKey = null;
-                if (array[0].Contains(idxSeparator))
+                if (array[0].Contains(m_idxSeparator))
                 {
-                    var arrayIdx = array[0].Split(idxSeparator.ToCharArray());
+                    var arrayIdx = array[0].Split(m_idxSeparator.ToCharArray());
                     if (!int.TryParse(arrayIdx[1], out idx))
                     {
                         continue;
@@ -101,9 +101,9 @@ namespace Klyte.Commons.i18n
                     array[0] = arrayIdx[0];
 
                 }
-                if (array[0].Contains(localeKeySeparator))
+                if (array[0].Contains(m_localeKeySeparator))
                 {
-                    array = array[0].Split(localeKeySeparator.ToCharArray());
+                    array = array[0].Split(m_localeKeySeparator.ToCharArray());
                     localeKey = array[1];
                 }
 
@@ -121,11 +121,11 @@ namespace Klyte.Commons.i18n
 
             if (localeId != "en")
             {
-                loadLocaleIntern("en", false, prefix, packagePrefix);
+                LoadLocaleIntern("en", false, prefix, packagePrefix);
             }
             if (setLocale)
             {
-                language = localeId;
+                m_language = localeId;
             }
 
         }

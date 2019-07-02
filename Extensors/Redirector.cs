@@ -19,21 +19,21 @@ namespace Klyte.Commons.Extensors
     public abstract class Redirector<T> : Redirector where T : Redirector<T>
     {
         #region Class Base
-        private readonly HarmonyInstance harmony = HarmonyInstance.Create("com.klyte.commons." + typeof(T).Name);
+        private readonly HarmonyInstance m_harmony = HarmonyInstance.Create("com.klyte.commons." + typeof(T).Name);
         private static T m_instance;
-        public static T instance => m_instance;
+        public static T Instance => m_instance;
 
         public HarmonyInstance GetHarmonyInstance()
         {
-            return harmony;
+            return m_harmony;
         }
         #endregion
 
-        protected static bool semiPreventDefault()
+        protected static bool SemiPreventDefault()
         {
             StackTrace stackTrace = new StackTrace();
             StackFrame[] stackFrames = stackTrace.GetFrames();
-            m_instance?.doLog($"SemiPreventDefault fullStackTrace: \r\n {Environment.StackTrace}");
+            m_instance?.DoLog($"SemiPreventDefault fullStackTrace: \r\n {Environment.StackTrace}");
             for (int i = 2; i < stackFrames.Length; i++)
             {
                 if (stackFrames[i].GetMethod().DeclaringType.ToString().StartsWith("Klyte."))
@@ -52,7 +52,7 @@ namespace Klyte.Commons.Extensors
         }
 
         public abstract void AwakeBody();
-        public abstract void doLog(string text, params object[] param);
+        public abstract void DoLog(string text, params object[] param);
 
 
         public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null)
@@ -62,7 +62,7 @@ namespace Klyte.Commons.Extensors
 
         public void OnDestroy()
         {
-            doLog($"Destroying {typeof(T)}");
+            DoLog($"Destroying {typeof(T)}");
             GetHarmonyInstance().UnpatchAll();
         }
 

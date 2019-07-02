@@ -57,7 +57,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 catch (Exception e)
                 {
-                    KlyteUtils.doLog("ERRO AO OBTER VALOR STR ARR: {0}", e.StackTrace);
+                    LogUtils.DoLog("ERRO AO OBTER VALOR STR ARR: {0}", e.StackTrace);
                     continue;
                 }
 
@@ -144,41 +144,41 @@ namespace Klyte.Commons.Interfaces
             if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER SALVA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                loadedConfig = Singleton<I>.instance.getConfig2();
+                loadedConfig = Singleton<I>.instance.GetConfig2();
             }
             else
             {
-                loadedConfig = Singleton<I>.instance.currentLoadedCityConfig;
+                loadedConfig = Singleton<I>.instance.CurrentLoadedCityConfig;
             }
             var value = RecursiveEncode(target);
-            KlyteUtils.doLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
-            loadedConfig.setString(idx, value);
+            LogUtils.DoLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
+            loadedConfig.SetString(idx, value);
         }
         protected Dictionary<uint, Dictionary<T, string>> LoadConfig(K idx, bool global = false)
         {
             var result = new Dictionary<uint, Dictionary<T, string>>();
-            KlyteUtils.doLog("{0} load()", idx);
+            LogUtils.DoLog("{0} load()", idx);
             string[] itemListLvl1;
             if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER CARREGADA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                itemListLvl1 = Singleton<I>.instance.getConfig2().getString(idx).Split(ItSepLvl1.ToCharArray());
+                itemListLvl1 = Singleton<I>.instance.GetConfig2().GetString(idx).Split(ItSepLvl1.ToCharArray());
             }
             else
             {
-                itemListLvl1 = Singleton<I>.instance.currentLoadedCityConfig.getString(idx).Split(ItSepLvl1.ToCharArray());
+                itemListLvl1 = Singleton<I>.instance.CurrentLoadedCityConfig.GetString(idx).Split(ItSepLvl1.ToCharArray());
             }
 
             if (itemListLvl1.Length > 0)
             {
-                KlyteUtils.doLog("{0} load(): file.Length > 0", idx);
+                LogUtils.DoLog("{0} load(): file.Length > 0", idx);
                 foreach (string s in itemListLvl1)
                 {
                     uint key = GetIndexFromStringArray(s);
                     var value = GetValueFromStringArray(s);
                     result[key] = value;
                 }
-                KlyteUtils.doLog("{0} load(): dic done", idx);
+                LogUtils.DoLog("{0} load(): dic done", idx);
                 result.Remove(~0u);
             }
             return result;
@@ -192,40 +192,40 @@ namespace Klyte.Commons.Interfaces
             if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER SALVA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                loadedConfig = Singleton<I>.instance.getConfig2();
+                loadedConfig = Singleton<I>.instance.GetConfig2();
             }
             else
             {
-                loadedConfig = Singleton<I>.instance.currentLoadedCityConfig;
+                loadedConfig = Singleton<I>.instance.CurrentLoadedCityConfig;
             }
             var value = RecursiveEncode(target);
-            KlyteUtils.doLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
-            loadedConfig.setString(idx, value);
+            LogUtils.DoLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
+            loadedConfig.SetString(idx, value);
         }
         protected List<Dictionary<T, string>> LoadConfigList(K idx, bool global = false)
         {
             var result = new List<Dictionary<T, string>>();
-            KlyteUtils.doLog("{0} load()", idx);
+            LogUtils.DoLog("{0} load()", idx);
             string[] itemListLvl1;
             if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER CARREGADA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                itemListLvl1 = Singleton<I>.instance.getConfig2().getString(idx).Split(ItSepLvl1.ToCharArray());
+                itemListLvl1 = Singleton<I>.instance.GetConfig2().GetString(idx).Split(ItSepLvl1.ToCharArray());
             }
             else
             {
-                itemListLvl1 = Singleton<I>.instance.currentLoadedCityConfig.getString(idx).Split(ItSepLvl1.ToCharArray());
+                itemListLvl1 = Singleton<I>.instance.CurrentLoadedCityConfig.GetString(idx).Split(ItSepLvl1.ToCharArray());
             }
 
             if (itemListLvl1.Length > 0)
             {
-                KlyteUtils.doLog("{0} load(): file.Length > 0", idx);
+                LogUtils.DoLog("{0} load(): file.Length > 0", idx);
                 foreach (string s in itemListLvl1)
                 {
                     var value = GetValueFromStringArray(s);
                     result.Add(value);
                 }
-                KlyteUtils.doLog("{0} load(): dic done", idx);
+                LogUtils.DoLog("{0} load(): dic done", idx);
             }
             return result;
         }
@@ -240,30 +240,29 @@ namespace Klyte.Commons.Interfaces
             if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER SALVA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                loadedConfig = Singleton<I>.instance.getConfig2();
+                loadedConfig = Singleton<I>.instance.GetConfig2();
             }
             else
             {
-                loadedConfig = Singleton<I>.instance.currentLoadedCityConfig;
+                loadedConfig = Singleton<I>.instance.CurrentLoadedCityConfig;
             }
             var value = RecursiveEncode(target, 1);
-            KlyteUtils.doLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
-            loadedConfig.setString(idx, value);
+            LogUtils.DoLog("saveConfig ({0}) NEW VALUE: {1}", idx, value);
+            loadedConfig.SetString(idx, value);
         }
 
         protected Dictionary<T, string> LoadConfigSingle(K idx, bool global = false)
         {
-            var result = new Dictionary<T, string>();
-            KlyteUtils.doLog("{0} load()", idx);
+            LogUtils.DoLog("{0} load()", idx);
             string itemList;
             if (global && !AllowGlobal) { throw new Exception("CONFIGURAÇÂO NÃO GLOBAL TENTOU SER CARREGADA COMO GLOBAL: " + typeof(U)); }
             if (global)
             {
-                itemList = Singleton<I>.instance.getConfig2().getString(idx);
+                itemList = Singleton<I>.instance.GetConfig2().GetString(idx);
             }
             else
             {
-                itemList = Singleton<I>.instance.currentLoadedCityConfig.getString(idx);
+                itemList = Singleton<I>.instance.CurrentLoadedCityConfig.GetString(idx);
             }
 
             return GetValueFromStringArray(itemList);
