@@ -22,7 +22,7 @@ namespace Klyte.Commons.UI
                 {
                     LogUtils.DoLog("Creating KlyteModsPanel");
                     UIComponent view = KlyteCommonsMod.Instance.KcPanelContainer;
-                    KlyteUiUtils.CreateUIElement(out UIPanel panelObj, view.transform);
+                    KlyteMonoUtils.CreateUIElement(out UIPanel panelObj, view.transform);
 
                     m_instance = panelObj.gameObject.AddComponent<KlyteModsPanel>();
                 }
@@ -36,12 +36,12 @@ namespace Klyte.Commons.UI
             ControlContainer = GetComponent<UIPanel>();
             ControlContainer.name = "KCPanel";
 
-            KlyteUiUtils.CreateUIElement(out UIPanel _mainPanel, ControlContainer.transform, "KCListPanel", new Vector4(395, 58, 875, 550));
+            KlyteMonoUtils.CreateUIElement(out UIPanel _mainPanel, ControlContainer.transform, "KCListPanel", new Vector4(395, 58, 875, 550));
             MainPanel = _mainPanel;
 
-            KlyteUiUtils.CreateUIElement(out m_stripMain, MainPanel.transform, "KCTabstrip", new Vector4(10, -40, MainPanel.width - 20, 40));
+            KlyteMonoUtils.CreateUIElement(out m_stripMain, MainPanel.transform, "KCTabstrip", new Vector4(10, -40, MainPanel.width - 20, 40));
 
-            KlyteUiUtils.CreateUIElement(out UITabContainer tabContainer, MainPanel.transform, "KCTabContainer", new Vector4(0, 0, MainPanel.width, MainPanel.height));
+            KlyteMonoUtils.CreateUIElement(out UITabContainer tabContainer, MainPanel.transform, "KCTabContainer", new Vector4(0, 0, MainPanel.width, MainPanel.height));
             m_stripMain.tabPages = tabContainer;
             m_stripMain.selectedIndex = 0;
             m_stripMain.selectedIndex = -1;
@@ -70,7 +70,7 @@ namespace Klyte.Commons.UI
             superTab.tooltip = tooltip;
             superTab.foregroundSpriteMode = UIForegroundSpriteMode.Stretch;
 
-            KlyteUiUtils.CreateUIElement(out UIPanel content, null);
+            KlyteMonoUtils.CreateUIElement(out UIPanel content, null);
             content.name = "Container";
             content.area = new Vector4(0, 0, width ?? MainPanel.width, MainPanel.height);
 
@@ -87,8 +87,8 @@ namespace Klyte.Commons.UI
 
         private static UIButton CreateTabTemplate()
         {
-            KlyteUiUtils.CreateUIElement(out UIButton tabTemplate, null, "KCTabTemplate");
-            KlyteUiUtils.InitButton(tabTemplate, false, "GenericTab");
+            KlyteMonoUtils.CreateUIElement(out UIButton tabTemplate, null, "KCTabTemplate");
+            KlyteMonoUtils.InitButton(tabTemplate, false, "GenericTab");
             tabTemplate.autoSize = false;
             tabTemplate.width = 40;
             tabTemplate.height = 40;

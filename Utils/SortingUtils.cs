@@ -11,7 +11,7 @@ namespace Klyte.Commons.Utils
 
         public static int NaturalCompare(string left, string right)
         {
-            return (int)typeof(PublicTransportDetailPanel).GetMethod("NaturalCompare", Redirector.allFlags).Invoke(null, new object[] { left, right });
+            return (int)typeof(PublicTransportDetailPanel).GetMethod("NaturalCompare", RedirectorUtils.allFlags).Invoke(null, new object[] { left, right });
         }
 
         public static void Quicksort(IList<UIComponent> elements, Comparison<UIComponent> comp, bool invert)

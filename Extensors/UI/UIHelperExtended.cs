@@ -184,7 +184,7 @@ namespace Klyte.Commons.Extensors
             {
                 UIPanel uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 label = uIPanel.Find<UILabel>("Label");
-                if (limitLabelByPanelWidth) { KlyteUiUtils.LimitWidth(label, (uint)uIPanel.width); }
+                if (limitLabelByPanelWidth) { KlyteMonoUtils.LimitWidth(label, (uint)uIPanel.width); }
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -216,7 +216,7 @@ namespace Klyte.Commons.Extensors
                 UIPanel uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 uIPanel.Find<UILabel>("Label").localeID = text;
                 uIPanel.Find<UILabel>("Label").isLocalized = true;
-                if (limitLabelByPanelWidth) { KlyteUiUtils.LimitWidth(uIPanel.Find<UILabel>("Label"), (uint)uIPanel.width); }
+                if (limitLabelByPanelWidth) { KlyteMonoUtils.LimitWidth(uIPanel.Find<UILabel>("Label"), (uint)uIPanel.width); }
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
                 uIDropDown.selectedIndex = defaultSelection;
@@ -477,7 +477,7 @@ namespace Klyte.Commons.Extensors
                 panel.wrapLayout = false;
                 panel.autoFitChildrenVertically = true;
                 GameObject.Destroy(panel.Find<UIDropDown>("Dropdown").gameObject);
-                var colorField = KlyteUiUtils.CreateColorField(panel);
+                var colorField = KlyteMonoUtils.CreateColorField(panel);
                 colorField.selectedColor = defaultValue;
 
                 colorField.eventSelectedColorReleased += (cp, value) =>
@@ -496,7 +496,7 @@ namespace Klyte.Commons.Extensors
         {
             if (eventCallback != null && !string.IsNullOrEmpty(name))
             {
-                var colorField = KlyteUiUtils.CreateColorField(m_root);
+                var colorField = KlyteMonoUtils.CreateColorField(m_root);
 
                 colorField.eventSelectedColorReleased += (cp, value) =>
                 {
@@ -672,7 +672,7 @@ namespace Klyte.Commons.Extensors
             uipanel.padding = new RectOffset(10, 10, 10, 10);
             uipanel.size = new Vector2(newGroup.Self.size.x, 0f);
 
-            KlyteUiUtils.LimitWidth(toggleLabel, uipanel.width, true);
+            KlyteMonoUtils.LimitWidth(toggleLabel, uipanel.width, true);
 
             parentPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
 

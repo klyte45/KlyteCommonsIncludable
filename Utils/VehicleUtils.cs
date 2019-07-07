@@ -24,17 +24,18 @@ namespace Klyte.Commons.Utils
             }
             return saida;
         }
-        public static int GetCapacity(VehicleInfo info, bool noLoop = false)
+
+        public static int GetCapacity<AI>(VehicleInfo info, AI ai,  bool noLoop = false) where AI: PrefabAI
         {
             if (info == null) return -1;
-            int capacity = ReflectionUtils. GetPrivateField<int>(info.GetAI(), "m_passengerCapacity");
+            int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>("m_passengerCapacity",ai.GetType())(ai);
             try
             {
                 if (!noLoop)
                 {
                     foreach (var trailer in info.m_trailers)
                     {
-                        capacity += GetCapacity(trailer.m_info, true);
+                        capacity += GetCapacity(trailer.m_info, trailer.m_info.GetAI(), true);
                     }
                 }
             }

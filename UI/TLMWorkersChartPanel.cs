@@ -53,7 +53,7 @@ namespace Klyte.Commons.UI
 
         private void CreateLineCharts(Vector3 relativePos)
         {
-            KlyteUiUtils.CreateUIElement(out m_agesChartPanel, m_parent);
+            KlyteMonoUtils.CreateUIElement(out m_agesChartPanel, m_parent);
             m_agesChartPanel.relativePosition = relativePos;
             m_agesChartPanel.width = 140;
             m_agesChartPanel.height = 70;
@@ -63,7 +63,7 @@ namespace Klyte.Commons.UI
             m_agesChartPanel.wrapLayout = false;
             m_agesChartPanel.tooltipLocaleID = "ZONEDBUILDING_WORKERCHART";
 
-            KlyteUiUtils.CreateUIElement(out UIPanel pieLegendPanel, m_agesChartPanel.transform);
+            KlyteMonoUtils.CreateUIElement(out UIPanel pieLegendPanel, m_agesChartPanel.transform);
             pieLegendPanel.relativePosition = new Vector3(70f, 0f);
             pieLegendPanel.width = 70;
             pieLegendPanel.height = 70;
@@ -72,7 +72,7 @@ namespace Klyte.Commons.UI
             pieLegendPanel.autoLayout = false;
             pieLegendPanel.useCenter = true;
 
-            KlyteUiUtils.CreateUIElement(out m_workplaceChart, m_agesChartPanel.transform);
+            KlyteMonoUtils.CreateUIElement(out m_workplaceChart, m_agesChartPanel.transform);
             m_workplaceChart.spriteName = "PieChartWhiteBg";
             m_workplaceChart.relativePosition = new Vector3(0, 0);
             m_workplaceChart.width = 70;
@@ -89,7 +89,7 @@ namespace Klyte.Commons.UI
             m_legendL2 = CriaFatiaELegenda(twoSchool, m_workplaceChart, pieLegendPanel, "ZONEDBUILDING_WELLEDUCATED", 14 * y++);
             m_legendL3 = CriaFatiaELegenda(threeSchool, m_workplaceChart, pieLegendPanel, "ZONEDBUILDING_HIGHLYEDUCATED", 14 * y++);
 
-            KlyteUiUtils.CreateUIElement(out m_workersChart, m_workplaceChart.transform);
+            KlyteMonoUtils.CreateUIElement(out m_workersChart, m_workplaceChart.transform);
             m_workersChart.spriteName = "PieChartWhiteFg";
             m_workersChart.relativePosition = new Vector3(0, 0);
             m_workersChart.width = 70;
@@ -106,7 +106,7 @@ namespace Klyte.Commons.UI
             chart.AddSlice(c, c);
             if (legendPanel != null)
             {
-                KlyteUiUtils.CreateUIElement(out UIPanel legendItemContainer, legendPanel.transform);
+                KlyteMonoUtils.CreateUIElement(out UIPanel legendItemContainer, legendPanel.transform);
                 legendItemContainer.width = legendPanel.width;
                 legendItemContainer.relativePosition = new Vector3(0f, offsetY);
                 legendItemContainer.name = "LegendItem";
@@ -114,13 +114,13 @@ namespace Klyte.Commons.UI
                 legendItemContainer.useCenter = true;
                 legendItemContainer.wrapLayout = false;
                 legendItemContainer.height = 20;
-                KlyteUiUtils.CreateUIElement(out UILabel legendColor, legendItemContainer.transform);
+                KlyteMonoUtils.CreateUIElement(out UILabel legendColor, legendItemContainer.transform);
                 legendColor.backgroundSprite = "EmptySprite";
                 legendColor.width = 10;
                 legendColor.height = 10;
                 legendColor.relativePosition = new Vector3(0, 0);
                 legendColor.color = c;
-                KlyteUiUtils.CreateUIElement(out UILabel legendName, legendItemContainer.transform);
+                KlyteMonoUtils.CreateUIElement(out UILabel legendName, legendItemContainer.transform);
                 legendName.textAlignment = UIHorizontalAlignment.Right;
                 legendName.width = legendItemContainer.width - 10;
                 legendName.localeID = localeID;

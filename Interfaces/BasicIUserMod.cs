@@ -15,9 +15,8 @@ using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserMod<U, L, R, C, A, T> : IUserMod, ILoadingExtension
-        where U : BasicIUserMod<U, L, R, C, A, T>, new()
-        where L : KlyteLocaleUtils<L, R>
+    public abstract class BasicIUserMod<U, R, C, A, T> : IUserMod, ILoadingExtension
+        where U : BasicIUserMod<U, R, C, A, T>, new()
         where R : KlyteResourceLoader<R>
         where C : MonoBehaviour
         where A : TextureAtlasDescriptor<A, R>
@@ -51,7 +50,7 @@ namespace Klyte.Commons.Interfaces
         public void OnLevelLoaded(LoadMode mode)
         {
             m_topObj = new GameObject(typeof(U).Name);
-            var typeTarg = typeof(Redirector<>);
+            var typeTarg = typeof(IRedirectable);
             var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
             DoLog($"{SimpleName} Redirectors: {instances.Count()}");
             foreach (Type t in instances)
@@ -76,21 +75,6 @@ namespace Klyte.Commons.Interfaces
             if (typeof(U).Assembly.GetName().Version.Revision != 9999)
             {
                 Application.Quit();
-            }
-            var typeTarg = typeof(Redirector<>);
-            var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
-            DoLog($"{SimpleName} Redirectors: {instances.Count()}");
-            foreach (Type t in instances)
-            {
-                GameObject.Destroy((Redirector)ReflectionUtils.GetPrivateStaticField("instance", t));
-            }
-            GameObject.Destroy(m_topObj);
-            typeTarg = typeof(Singleton<>);
-            instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
-
-            foreach (Type t in instances)
-            {
-                GameObject.Destroy(((MonoBehaviour)ReflectionUtils.GetPrivateStaticProperty("instance", t)));
             }
         }
         public virtual void OnReleased()
@@ -119,28 +103,21 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
-        private static U m_instance;
-        public static U Instance => m_instance;
-
-        private static readonly SavedBool m_debugMode = new SavedBool(Singleton<L>.instance.Prefix + "DebugMode", Settings.gameSettingsFile, false, true);
+        private static readonly SavedBool m_debugMode = new SavedBool(KlyteLocaleManager.m_defaultPrefixInGame + "DebugMode", Settings.gameSettingsFile, false, true);
         public bool needShowPopup;
-        private static bool m_isLocaleLoaded = false;
-        public static bool LocaleLoaded => m_isLocaleLoaded;
-
 
         public static SavedBool DebugMode => m_debugMode;
-        private SavedString CurrentSaveVersion => new SavedString(Singleton<L>.instance.Prefix + "SaveVersion", Settings.gameSettingsFile, "null", true);
+        private SavedString CurrentSaveVersion => new SavedString(KlyteLocaleManager.m_defaultPrefixInGame + "SaveVersion", Settings.gameSettingsFile, "null", true);
         public static bool IsCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
 
-
-
+        public static U Instance { get; set; }
 
         protected void Construct()
         {
-            m_instance = this as U;
-            Debug.LogWarningFormat(Singleton<L>.instance.Prefix + "v" + MajorVersion + " LOADING ");
+            Instance = this as U;
+            Debug.LogWarningFormat(KlyteLocaleManager.m_defaultPrefixInGame + "v" + MajorVersion + " LOADING ");
             LoadSettings();
-            Debug.LogWarningFormat(Singleton<L>.instance.Prefix + "v" + MajorVersion + " SETTING FILES");
+            Debug.LogWarningFormat(KlyteLocaleManager.m_defaultPrefixInGame + "v" + MajorVersion + " SETTING FILES");
             if (m_debugMode.value)
                 Debug.LogWarningFormat("currentSaveVersion.value = {0}, fullVersion = {1}", CurrentSaveVersion.value, FullVersion);
             if (CurrentSaveVersion.value != FullVersion)
@@ -159,24 +136,26 @@ namespace Klyte.Commons.Interfaces
                 if (m_onSettingsUiComponent != null)
                     DoWithSettingsUI(new UIHelperExtension(m_onSettingsUiComponent));
             }
-            EventOnLoadLocaleEnd += ev;
-            if (typeof(U) == typeof(KlyteCommonsMod))
+            if (Locale.Get("K45_TEST_UP") != "OK")
             {
-                LoadLocale(false);
-            }
-            else
-            {
-                KlyteCommonsMod.Instance.EventOnLoadLocaleEnd += delegate ()
+                var localeMan = KlyteMonoUtils.CreateElement<KlyteLocaleManager>(null);
+                if (Locale.Get("K45_TEST_UP") != "OK")
                 {
-                    LoadLocale(true);
-                };
+                    LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
+                }
+                LocaleManager.eventLocaleChanged += localeMan.ReloadLanguage;
             }
-            if (KlyteCommonsMod.m_isLocaleLoaded)
+            var localeManager = GameObject.FindObjectOfType<KlyteLocaleManager>();
+            foreach (var lang in KlyteLocaleManager.locales)
             {
-                LoadLocale(false);
-                ev();
+                var content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
+                if (content != null)
+                {
+                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
+                }
             }
-
+            localeManager.ReloadLanguage();
+            ev();
         }
 
         private void DoWithSettingsUI(UIHelperExtension helper)
@@ -203,13 +182,13 @@ namespace Klyte.Commons.Interfaces
 
         protected void CreateGroup9(UIHelperExtension helper)
         {
-            UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("KCM_BETAS_EXTRA_INFO"));
+            UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("K45_BETAS_EXTRA_INFO"));
             Group9SettingsUI(group9);
 
-            group9.AddCheckbox(Locale.Get("KCM_DEBUG_MODE"), m_debugMode.value, delegate (bool val) { m_debugMode.value = val; });
-            group9.AddLabel(String.Format(Locale.Get("KCM_VERSION_SHOW"), FullVersion));
-            if (typeof(R) != typeof(KCResourceLoader)) group9.AddLabel(Locale.Get("KCM_ORIGINAL_TLM_VERSION") + " " + string.Join(".", Singleton<R>.instance.LoadResourceString("TLMVersion.txt").Split(".".ToCharArray()).Take(3).ToArray()));
-            group9.AddButton(Locale.Get("KCM_RELEASE_NOTES"), delegate ()
+            group9.AddCheckbox(Locale.Get("K45_DEBUG_MODE"), m_debugMode.value, delegate (bool val) { m_debugMode.value = val; });
+            group9.AddLabel(String.Format(Locale.Get("K45_VERSION_SHOW"), FullVersion));
+            if (typeof(R) != typeof(KCResourceLoader)) group9.AddLabel(Locale.Get("K45_ORIGINAL_TLM_VERSION") + " " + string.Join(".", Singleton<R>.instance.LoadResourceString("TLMVersion.txt").Split(".".ToCharArray()).Take(3).ToArray()));
+            group9.AddButton(Locale.Get("K45_RELEASE_NOTES"), delegate ()
             {
                 ShowVersionInfoPopup(true);
             });
@@ -263,18 +242,6 @@ namespace Klyte.Commons.Interfaces
             }
             return false;
         }
-
-        public void LoadLocale(bool force)
-        {
-            if (!m_isLocaleLoaded || force)
-            {
-                Singleton<L>.instance.LoadCurrentLocale(force);
-                EventOnLoadLocaleEnd?.Invoke();
-                m_isLocaleLoaded = true;
-            }
-        }
-        private delegate void OnLocaleLoadedFirstTime();
-        private event OnLocaleLoadedFirstTime EventOnLoadLocaleEnd;
 
     }
 

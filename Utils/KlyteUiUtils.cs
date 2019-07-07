@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Klyte.Commons.Utils
 {
-    public class KlyteUiUtils
+    public class KlyteMonoUtils
     {
         #region UI utils
         public static T CreateElement<T>(Transform parent, string name = null) where T : MonoBehaviour

@@ -13,11 +13,12 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
+[assembly: AssemblyVersion("0.0.0.*")]
 namespace Klyte.Commons
 {
-    public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCLocaleUtils, KCResourceLoader, MonoBehaviour, KCCommonTextureAtlas, UICustomControl>
+    public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCResourceLoader, MonoBehaviour, KCCommonTextureAtlas, UICustomControl>
     {
-        public override string SimpleName => "Klyte Commons";
+        public override string SimpleName => "Klyte Commons REWORK";
         public override string Description => "Base mod for Klyte45 mods. Required dependency";
 
         public override void DoErrorLog(string fmt, params object[] args)
@@ -43,23 +44,31 @@ namespace Klyte.Commons
 
         public override void TopSettingsUI(UIHelperExtension ext)
         {
-            LocaleManager.eventLocaleChanged += new LocaleManager.LocaleChangedHandler(AutoLoadLocale);
+            LocaleManager.eventLocaleChanged += () =>
+            {
+                var localeManager = GameObject.FindObjectOfType<KlyteLocaleManager>();
+                if (localeManager != null)
+                {
+                    localeManager.ReloadLanguage();
+                }
+            };
         }
 
         public override void Group9SettingsUI(UIHelperExtension group9)
         {
-            group9.AddDropdownLocalized("KCM_MOD_LANG", KCLocaleUtils.instance.GetLanguageIndex(), KCLocaleUtils.CurrentLanguageId.value, delegate (int idx)
-            {
-                KCLocaleUtils.CurrentLanguageId.value = idx;
-                LocaleManager.ForceReload();
-            });
-            group9.AddLabel(Locale.Get("KCM_LANG_NOTICE"));
+            var localeManager = GameObject.FindObjectOfType<KlyteLocaleManager>();
+            var dd = group9.AddDropdownLocalized("K45_MOD_LANG", (new string[] { "K45_GAME_DEFAULT_LANGUAGE" }.Concat(KlyteLocaleManager.locales.Select(x => $"K45_LANG_{x}")).Select(x => Locale.Get(x))).ToArray(), localeManager.LoadedLanguageIdx, delegate (int idx)
+             {
+                 localeManager = GameObject.FindObjectOfType<KlyteLocaleManager>();
+                 if (localeManager != null)
+                 {
+                     localeManager.LoadedLanguageIdx = idx;
+                 }
+             });
+            LocaleManager.eventLocaleChanged += () => dd.items = new string[] { "K45_GAME_DEFAULT_LANGUAGE" }.Concat(KlyteLocaleManager.locales.Select(x => $"K45_LANG_{x}")).Select(x => Locale.Get(x)).ToArray();
+            group9.AddLabel(Locale.Get("K45_LANG_NOTICE"));
         }
 
-        public void AutoLoadLocale()
-        {
-            LoadLocale(true);
-        }
 
         private UIButton m_openKCPanelButton;
         private UIPanel m_kCPanelContainer;
@@ -71,7 +80,7 @@ namespace Klyte.Commons
                 if (m_kCPanelContainer == null)
                 {
                     UITabstrip toolStrip = ToolsModifierControl.mainToolbar.GetComponentInChildren<UITabstrip>();
-                    KlyteUiUtils.CreateUIElement(out m_openKCPanelButton, null);
+                    KlyteMonoUtils.CreateUIElement(out m_openKCPanelButton, null);
                     m_openKCPanelButton.size = new Vector2(43f, 49f);
                     m_openKCPanelButton.tooltip = "Klyte45's Mods (v" + KlyteCommonsMod.Version + ")";
                     m_openKCPanelButton.atlas = KCCommonTextureAtlas.instance.Atlas;
@@ -91,7 +100,7 @@ namespace Klyte.Commons
                     m_openKCPanelButton.playAudioEvents = true;
                     m_openKCPanelButton.tabStrip = true;
 
-                    KlyteUiUtils.CreateUIElement(out m_kCPanelContainer, null);
+                    KlyteMonoUtils.CreateUIElement(out m_kCPanelContainer, null);
 
                     toolStrip.AddTab("Klyte45Button", m_openKCPanelButton.gameObject, m_kCPanelContainer.gameObject);
 
