@@ -12,26 +12,26 @@ namespace Klyte.Commons.Utils
         {
             try
             {
-                if (KlyteCommonsMod.DebugMode)
+                if (CommonProperties.DebugMode)
                 {
-                    Debug.LogWarningFormat("KCv" + KlyteCommonsMod.Version + " " + format, args);
+                    Debug.LogWarningFormat($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
                 }
 
             }
             catch
             {
-                Debug.LogErrorFormat("KltUtils: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
         internal static void DoErrorLog(string format, params object[] args)
         {
             try
             {
-                Console.WriteLine("KCv" + KlyteCommonsMod.Version + " " + format, args);
+                Console.WriteLine($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
             }
             catch
             {
-                Debug.LogErrorFormat("KltUtils: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
         #endregion

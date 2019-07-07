@@ -8,6 +8,7 @@ using Klyte.Commons.i18n;
 using Klyte.Commons.UI;
 using Klyte.Commons.Utils;
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,8 +34,6 @@ namespace Klyte.Commons.Interfaces
 
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
-
-        protected virtual ModTab? Tab => null;
         protected virtual float? TabWidth => null;
 
 
@@ -50,7 +49,7 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnLevelLoaded(LoadMode mode)
         {
-            m_topObj = new GameObject(typeof(U).Name);
+            m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
             var typeTarg = typeof(IRedirectable);
             var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
             DoLog($"{SimpleName} Redirectors: {instances.Count()}");
@@ -62,11 +61,6 @@ namespace Klyte.Commons.Interfaces
             {
                 m_controller = m_topObj.AddComponent<C>();
             }
-            if (Tab != null)
-            {
-                KlyteModsPanel.Instance.AddTab((ModTab)Tab, typeof(T), Singleton<A>.instance.Atlas, Enum.GetNames(typeof(S))[0], GeneralName, (x, y) => { if (y) ShowVersionInfoPopup(); }, TabWidth);
-            }
-
         }
 
         public string GeneralName => $"{SimpleName} (v{Version})";
@@ -104,11 +98,10 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
-        private static readonly SavedBool m_debugMode = new SavedBool(KlyteLocaleManager.m_defaultPrefixInGame + "DebugMode", Settings.gameSettingsFile, false, true);
         public bool needShowPopup;
 
-        public static SavedBool DebugMode => m_debugMode;
-        private SavedString CurrentSaveVersion => new SavedString(KlyteLocaleManager.m_defaultPrefixInGame + "SaveVersion", Settings.gameSettingsFile, "null", true);
+        public static SavedBool DebugMode { get; } = new SavedBool(KlyteLocaleManager.m_defaultPrefixInGame + "DebugMode", Settings.gameSettingsFile, false, true);
+        private SavedString CurrentSaveVersion { get; } = new SavedString(KlyteLocaleManager.m_defaultPrefixInGame + "SaveVersion", Settings.gameSettingsFile, "null", true);
         public static bool IsCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
 
         public static U Instance { get; set; }
@@ -119,7 +112,7 @@ namespace Klyte.Commons.Interfaces
             Debug.LogWarningFormat(KlyteLocaleManager.m_defaultPrefixInGame + "v" + MajorVersion + " LOADING ");
             LoadSettings();
             Debug.LogWarningFormat(KlyteLocaleManager.m_defaultPrefixInGame + "v" + MajorVersion + " SETTING FILES");
-            if (m_debugMode.value)
+            if (DebugMode.value)
                 Debug.LogWarningFormat("currentSaveVersion.value = {0}, fullVersion = {1}", CurrentSaveVersion.value, FullVersion);
             if (CurrentSaveVersion.value != FullVersion)
             {
@@ -131,32 +124,34 @@ namespace Klyte.Commons.Interfaces
 
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
+
             m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
-            void ev()
-            {
-                if (m_onSettingsUiComponent != null)
-                    DoWithSettingsUI(new UIHelperExtension(m_onSettingsUiComponent));
-            }
+
             if (Locale.Get("K45_TEST_UP") != "OK")
             {
-                var localeMan = KlyteMonoUtils.CreateElement<KlyteLocaleManager>(null);
+                KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
                 if (Locale.Get("K45_TEST_UP") != "OK")
                 {
                     LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
                 }
-                LocaleManager.eventLocaleChanged += localeMan.ReloadLanguage;
+                LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
             }
-            var localeManager = GameObject.FindObjectOfType<KlyteLocaleManager>();
             foreach (var lang in KlyteLocaleManager.locales)
             {
                 var content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
                 if (content != null)
                 {
-                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
+                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}1_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
                 }
+                content = Singleton<R>.instance.LoadResourceString($"commons.UI.i18n.{lang}.properties");
+                if (content != null)
+                {
+                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_common.txt", content);
+                }
+
             }
-            localeManager.ReloadLanguage();
-            ev();
+            KlyteLocaleManager.ReloadLanguage();
+            DoWithSettingsUI(new UIHelperExtension(m_onSettingsUiComponent));
         }
 
         private void DoWithSettingsUI(UIHelperExtension helper)
@@ -177,22 +172,27 @@ namespace Klyte.Commons.Interfaces
             TopSettingsUI(helper);
 
             if (UseGroup9) CreateGroup9(helper);
+            UIDropDown dd = null;
+            dd = helper.AddDropdownLocalized("K45_MOD_LANG", (new string[] { "K45_GAME_DEFAULT_LANGUAGE" }.Concat(KlyteLocaleManager.locales.Select(x => $"K45_LANG_{x}")).Select(x => Locale.Get(x))).ToArray(), KlyteLocaleManager.GetLoadedLanguage(), delegate (int idx)
+            {
+                KlyteLocaleManager.SaveLoadedLanguage(idx);
+                KlyteLocaleManager.ReloadLanguage();
+            });
 
             DoLog("End Loading Options");
         }
-
+        
         protected void CreateGroup9(UIHelperExtension helper)
         {
             UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("K45_BETAS_EXTRA_INFO"));
             Group9SettingsUI(group9);
 
-            group9.AddCheckbox(Locale.Get("K45_DEBUG_MODE"), m_debugMode.value, delegate (bool val) { m_debugMode.value = val; });
+            group9.AddCheckbox(Locale.Get("K45_DEBUG_MODE"), DebugMode.value, delegate (bool val) { DebugMode.value = val; });
             group9.AddLabel(String.Format(Locale.Get("K45_VERSION_SHOW"), FullVersion));
-            if (typeof(R) != typeof(KCResourceLoader)) group9.AddLabel(Locale.Get("K45_ORIGINAL_TLM_VERSION") + " " + string.Join(".", Singleton<R>.instance.LoadResourceString("TLMVersion.txt").Split(".".ToCharArray()).Take(3).ToArray()));
             group9.AddButton(Locale.Get("K45_RELEASE_NOTES"), delegate ()
-            {
-                ShowVersionInfoPopup(true);
-            });
+               {
+                   ShowVersionInfoPopup(true);
+               });
         }
 
         public virtual void Group9SettingsUI(UIHelperExtension group9) { }
