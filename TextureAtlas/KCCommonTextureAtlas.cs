@@ -10,17 +10,19 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using static Klyte.Commons.TextureAtlas.KCCommonTextureAtlas;
 
 namespace Klyte.Commons.TextureAtlas
 {
-    public class KCCommonTextureAtlas : TextureAtlasDescriptor<KCCommonTextureAtlas, KCResourceLoader>
+    public class KCCommonTextureAtlas : TextureAtlasDescriptor<KCCommonTextureAtlas, KCResourceLoader, SpriteNames>
     {
         protected override int Width => 43;
         protected override int Height => 49;
         protected override string ResourceName => "UI.Images.sprites.png";
         protected override string CommonName => "KlyteCommonsSprites";
-        public override string[] SpriteNames => new string[] {
-                    "ToolbarIconGroup6Hovered",    "ToolbarIconGroup6Focused",   "ToolbarIconGroup6Pressed",    "KlyteMenuIcon"
-                };
+        public enum SpriteNames
+        {
+            ToolbarIconGroup6Hovered, ToolbarIconGroup6Focused, ToolbarIconGroup6Pressed, KlyteMenuIcon
+        }
     }
 }

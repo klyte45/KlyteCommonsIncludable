@@ -12,11 +12,12 @@ using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using static Klyte.Commons.TextureAtlas.KCCommonTextureAtlas;
 
 [assembly: AssemblyVersion("0.0.0.*")]
 namespace Klyte.Commons
 {
-    public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCResourceLoader, MonoBehaviour, KCCommonTextureAtlas, UICustomControl>
+    public sealed class KlyteCommonsMod : BasicIUserMod<KlyteCommonsMod, KCResourceLoader, MonoBehaviour, KCCommonTextureAtlas, UICustomControl, SpriteNames>
     {
         public override string SimpleName => "Klyte Commons REWORK";
         public override string Description => "Base mod for Klyte45 mods. Required dependency";

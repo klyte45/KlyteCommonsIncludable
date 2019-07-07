@@ -15,11 +15,12 @@ using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserMod<U, R, C, A, T> : IUserMod, ILoadingExtension
-        where U : BasicIUserMod<U, R, C, A, T>, new()
+    public abstract class BasicIUserMod<U, R, C, A, T, S> : IUserMod, ILoadingExtension
+        where U : BasicIUserMod<U, R, C, A, T, S>, new()
         where R : KlyteResourceLoader<R>
         where C : MonoBehaviour
-        where A : TextureAtlasDescriptor<A, R>
+        where A : TextureAtlasDescriptor<A, R, S>
+        where S : Enum
         where T : UICustomControl
     {
 
@@ -63,7 +64,7 @@ namespace Klyte.Commons.Interfaces
             }
             if (Tab != null)
             {
-                KlyteModsPanel.Instance.AddTab((ModTab)Tab, typeof(T), Singleton<A>.instance.Atlas, Singleton<A>.instance.SpriteNames[0], GeneralName, (x, y) => { if (y) ShowVersionInfoPopup(); }, TabWidth);
+                KlyteModsPanel.Instance.AddTab((ModTab)Tab, typeof(T), Singleton<A>.instance.Atlas, Enum.GetNames(typeof(S))[0], GeneralName, (x, y) => { if (y) ShowVersionInfoPopup(); }, TabWidth);
             }
 
         }
