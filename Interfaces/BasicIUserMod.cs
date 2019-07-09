@@ -52,7 +52,7 @@ namespace Klyte.Commons.Interfaces
             m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
             var typeTarg = typeof(IRedirectable);
             var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
-            DoLog($"{SimpleName} Redirectors: {instances.Count()}");
+            LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
             foreach (Type t in instances)
             {
                 m_topObj.AddComponent(t);
@@ -121,6 +121,7 @@ namespace Klyte.Commons.Interfaces
         }
 
         UIComponent m_onSettingsUiComponent;
+        bool m_showLangDropDown = false;
 
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
@@ -135,6 +136,7 @@ namespace Klyte.Commons.Interfaces
                     LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
                 }
                 LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
+                m_showLangDropDown = true;
             }
             foreach (var lang in KlyteLocaleManager.locales)
             {
@@ -150,8 +152,12 @@ namespace Klyte.Commons.Interfaces
                 }
 
             }
-            KlyteLocaleManager.ReloadLanguage();
             DoWithSettingsUI(new UIHelperExtension(m_onSettingsUiComponent));
+        }
+
+        public void Start()
+        {
+            KlyteLocaleManager.RedrawUIComponents();
         }
 
         private void DoWithSettingsUI(UIHelperExtension helper)
@@ -172,16 +178,24 @@ namespace Klyte.Commons.Interfaces
             TopSettingsUI(helper);
 
             if (UseGroup9) CreateGroup9(helper);
-            UIDropDown dd = null;
-            dd = helper.AddDropdownLocalized("K45_MOD_LANG", (new string[] { "K45_GAME_DEFAULT_LANGUAGE" }.Concat(KlyteLocaleManager.locales.Select(x => $"K45_LANG_{x}")).Select(x => Locale.Get(x))).ToArray(), KlyteLocaleManager.GetLoadedLanguage(), delegate (int idx)
+            if (m_showLangDropDown)
             {
-                KlyteLocaleManager.SaveLoadedLanguage(idx);
-                KlyteLocaleManager.ReloadLanguage();
-            });
+                UIDropDown dd = null;
+                dd = helper.AddDropdownLocalized("K45_MOD_LANG", (new string[] { "K45_GAME_DEFAULT_LANGUAGE" }.Concat(KlyteLocaleManager.locales.Select(x => $"K45_LANG_{x}")).Select(x => Locale.Get(x))).ToArray(), KlyteLocaleManager.GetLoadedLanguage(), delegate (int idx)
+                {
+                    KlyteLocaleManager.SaveLoadedLanguage(idx);
+                    KlyteLocaleManager.ReloadLanguage();
+                    KlyteLocaleManager.RedrawUIComponents();
+                });
+            }
+            else
+            {
+                helper.AddLabel(string.Format(Locale.Get("K45_LANG_CTRL_MOD_INFO"), Locale.Get("K45_MOD_CONTROLLING_LOCALE")));
+            }
 
-            DoLog("End Loading Options");
+            LogUtils.DoLog("End Loading Options");
         }
-        
+
         protected void CreateGroup9(UIHelperExtension helper)
         {
             UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("K45_BETAS_EXTRA_INFO"));
@@ -190,9 +204,9 @@ namespace Klyte.Commons.Interfaces
             group9.AddCheckbox(Locale.Get("K45_DEBUG_MODE"), DebugMode.value, delegate (bool val) { DebugMode.value = val; });
             group9.AddLabel(String.Format(Locale.Get("K45_VERSION_SHOW"), FullVersion));
             group9.AddButton(Locale.Get("K45_RELEASE_NOTES"), delegate ()
-               {
-                   ShowVersionInfoPopup(true);
-               });
+            {
+                ShowVersionInfoPopup(true);
+            });
         }
 
         public virtual void Group9SettingsUI(UIHelperExtension group9) { }
@@ -232,7 +246,7 @@ namespace Klyte.Commons.Interfaces
                     }
                     else
                     {
-                        DoLog("PANEL NOT FOUND!!!!");
+                        LogUtils.DoLog("PANEL NOT FOUND!!!!");
                         return false;
                     }
                 }

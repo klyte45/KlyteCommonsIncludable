@@ -36,6 +36,8 @@ namespace Klyte.Commons.i18n
 
         public void Awake()
         {
+            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
+            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = "MOD_CONTROLLING_LOCALE" }] = CommonProperties.ModName;
             foreach (var lang in locales)
             {
                 FileUtils.EnsureFolderCreation($"{m_translateFilesPath}{lang}");
@@ -63,6 +65,8 @@ namespace Klyte.Commons.i18n
 
         public static void ReloadLanguage()
         {
+            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
+            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = "K45_MOD_CONTROLLING_LOCALE" }] = CommonProperties.ModName;
             if (m_alreadyLoading) return;
             m_alreadyLoading = true;
             m_language = CurrentLanguageId.value;
