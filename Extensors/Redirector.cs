@@ -16,7 +16,7 @@ namespace Klyte.Commons.Extensors
 
     public interface IRedirectable
     {
-        Redirector RedirectorInstance { get; set; }
+        Redirector RedirectorInstance { get; }
     }
 
     public class Redirector : MonoBehaviour
