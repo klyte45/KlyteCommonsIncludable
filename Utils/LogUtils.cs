@@ -8,7 +8,7 @@ namespace Klyte.Commons.Utils
     {
         #region Log Utils
 
-        internal static void DoLog(string format, params object[] args)
+        public static void DoLog(string format, params object[] args)
         {
             try
             {
@@ -23,7 +23,7 @@ namespace Klyte.Commons.Utils
                 Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
-        internal static void DoErrorLog(string format, params object[] args)
+        public static void DoErrorLog(string format, params object[] args)
         {
             try
             {

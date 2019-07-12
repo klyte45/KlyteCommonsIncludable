@@ -61,6 +61,12 @@ namespace Klyte.Commons.Interfaces
             {
                 m_controller = m_topObj.AddComponent<C>();
             }
+            OnLevelLoadingInternal();
+        }
+
+        protected virtual void OnLevelLoadingInternal()
+        {
+
         }
 
         public string GeneralName => $"{SimpleName} (v{Version})";
