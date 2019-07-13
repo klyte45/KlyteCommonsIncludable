@@ -106,8 +106,8 @@ namespace Klyte.Commons.Interfaces
 
         public bool needShowPopup;
 
-        public static SavedBool DebugMode { get; } = new SavedBool(KlyteLocaleManager.m_defaultPrefixInGame + "DebugMode", Settings.gameSettingsFile, false, true);
-        private SavedString CurrentSaveVersion { get; } = new SavedString(KlyteLocaleManager.m_defaultPrefixInGame + "SaveVersion", Settings.gameSettingsFile, "null", true);
+        public static SavedBool DebugMode { get; } = new SavedBool(CommonProperties.Acronym + "_DebugMode", Settings.gameSettingsFile, false, true);
+        private SavedString CurrentSaveVersion { get; } = new SavedString(CommonProperties.Acronym + "SaveVersion", Settings.gameSettingsFile, "null", true);
         public static bool IsCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
 
         public static U Instance { get; set; }
@@ -115,9 +115,9 @@ namespace Klyte.Commons.Interfaces
         protected void Construct()
         {
             Instance = this as U;
-            Debug.LogWarningFormat(KlyteLocaleManager.m_defaultPrefixInGame + "v" + MajorVersion + " LOADING ");
+            Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " LOADING ");
             LoadSettings();
-            Debug.LogWarningFormat(KlyteLocaleManager.m_defaultPrefixInGame + "v" + MajorVersion + " SETTING FILES");
+            Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " SETTING FILES");
             if (DebugMode.value)
                 Debug.LogWarningFormat("currentSaveVersion.value = {0}, fullVersion = {1}", CurrentSaveVersion.value, FullVersion);
             if (CurrentSaveVersion.value != FullVersion)
