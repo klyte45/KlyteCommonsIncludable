@@ -49,18 +49,26 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnLevelLoaded(LoadMode mode)
         {
-            m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
-            var typeTarg = typeof(IRedirectable);
-            var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
-            LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
-            foreach (Type t in instances)
+            if (IsValidLoadMode(mode))
             {
-                m_topObj.AddComponent(t);
+                m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
+                var typeTarg = typeof(IRedirectable);
+                var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
+                LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
+                foreach (Type t in instances)
+                {
+                    m_topObj.AddComponent(t);
+                }
+                if (typeof(C) != typeof(MonoBehaviour))
+                {
+                    m_controller = m_topObj.AddComponent<C>();
+                }
             }
-            if (typeof(C) != typeof(MonoBehaviour))
-            {
-                m_controller = m_topObj.AddComponent<C>();
-            }
+        }
+
+        private static bool IsValidLoadMode(LoadMode mode)
+        {
+            return mode == LoadMode.LoadGame || mode == LoadMode.LoadScenario || mode == LoadMode.NewGame || mode == LoadMode.NewGameFromScenario;
         }
 
         public string GeneralName => $"{SimpleName} (v{Version})";
