@@ -26,6 +26,7 @@ namespace Klyte.Commons.Utils
             }
             Debug.LogWarning(localeDump);
         }
+
         public static bool FindSimetry(int[] array, out int middle)
         {
             middle = -1;

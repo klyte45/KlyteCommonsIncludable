@@ -36,7 +36,7 @@ namespace Klyte.Commons.Utils
                 Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
                 if (!(asset == null) && !(asset.package == null))
                 {
-                    string packagePath = asset.package.packagePath;
+                    string packagePath = asset.package .packagePath; 
                     if (packagePath != null)
                     {
                         string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
