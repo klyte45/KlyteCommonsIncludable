@@ -38,7 +38,7 @@ namespace Klyte.Commons.i18n
         {
             m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
             m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = "MOD_CONTROLLING_LOCALE" }] = CommonProperties.ModName;
-            foreach (var lang in locales)
+            foreach (string lang in locales)
             {
                 FileUtils.EnsureFolderCreation($"{m_translateFilesPath}{lang}");
             }
@@ -52,12 +52,14 @@ namespace Klyte.Commons.i18n
         private static bool m_alreadyLoading = false;
         public int LoadedLanguageIdx
         {
-            get {
-                return GetLoadedLanguage();
-            }
+            get => GetLoadedLanguage();
             set {
-                var newVal = value <= 0 || value > locales.Length ? "" : locales[value - 1];
-                if (newVal == m_language) return;
+                string newVal = value <= 0 || value > locales.Length ? "" : locales[value - 1];
+                if (newVal == m_language)
+                {
+                    return;
+                }
+
                 CurrentLanguageId.value = newVal;
                 ReloadLanguage();
             }
@@ -67,26 +69,36 @@ namespace Klyte.Commons.i18n
         {
             m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
             m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = "K45_MOD_CONTROLLING_LOCALE" }] = CommonProperties.ModName;
-            if (m_alreadyLoading) return;
+            if (m_alreadyLoading)
+            {
+                return;
+            }
+
             m_alreadyLoading = true;
             m_language = CurrentLanguageId.value;
             m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
             ReadLanguage("en");
-            if (m_language != "en") ReadLanguage(m_language == "" ? LocaleManager.instance.language.Substring(0, 2) : m_language);
+            if (m_language != "en")
+            {
+                ReadLanguage(m_language == "" ? LocaleManager.instance.language.Substring(0, 2) : m_language);
+            }
+
             RedrawUIComponents();
             m_alreadyLoading = false;
         }
 
         public static void RedrawUIComponents()
         {
-            foreach (var eventLocale in new string[] { "eventUIComponentLocaleChanged", "eventLocaleChanged" })
+            foreach (string eventLocale in new string[] { "eventUIComponentLocaleChanged", "eventLocaleChanged" })
             {
-                var field = typeof(LocaleManager).GetField(eventLocale, RedirectorUtils.allFlags);
+                FieldInfo field = typeof(LocaleManager).GetField(eventLocale, RedirectorUtils.allFlags);
                 if (field.GetValue(LocaleManager.instance) != null)
                 {
-                    foreach (var eventHandler in (field.GetValue(LocaleManager.instance) as MulticastDelegate).GetInvocationList())
+                    foreach (Delegate eventHandler in (field.GetValue(LocaleManager.instance) as MulticastDelegate).GetInvocationList())
                     {
-                        try { eventHandler.Method.Invoke(eventHandler.Target, new object[] { }); } catch { }
+                        try
+                        { eventHandler.Method.Invoke(eventHandler.Target, new object[] { }); }
+                        catch { }
                     }
                 }
             }
@@ -94,11 +106,11 @@ namespace Klyte.Commons.i18n
 
         private static void ReadLanguage(string languageCode)
         {
-            var folderPath = $"{m_translateFilesPath}{languageCode}{Path.DirectorySeparatorChar}";
-            var files = Directory.GetFiles(folderPath, "*.txt").ToList();
+            string folderPath = $"{m_translateFilesPath}{languageCode}{Path.DirectorySeparatorChar}";
+            List<string> files = Directory.GetFiles(folderPath, "*.txt").ToList();
             files.Sort();
             LogUtils.DoLog($"{string.Join(",", files.ToArray())}");
-            foreach (var file in files)
+            foreach (string file in files)
             {
                 FileSplitter(File.ReadAllText(file));
             }
@@ -107,18 +119,26 @@ namespace Klyte.Commons.i18n
 
         internal static void FileSplitter(string fileContents)
         {
-            foreach (var myString in fileContents.Split(m_lineSeparator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            foreach (string myString in fileContents.Split(m_lineSeparator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
             {
-                if (myString.StartsWith(m_commentChar)) continue;
-                if (!myString.Contains(m_kvSeparator)) continue;
+                if (myString.StartsWith(m_commentChar))
+                {
+                    continue;
+                }
+
+                if (!myString.Contains(m_kvSeparator))
+                {
+                    continue;
+                }
+
                 bool noPrefix = myString.StartsWith(m_ignorePrefixChar);
-                var array = myString.Split(m_kvSeparator.ToCharArray(), 2);
+                string[] array = myString.Split(m_kvSeparator.ToCharArray(), 2);
                 string value = array[1];
                 int idx = 0;
                 string localeKey = null;
                 if (array[0].Contains(m_idxSeparator))
                 {
-                    var arrayIdx = array[0].Split(m_idxSeparator.ToCharArray());
+                    string[] arrayIdx = array[0].Split(m_idxSeparator.ToCharArray());
                     if (!int.TryParse(arrayIdx[1], out idx))
                     {
                         continue;
@@ -146,7 +166,7 @@ namespace Klyte.Commons.i18n
 
         internal static void SaveLoadedLanguage(int value)
         {
-            var newVal = value <= 0 || value > locales.Length ? "" : locales[value - 1];
+            string newVal = value <= 0 || value > locales.Length ? "" : locales[value - 1];
             CurrentLanguageId.value = newVal;
         }
         internal static int GetLoadedLanguage() => Array.IndexOf(locales, CurrentLanguageId.value) + 1;
