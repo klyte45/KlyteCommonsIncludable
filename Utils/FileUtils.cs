@@ -23,10 +23,7 @@ namespace Klyte.Commons.Utils
             }
             return new FileInfo(folderName);
         }
-        public static bool IsFileCreated(string fileName)
-        {
-            return File.Exists(fileName);
-        }
+        public static bool IsFileCreated(string fileName) => File.Exists(fileName);
 
         public static void ScanPrefabsFolders(string filenameToSearch, Action<FileStream> action)
         {
@@ -36,7 +33,7 @@ namespace Klyte.Commons.Utils
                 Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
                 if (!(asset == null) && !(asset.package == null))
                 {
-                    string packagePath = asset.package .packagePath; 
+                    string packagePath = asset.package.packagePath;
                     if (packagePath != null)
                     {
                         string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
@@ -45,7 +42,7 @@ namespace Klyte.Commons.Utils
                             list.Add(filePath);
                             if (File.Exists(filePath))
                             {
-                                using var stream = File.OpenRead(filePath);
+                                using FileStream stream = File.OpenRead(filePath);
                                 action(stream);
                             }
                         }
