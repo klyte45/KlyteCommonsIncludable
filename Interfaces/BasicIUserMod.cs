@@ -5,10 +5,8 @@ using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
-using Klyte.Commons.UI;
 using Klyte.Commons.Utils;
 using System;
-using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,9 +37,7 @@ namespace Klyte.Commons.Interfaces
 
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
-
-        private C m_controller;
-        public C Controller => m_controller;
+        public C Controller { get; private set; }
 
         public void OnCreated(ILoading loading)
         {
@@ -50,8 +46,8 @@ namespace Klyte.Commons.Interfaces
         public void OnLevelLoaded(LoadMode mode)
         {
             m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
-            var typeTarg = typeof(IRedirectable);
-            var instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
+            Type typeTarg = typeof(IRedirectable);
+            System.Collections.Generic.List<Type> instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
             LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
             foreach (Type t in instances)
             {
@@ -59,7 +55,14 @@ namespace Klyte.Commons.Interfaces
             }
             if (typeof(C) != typeof(MonoBehaviour))
             {
-                m_controller = m_topObj.AddComponent<C>();
+                Controller = m_topObj.AddComponent<C>();
+            }
+            var toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
+            if (toMainMenuButton != null)
+            {
+                toMainMenuButton.isEnabled = false;
+                toMainMenuButton.tooltipLocaleID = "K45_TO_MAIN_MENU_DISABLE_WARNING";
+                toMainMenuButton.isTooltipLocalized = true;
             }
             OnLevelLoadingInternal();
         }
@@ -78,10 +81,7 @@ namespace Klyte.Commons.Interfaces
                 Application.Quit();
             }
         }
-        public virtual void OnReleased()
-        {
-            OnLevelUnloading();
-        }
+        public virtual void OnReleased() => OnLevelUnloading();
 
         public static string MinorVersion => MajorVersion + "." + typeof(U).Assembly.GetName().Version.Build;
         public static string MajorVersion => typeof(U).Assembly.GetName().Version.Major + "." + typeof(U).Assembly.GetName().Version.Minor;
@@ -119,20 +119,23 @@ namespace Klyte.Commons.Interfaces
             LoadSettings();
             Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " SETTING FILES");
             if (DebugMode.value)
+            {
                 Debug.LogWarningFormat("currentSaveVersion.value = {0}, fullVersion = {1}", CurrentSaveVersion.value, FullVersion);
+            }
+
             if (CurrentSaveVersion.value != FullVersion)
             {
                 needShowPopup = true;
             }
         }
 
-        UIComponent m_onSettingsUiComponent;
-        bool m_showLangDropDown = false;
+        private UIComponent m_onSettingsUiComponent;
+        private bool m_showLangDropDown = false;
 
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
 
-            m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
+            m_onSettingsUiComponent = new UIHelperExtension((UIHelper) helperDefault).Self ?? m_onSettingsUiComponent;
 
             if (Locale.Get("K45_TEST_UP") != "OK")
             {
@@ -144,9 +147,9 @@ namespace Klyte.Commons.Interfaces
                 LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
                 m_showLangDropDown = true;
             }
-            foreach (var lang in KlyteLocaleManager.locales)
+            foreach (string lang in KlyteLocaleManager.locales)
             {
-                var content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
+                string content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
                 if (content != null)
                 {
                     File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}1_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
@@ -160,12 +163,6 @@ namespace Klyte.Commons.Interfaces
             }
             DoWithSettingsUI(new UIHelperExtension(m_onSettingsUiComponent));
         }
-
-        public void Start()
-        {
-            KlyteLocaleManager.RedrawUIComponents();
-        }
-
         private void DoWithSettingsUI(UIHelperExtension helper)
         {
             foreach (Transform child in helper.Self?.transform)
@@ -183,7 +180,11 @@ namespace Klyte.Commons.Interfaces
 
             TopSettingsUI(helper);
 
-            if (UseGroup9) CreateGroup9(helper);
+            if (UseGroup9)
+            {
+                CreateGroup9(helper);
+            }
+
             if (m_showLangDropDown)
             {
                 UIDropDown dd = null;
@@ -207,8 +208,9 @@ namespace Klyte.Commons.Interfaces
             UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("K45_BETAS_EXTRA_INFO"));
             Group9SettingsUI(group9);
 
-            group9.AddCheckbox(Locale.Get("K45_DEBUG_MODE"), DebugMode.value, delegate (bool val) { DebugMode.value = val; });
-            group9.AddLabel(String.Format(Locale.Get("K45_VERSION_SHOW"), FullVersion));
+            group9.AddCheckbox(Locale.Get("K45_DEBUG_MODE"), DebugMode.value, delegate (bool val)
+            { DebugMode.value = val; });
+            group9.AddLabel(string.Format(Locale.Get("K45_VERSION_SHOW"), FullVersion));
             group9.AddButton(Locale.Get("K45_RELEASE_NOTES"), delegate ()
             {
                 ShowVersionInfoPopup(true);
