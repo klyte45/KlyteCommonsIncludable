@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
         {
             GameObject container = new GameObject();
             container.transform.parent = parent;
-            uiItem = (T)container.AddComponent(typeof(T));
+            uiItem = (T) container.AddComponent(typeof(T));
             if (name != null)
             {
                 container.name = name;
@@ -31,7 +31,7 @@ namespace Klyte.Commons.Utils
             container.AddComponent(type);
             return container;
         }
-        public static void CreateUIElement<T>(out T uiItem, Transform parent, String name = null, Vector4 area = default) where T : UIComponent
+        public static void CreateUIElement<T>(out T uiItem, Transform parent, string name = null, Vector4 area = default) where T : UIComponent
         {
             GameObject container = new GameObject();
             container.transform.parent = parent;
@@ -59,20 +59,21 @@ namespace Klyte.Commons.Utils
         {
 
             // Counting the perceptive luminance - human eye favors green color... 
-            double a = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+            double a = (0.299 * color.r) + (0.587 * color.g) + (0.114 * color.b);
 
             int d;
             if (a > 0.5)
+            {
                 d = 0; // bright colors - black font
+            }
             else
+            {
                 d = 1; // dark colors - white font
+            }
 
             return new Color(d, d, d, 1);
         }
-        public static UIDragHandle CreateDragHandle(UIComponent parent, UIComponent target)
-        {
-            return CreateDragHandle(parent, target, -1);
-        }
+        public static UIDragHandle CreateDragHandle(UIComponent parent, UIComponent target) => CreateDragHandle(parent, target, -1);
         public static UIDragHandle CreateDragHandle(UIComponent parent, UIComponent target, float height)
         {
             CreateUIElement(out UIDragHandle dh, parent.transform);
@@ -145,7 +146,7 @@ namespace Klyte.Commons.Utils
 
         public UISlider GenerateSliderField(UIHelperExtension uiHelper, OnValueChanged action, out UILabel label, out UIPanel container)
         {
-            UISlider budgetMultiplier = (UISlider)uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
+            UISlider budgetMultiplier = (UISlider) uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
             label = budgetMultiplier.transform.parent.GetComponentInChildren<UILabel>();
             label.autoSize = true;
             label.wordWrap = false;
@@ -165,17 +166,11 @@ namespace Klyte.Commons.Utils
                 ClearAllVisibilityEvents(u.components[i]);
             }
         }
-        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x)
-        {
-            return LimitWidth(x, x.minimumSize.x);
-        }
+        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x) => LimitWidth(x, x.minimumSize.x);
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false)
         {
             x.autoSize = true;
-            void callback(UIComponent y, Vector2 z)
-            {
-                x.transform.localScale = new Vector3(Math.Min(1, maxWidth / x.width), x.transform.localScale.y, x.transform.localScale.z);
-            }
+            void callback(UIComponent y, Vector2 z) => x.transform.localScale = new Vector3(Math.Min(1, maxWidth / x.width), x.transform.localScale.y, x.transform.localScale.z);
             x.eventSizeChanged += callback;
             if (alsoMinSize)
             {
@@ -233,7 +228,7 @@ namespace Klyte.Commons.Utils
             scrollablePanel.verticalScrollbar = scrollbar;
             scrollablePanel.eventMouseWheel += delegate (UIComponent component, UIMouseEventParameter param)
             {
-                ((UIScrollablePanel)component).scrollPosition += new Vector2(0f, Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).verticalScrollbar.incrementAmount);
+                ((UIScrollablePanel) component).scrollPosition += new Vector2(0f, Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel) component).verticalScrollbar.incrementAmount);
             };
 
             return new UIHelperExtension(scrollablePanel);
@@ -290,7 +285,7 @@ namespace Klyte.Commons.Utils
             scrollablePanel.horizontalScrollbar = scrollbar;
             scrollablePanel.eventMouseWheel += delegate (UIComponent component, UIMouseEventParameter param)
             {
-                ((UIScrollablePanel)component).scrollPosition += new Vector2(Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).horizontalScrollbar.incrementAmount, 0);
+                ((UIScrollablePanel) component).scrollPosition += new Vector2(Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel) component).horizontalScrollbar.incrementAmount, 0);
             };
 
             return new UIHelperExtension(scrollablePanel);
@@ -312,7 +307,7 @@ namespace Klyte.Commons.Utils
                     return null;
                 }
             }
-            var go = GameObject.Instantiate(m_colorFieldTemplate.gameObject, parent.transform);
+            GameObject go = GameObject.Instantiate(m_colorFieldTemplate.gameObject, parent.transform);
             UIColorField component = go.GetComponent<UIColorField>();
             component.pickerPosition = UIColorField.ColorPickerPosition.RightAbove;
             component.transform.SetParent(parent.transform);
@@ -321,7 +316,7 @@ namespace Klyte.Commons.Utils
         }
         private static void DefaultColorPickerHandler(UIColorField dropdown, UIColorPicker popup, ref bool overridden)
         {
-            var panel = popup.GetComponent<UIPanel>();
+            UIPanel panel = popup.GetComponent<UIPanel>();
             overridden = true;
             panel.height = 250;
             CreateUIElement<UITextField>(out UITextField textField, panel.transform, "ColorText", new Vector4(15, 225, 200, 20));
@@ -334,25 +329,26 @@ namespace Klyte.Commons.Utils
                 {
                     try
                     {
-                        Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
+                        Color32 targetColor = ColorExtensions.FromRGB(((UITextField) x).text);
                         dropdown.selectedColor = targetColor;
                         popup.color = targetColor;
-                        ((UITextField)x).textColor = Color.white;
-                        ((UITextField)x).text = targetColor.ToRGB();
+                        ((UITextField) x).textColor = Color.white;
+                        ((UITextField) x).text = targetColor.ToRGB();
                     }
                     catch
                     {
-                        ((UITextField)x).textColor = Color.red;
+                        ((UITextField) x).textColor = Color.red;
                     }
                 }
             };
             popup.eventColorUpdated += (x) =>
             {
-                textField.text = ((Color32)x).ToRGB();
+                textField.text = ((Color32) x).ToRGB();
             };
-            textField.text = ((Color32)popup.color).ToRGB();
+            textField.text = ((Color32) popup.color).ToRGB();
         }
 
         #endregion
     }
+
 }

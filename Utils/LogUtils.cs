@@ -20,7 +20,7 @@ namespace Klyte.Commons.Utils
             }
             catch
             {
-                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
         public static void DoErrorLog(string format, params object[] args)
@@ -31,7 +31,7 @@ namespace Klyte.Commons.Utils
             }
             catch
             {
-                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {0} (args = {1})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
         #endregion
