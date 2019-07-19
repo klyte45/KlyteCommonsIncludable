@@ -1,15 +1,7 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
-using Klyte.Commons.Interfaces;
 using Klyte.Commons.Utils;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -22,10 +14,7 @@ namespace Klyte.Commons.Interfaces
 
         protected UITextureAtlas m_atlas;
 
-        public void Awake()
-        {
-            m_atlas = Singleton<R>.instance.CreateTextureAtlas(ResourceName, CommonName, (UIView.GetAView() ?? FindObjectOfType<UIView>()).defaultAtlas.material, Width, Height, Enum.GetNames(typeof(E)));
-        }
+        public void Awake() => m_atlas = Singleton<R>.instance.CreateTextureAtlas(ResourceName, CommonName, (UIView.GetAView() ?? FindObjectOfType<UIView>()).defaultAtlas.material, Width, Height, Enum.GetNames(typeof(E)));
 
         public UITextureAtlas Atlas => m_atlas;
     }
