@@ -1,15 +1,7 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Globalization;
-using ColossalFramework.Math;
-using ColossalFramework.Plugins;
 using ColossalFramework.UI;
-using ICities;
-using Klyte.Commons.Extensors;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -17,7 +9,7 @@ namespace Klyte.Commons.Utils
 {
     public abstract class KlyteResourceLoader<T> : Singleton<T> where T : KlyteResourceLoader<T>
     {
-        protected abstract string Prefix { get; }
+        public abstract string Prefix { get; }
         private Type ResourceReference => typeof(T);
         public virtual Shader GetLoadedShader(string shaderName) => null;
 
@@ -25,7 +17,7 @@ namespace Klyte.Commons.Utils
         {
             name = Prefix + name;
 
-            UnmanagedMemoryStream stream = (UnmanagedMemoryStream)Assembly.GetAssembly(ResourceReference).GetManifestResourceStream(name);
+            UnmanagedMemoryStream stream = (UnmanagedMemoryStream) Assembly.GetAssembly(ResourceReference).GetManifestResourceStream(name);
             if (stream == null)
             {
                 LogUtils.DoErrorLog("Could not find resource: " + name);
@@ -33,14 +25,14 @@ namespace Klyte.Commons.Utils
             }
 
             BinaryReader read = new BinaryReader(stream);
-            return read.ReadBytes((int)stream.Length);
+            return read.ReadBytes((int) stream.Length);
         }
 
         public string LoadResourceString(string name)
         {
             name = Prefix + name;
 
-            UnmanagedMemoryStream stream = (UnmanagedMemoryStream)Assembly.GetAssembly(ResourceReference).GetManifestResourceStream(name);
+            UnmanagedMemoryStream stream = (UnmanagedMemoryStream) Assembly.GetAssembly(ResourceReference).GetManifestResourceStream(name);
             if (stream == null)
             {
                 LogUtils.DoErrorLog("Could not find resource: " + name);
@@ -93,7 +85,7 @@ namespace Klyte.Commons.Utils
             }
             UITextureAtlas atlas = ScriptableObject.CreateInstance<UITextureAtlas>();
             { // Setup atlas
-                Material material = (Material)Material.Instantiate(baseMaterial);
+                Material material = Material.Instantiate(baseMaterial);
                 material.mainTexture = tex;
                 atlas.material = material;
                 atlas.name = atlasName;
@@ -102,7 +94,7 @@ namespace Klyte.Commons.Utils
             for (int i = 0; i < spriteNames.Length; ++i)
             {
                 float uw = 1.0f / spriteNames.Length;
-                var spriteInfo = new UITextureAtlas.SpriteInfo()
+                UITextureAtlas.SpriteInfo spriteInfo = new UITextureAtlas.SpriteInfo()
                 {
                     name = spriteNames[i],
                     texture = tex,
@@ -112,10 +104,5 @@ namespace Klyte.Commons.Utils
             }
             return atlas;
         }
-    }
-
-    public sealed class KCResourceLoader : KlyteResourceLoader<KCResourceLoader>
-    {
-        protected override string Prefix => "Klyte.Commons.";
     }
 }

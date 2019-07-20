@@ -30,8 +30,6 @@ namespace Klyte.Commons.Interfaces
 
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
-        protected virtual float? TabWidth => null;
-
 
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
@@ -43,11 +41,18 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnLevelLoaded(LoadMode mode)
         {
+
+            OnLevelLoadedInherit(mode);
+            OnLevelLoadingInternal();
+        }
+
+        protected virtual void OnLevelLoadedInherit(LoadMode mode)
+        {
             if (IsValidLoadMode(mode))
             {
                 m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
                 Type typeTarg = typeof(IRedirectable);
-                System.Collections.Generic.List<Type> instances = ReflectionUtils.GetSubtypesRecursive(typeTarg, typeof(U));
+                System.Collections.Generic.List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
                 LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
                 foreach (Type t in instances)
                 {
@@ -57,15 +62,15 @@ namespace Klyte.Commons.Interfaces
                 {
                     Controller = m_topObj.AddComponent<C>();
                 }
+
+                UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
+                if (toMainMenuButton != null)
+                {
+                    toMainMenuButton.isEnabled = false;
+                    toMainMenuButton.tooltipLocaleID = "K45_TO_MAIN_MENU_DISABLE_WARNING";
+                    toMainMenuButton.isTooltipLocalized = true;
+                }
             }
-            UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
-            if (toMainMenuButton != null)
-            {
-                toMainMenuButton.isEnabled = false;
-                toMainMenuButton.tooltipLocaleID = "K45_TO_MAIN_MENU_DISABLE_WARNING";
-                toMainMenuButton.isTooltipLocalized = true;
-            }
-            OnLevelLoadingInternal();
         }
 
         protected virtual void OnLevelLoadingInternal()

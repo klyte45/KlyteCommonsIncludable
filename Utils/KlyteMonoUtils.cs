@@ -106,6 +106,16 @@ namespace Klyte.Commons.Utils
 
             button.textColor = new Color32(255, 255, 255, 255);
         }
+        public static void InitButtonFull(UIButton button, bool isCheck, string baseSprite)
+        {
+            string sprite = baseSprite;
+            button.normalBgSprite = sprite;
+            button.disabledBgSprite = sprite + "Disabled";
+            button.hoveredBgSprite = baseSprite + "Focused";
+            button.focusedBgSprite = baseSprite + "Hovered";
+            button.pressedBgSprite = isCheck ? sprite + "Pressed" : button.focusedBgSprite;
+            button.textColor = new Color32(255, 255, 255, 255);
+        }
         public static void InitButtonSameSprite(UIButton button, string baseSprite)
         {
             string sprite = baseSprite;//"ButtonMenu";
@@ -341,10 +351,7 @@ namespace Klyte.Commons.Utils
                     }
                 }
             };
-            popup.eventColorUpdated += (x) =>
-            {
-                textField.text = ((Color32) x).ToRGB();
-            };
+            popup.eventColorUpdated += (x) => textField.text = ((Color32) x).ToRGB();
             textField.text = ((Color32) popup.color).ToRGB();
         }
 
