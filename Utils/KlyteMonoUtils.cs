@@ -322,6 +322,7 @@ namespace Klyte.Commons.Utils
             component.pickerPosition = UIColorField.ColorPickerPosition.RightAbove;
             component.transform.SetParent(parent.transform);
             component.eventColorPickerOpen += DefaultColorPickerHandler;
+            component.size = new Vector2(28, 28);
             return component;
         }
         private static void DefaultColorPickerHandler(UIColorField dropdown, UIColorPicker popup, ref bool overridden)

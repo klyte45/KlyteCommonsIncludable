@@ -29,13 +29,13 @@ namespace Klyte.Commons.Utils
         {
             if ((methodName ?? "") != string.Empty)
             {
-                var method = o.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                MethodInfo method = o.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
                 if (method != null)
                 {
                     return (T) method.Invoke(o, paramList);
                 }
             }
-            return default(T);
+            return default;
 
         }
 
@@ -43,13 +43,13 @@ namespace Klyte.Commons.Utils
         {
             if ((methodName ?? "") != string.Empty)
             {
-                var method = t.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                MethodInfo method = t.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
                 if (method != null)
                 {
                     return (T) method.Invoke(null, paramList);
                 }
             }
-            return default(T);
+            return default;
 
         }
         #region Field Access
@@ -344,15 +344,15 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"typeTarg = {typeTarg} | IsGenType={typeTarg.IsGenericType} ");
             }
 
-            IEnumerable<Type> classes = from t in AppDomain.CurrentDomain.GetAssemblies().Where(x => refType == null || x == refType.Assembly)?.SelectMany(x =>
+            IEnumerable<Type> classes = (from t in AppDomain.CurrentDomain.GetAssemblies().Where(x => refType == null || x == refType.Assembly)?.SelectMany(x =>
             {
                 try
                 { return x?.GetTypes(); }
                 catch { return new Type[0]; }
             })
-                                        let y = t.BaseType
-                                        where t.IsClass && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
-                                        select t;
+                                         let y = t.BaseType
+                                         where t.IsClass && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
+                                         select t);
             List<Type> result = new List<Type>();
             if (CommonProperties.DebugMode)
             {
@@ -370,7 +370,7 @@ namespace Klyte.Commons.Utils
                     result.Add(t);
                 }
             }
-            return result;
+            return result.Distinct().ToList();
         }
 
         public static List<Type> GetInterfaceImplementations(Type interfaceType, Type refType)
@@ -380,15 +380,15 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"interfaceType = {interfaceType}");
             }
 
-            IEnumerable<Type> classes = from t in AppDomain.CurrentDomain.GetAssemblies().Where(x => refType == null || x == refType.Assembly)?.SelectMany(x =>
+            IEnumerable<Type> classes = (from t in AppDomain.CurrentDomain.GetAssemblies().Where(x => refType == null || x == refType.Assembly)?.SelectMany(x =>
             {
                 try
                 { return x?.GetTypes(); }
                 catch { return new Type[0]; }
             })
-                                        let y = t.GetInterfaces()
-                                        where t.IsClass && y.Contains(interfaceType)
-                                        select t;
+                                         let y = t.GetInterfaces()
+                                         where t.IsClass && y.Contains(interfaceType) && !t.IsAbstract
+                                         select t);
 
             List<Type> result = new List<Type>();
             if (CommonProperties.DebugMode)
@@ -396,26 +396,15 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"classes:\r\n\t {string.Join("\r\n\t", classes.Select(x => x.ToString()).ToArray())} ");
             }
 
-            foreach (Type t in classes)
-            {
-                if (!t.IsSealed)
-                {
-                    result.AddRange(GetSubtypesRecursive(t, t));
-                }
-                if (!t.IsAbstract)
-                {
-                    result.Add(t);
-                }
-            }
-            return result;
+            return classes.ToList();
         }
         public static Type GetImplementationForGenericType(Type typeOr, params Type[] typeArgs)
         {
             Type typeTarg = typeOr.MakeGenericType(typeArgs);
 
-            IEnumerable<Type> instances = from t in Assembly.GetAssembly(typeOr).GetTypes()
-                                          where t.IsClass && !t.IsAbstract && typeTarg.IsAssignableFrom(t) && !t.IsGenericType
-                                          select t;
+            IEnumerable<Type> instances = (from t in Assembly.GetAssembly(typeOr).GetTypes()
+                                           where t.IsClass && !t.IsAbstract && typeTarg.IsAssignableFrom(t) && !t.IsGenericType
+                                           select t);
             if (instances.Count() != 1)
             {
                 throw new Exception($"Defininções inválidas para [{ string.Join(", ", typeArgs.Select(x => x.ToString()).ToArray()) }] no tipo genérico {typeOr}");
