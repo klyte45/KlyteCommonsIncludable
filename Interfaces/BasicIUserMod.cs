@@ -165,6 +165,29 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
+        public void ClosePanel()
+        {
+            if (m_modsPanel == null)
+            {
+                return;
+            }
+
+            m_modsPanel.isVisible = false;
+            m_modPanelButton?.Unfocus();
+
+        }
+
+        public void OpenPanel()
+        {
+            if (m_modsPanel == null)
+            {
+                return;
+            }
+
+            m_modsPanel.isVisible = true;
+            m_modPanelButton?.Focus();
+        }
+
         public static SavedFloat ButtonPosX { get; } = new SavedFloat("K45_ButtonPosX", Settings.gameSettingsFile, 300, true);
         public static SavedFloat ButtonPosY { get; } = new SavedFloat("K45_ButtonPosY", Settings.gameSettingsFile, 20, true);
 
