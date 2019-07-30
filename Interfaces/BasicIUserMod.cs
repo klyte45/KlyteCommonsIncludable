@@ -188,6 +188,12 @@ namespace Klyte.Commons.Interfaces
             m_modPanelButton?.Focus();
         }
 
+        public void OpenPanelAtModTab()
+        {
+            OpenPanel();
+            m_modsTabstrip.ShowTab(CommonProperties.Acronym);
+        }
+
         public static SavedFloat ButtonPosX { get; } = new SavedFloat("K45_ButtonPosX", Settings.gameSettingsFile, 300, true);
         public static SavedFloat ButtonPosY { get; } = new SavedFloat("K45_ButtonPosY", Settings.gameSettingsFile, 20, true);
 
