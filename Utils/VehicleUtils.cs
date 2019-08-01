@@ -11,12 +11,16 @@ namespace Klyte.Commons.Utils
         public static VehicleInfo GetRandomModel(List<string> assetList, out string selectedModel)
         {
             selectedModel = null;
-            if (assetList.Count == 0) return null;
+            if (assetList.Count == 0)
+            {
+                return null;
+            }
+
             Randomizer r = new Randomizer(new System.Random().Next());
 
             selectedModel = assetList[r.Int32(0, assetList.Count - 1)];
 
-            var saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel);
+            VehicleInfo saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel);
             if (saida == null)
             {
                 LogUtils.DoLog("MODEL DOESN'T EXIST!");
@@ -25,15 +29,19 @@ namespace Klyte.Commons.Utils
             return saida;
         }
 
-        public static int GetCapacity<AI>(VehicleInfo info, AI ai,  bool noLoop = false) where AI: PrefabAI
+        public static int GetCapacity<AI>(VehicleInfo info, AI ai, bool noLoop = false) where AI : PrefabAI
         {
-            if (info == null) return -1;
-            int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>("m_passengerCapacity",ai.GetType())(ai);
+            if (info == null)
+            {
+                return -1;
+            }
+
+            int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>("m_passengerCapacity", ai.GetType())(ai);
             try
             {
                 if (!noLoop)
                 {
-                    foreach (var trailer in info.m_trailers)
+                    foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                     {
                         capacity += GetCapacity(trailer.m_info, trailer.m_info.GetAI(), true);
                     }
@@ -51,8 +59,9 @@ namespace Klyte.Commons.Utils
             string @unchecked = Locale.GetUnchecked("VEHICLE_TITLE", prefab.name);
             return @unchecked.StartsWith("VEHICLE_TITLE") || @unchecked.StartsWith("Trailer");
         }
-      
+
 
         #endregion
     }
+
 }

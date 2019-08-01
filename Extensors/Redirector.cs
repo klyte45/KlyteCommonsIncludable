@@ -1,11 +1,11 @@
-﻿using System;
-using System.Reflection;
-using UnityEngine;
-using System.Diagnostics;
-using Harmony;
-using System.Reflection.Emit;
-using System.Collections.Generic;
+﻿using Harmony;
 using Klyte.Commons.Utils;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Emit;
+using UnityEngine;
 
 namespace Klyte.Commons.Extensors
 {
@@ -22,23 +22,15 @@ namespace Klyte.Commons.Extensors
     public class Redirector : MonoBehaviour
     {
         #region Class Base
-        private HarmonyInstance m_harmony ;
+        private static readonly HarmonyInstance m_harmony = HarmonyInstance.Create($"com.klyte.redirectors.{CommonProperties.Acronym}");
 
         private readonly List<DynamicMethod> m_detourList = new List<DynamicMethod>();
 
 
-        public void Awake()
-        {
-            m_harmony = HarmonyInstance.Create($"com.klyte.redirectors.{transform.parent?.GetType()?.Name??"default"}");
-        }
-
-        public HarmonyInstance GetHarmonyInstance()
-        {
-            return m_harmony;
-        }
+        public HarmonyInstance GetHarmonyInstance() => m_harmony;
         #endregion
 
-        public readonly static MethodInfo semiPreventDefaultMI = new Func<bool>(() =>
+        public static readonly MethodInfo semiPreventDefaultMI = new Func<bool>(() =>
         {
             StackTrace stackTrace = new StackTrace();
             StackFrame[] stackFrames = stackTrace.GetFrames();
@@ -53,16 +45,13 @@ namespace Klyte.Commons.Extensors
             return true;
         }).Method;
 
-        public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null)
-        {
-            m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
-        }
+        public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null) => m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
 
         public void OnDestroy()
         {
-            foreach (var patch in m_detourList)
+            foreach (DynamicMethod patch in m_detourList)
             {
-                foreach (var method in patch.GetHarmonyMethods())
+                foreach (HarmonyMethod method in patch.GetHarmonyMethods())
                 {
                     GetHarmonyInstance().Unpatch(patch.GetBaseDefinition(), method.method);
 
@@ -71,14 +60,8 @@ namespace Klyte.Commons.Extensors
             }
         }
 
-        public void EnableDebug()
-        {
-            HarmonyInstance.DEBUG = true;
-        }
-        public void DisableDebug()
-        {
-            HarmonyInstance.DEBUG = false;
-        }
+        public void EnableDebug() => HarmonyInstance.DEBUG = true;
+        public void DisableDebug() => HarmonyInstance.DEBUG = false;
     }
 }
 
