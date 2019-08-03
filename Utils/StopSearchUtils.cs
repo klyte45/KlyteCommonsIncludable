@@ -102,6 +102,8 @@ namespace Klyte.Commons.Utils
             {
                 Vector3 position = -path.m_nodes[0];
                 Vector3 position2 = -path.m_nodes[1];
+                position.y *= -1;
+                position2.y *= -1;
                 Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
 
                 LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
@@ -129,7 +131,7 @@ namespace Klyte.Commons.Utils
                     result.Add(new StopPointDescriptorLanes
                     {
                         platformLine = refBezier,
-                        width = lane.m_width,
+                        width = (lane.m_width/ 2)+ path.m_netInfo.m_halfWidth,
                         vehicleType = lane.m_stopType
                     });
 
@@ -142,10 +144,10 @@ namespace Klyte.Commons.Utils
                 {
                     result.AddRange(subPlats.Select(x =>
                     {
-                        x.platformLine.a -= subBuilding.m_position;
-                        x.platformLine.b -= subBuilding.m_position;
-                        x.platformLine.c -= subBuilding.m_position;
-                        x.platformLine.d -= subBuilding.m_position;
+                        x.platformLine.a += subBuilding.m_position;
+                        x.platformLine.b += subBuilding.m_position;
+                        x.platformLine.c += subBuilding.m_position;
+                        x.platformLine.d += subBuilding.m_position;
                         return x;
                     }));
                 }
@@ -161,17 +163,17 @@ namespace Klyte.Commons.Utils
 
                 Vector3 centerX = x.platformLine.GetBounds().center;
                 Vector3 centerY = y.platformLine.GetBounds().center;
+                if (centerX.y != centerY.y)
+                {
+                    return -centerX.y.CompareTo(centerY.y);
+                }
+
                 if (centerX.z != centerY.z)
                 {
-                    return centerX.z.CompareTo(centerY.z);
+                    return -centerX.z.CompareTo(centerY.z);
                 }
 
-                if (centerX.x != centerY.x)
-                {
-                    return -centerX.x.CompareTo(centerY.x);
-                }
-
-                return centerX.y.CompareTo(centerY.y);
+                return centerX.x.CompareTo(centerY.x);
             });
             return result.ToArray();
         }

@@ -129,6 +129,12 @@ namespace Klyte.Commons
             var ray = new Segment3(origin, vector);
 
             BuildingManager.instance.RayCast(ray, ItemClass.Service.None, ItemClass.SubService.None, ItemClass.Layer.Default, Building.Flags.None, out _, out m_hoverBuilding);
+            var i = 0;
+            while (BuildingBuffer[m_hoverBuilding].m_parentBuilding != 0 && i < 10)
+            {
+                m_hoverBuilding = BuildingBuffer[m_hoverBuilding].m_parentBuilding;
+                i++;
+            }
 
         }
         public void RenderOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort buildingId)
@@ -146,7 +152,7 @@ namespace Klyte.Commons
 
             );
             Singleton<RenderManager>.instance.OverlayEffect.DrawQuad(cameraInfo, toolColor, quad, -1f, 1280f, false, true);
-            
+
         }
 
         private long ElapsedMilliseconds(long startTime)

@@ -14,7 +14,7 @@ namespace Klyte.Commons.Utils
             {
                 if (CommonProperties.DebugMode)
                 {
-                    Debug.LogWarningFormat($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
+                    Console.WriteLine($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
                 }
 
             }
