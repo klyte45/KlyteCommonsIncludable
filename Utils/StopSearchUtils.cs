@@ -100,10 +100,10 @@ namespace Klyte.Commons.Utils
             var result = new List<StopPointDescriptorLanes>();
             foreach (BuildingInfo.PathInfo path in buildingInfo.m_paths)
             {
-                Vector3 position = -path.m_nodes[0];
-                Vector3 position2 = -path.m_nodes[1];
-                position.y *= -1;
-                position2.y *= -1;
+                Vector3 position = path.m_nodes[0];
+                Vector3 position2 = path.m_nodes[1];
+                position.z *= -1;
+                position2.z *= -1;
                 Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
 
                 LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
@@ -173,7 +173,7 @@ namespace Klyte.Commons.Utils
                     return -centerX.z.CompareTo(centerY.z);
                 }
 
-                return centerX.x.CompareTo(centerY.x);
+                return -centerX.x.CompareTo(centerY.x);
             });
             return result.ToArray();
         }
