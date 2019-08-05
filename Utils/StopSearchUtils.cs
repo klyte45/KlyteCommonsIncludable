@@ -98,6 +98,11 @@ namespace Klyte.Commons.Utils
         public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo)
         {
             var result = new List<StopPointDescriptorLanes>();
+            if (buildingInfo == null)
+            {
+                return result.ToArray();
+            }
+
             foreach (BuildingInfo.PathInfo path in buildingInfo.m_paths)
             {
                 Vector3 position = path.m_nodes[0];
@@ -116,7 +121,17 @@ namespace Klyte.Commons.Utils
 
                     Vector3 lanePos = position + (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
                     Vector3 lanePos2 = position2 + (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                    NetSegment.CalculateMiddlePoints(lanePos, Vector3.zero, lanePos2, Vector3.zero, true, true, out Vector3 b3, out Vector3 c);
+                    Vector3 b3, c;
+                    if (path.m_curveTargets == null || path.m_curveTargets.Length == 0)
+                    {
+                        NetSegment.CalculateMiddlePoints(lanePos, Vector3.zero, lanePos2, Vector3.zero, true, true, out b3, out c);
+                    }
+                    else
+                    {
+                        GetMiddlePointsFor(path, out b3, out c);
+                        b3 += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                        c += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                    }
                     var refBezier = new Bezier3(lanePos, b3, c, lanePos2);
                     LogUtils.DoLog($"[{buildingInfo}]refBezier = {refBezier} ({lanePos} {b3} {c} {lanePos2})");
 
@@ -131,7 +146,7 @@ namespace Klyte.Commons.Utils
                     result.Add(new StopPointDescriptorLanes
                     {
                         platformLine = refBezier,
-                        width = (lane.m_width/ 2)+ path.m_netInfo.m_halfWidth,
+                        width = (lane.m_width / 2) + path.m_netInfo.m_halfWidth,
                         vehicleType = lane.m_stopType
                     });
 
@@ -161,8 +176,8 @@ namespace Klyte.Commons.Utils
                     return priorityX.CompareTo(priorityY);
                 }
 
-                Vector3 centerX = x.platformLine.GetBounds().center;
-                Vector3 centerY = y.platformLine.GetBounds().center;
+                Vector3 centerX = x.platformLine.Position(0.5f);
+                Vector3 centerY = y.platformLine.Position(0.5f);
                 if (centerX.y != centerY.y)
                 {
                     return -centerX.y.CompareTo(centerY.y);
@@ -177,6 +192,96 @@ namespace Klyte.Commons.Utils
             });
             return result.ToArray();
         }
+
+        private static void GetMiddlePointsFor(BuildingInfo.PathInfo pathInfo, out Vector3 b, out Vector3 c)
+        {
+            b = Vector3.zero;
+            c = Vector3.zero;
+            if (pathInfo.m_finalNetInfo != null && pathInfo.m_nodes != null && pathInfo.m_nodes.Length != 0)
+            {
+                Vector3 vector = Building.CalculatePosition(new Vector3(), 0, pathInfo.m_nodes[0]);
+                if (!pathInfo.m_finalNetInfo.m_useFixedHeight)
+                {
+                    vector.y = NetSegment.SampleTerrainHeight(pathInfo.m_finalNetInfo, vector, false, pathInfo.m_nodes[0].y);
+                }
+                var ray = new Ray(vector + new Vector3(0f, 8f, 0f), Vector3.down);
+                if (NetTool.MakeControlPoint(ray, 16f, pathInfo.m_finalNetInfo, true, NetNode.Flags.Untouchable, NetSegment.Flags.Untouchable, Building.Flags.All, pathInfo.m_nodes[0].y - pathInfo.m_finalNetInfo.m_buildHeight, true, out NetTool.ControlPoint controlPoint))
+                {
+                    Vector3 vector2 = controlPoint.m_position - vector;
+                    if (!pathInfo.m_finalNetInfo.m_useFixedHeight)
+                    {
+                        vector2.y = 0f;
+                    }
+                    var sqrMagnitude = vector2.sqrMagnitude;
+                    if (sqrMagnitude > pathInfo.m_maxSnapDistance * pathInfo.m_maxSnapDistance)
+                    {
+                        controlPoint.m_position = vector;
+                        controlPoint.m_elevation = 0f;
+                        controlPoint.m_node = 0;
+                        controlPoint.m_segment = 0;
+                    }
+                    else
+                    {
+                        controlPoint.m_position.y = vector.y;
+                    }
+                }
+                else
+                {
+                    controlPoint.m_position = vector;
+                }
+                var j = 1;
+
+                vector = Building.CalculatePosition(Vector3.zero, 0, pathInfo.m_nodes[j]);
+                if (!pathInfo.m_finalNetInfo.m_useFixedHeight)
+                {
+                    vector.y = NetSegment.SampleTerrainHeight(pathInfo.m_finalNetInfo, vector, false, pathInfo.m_nodes[j].y);
+                }
+                ray = new Ray(vector + new Vector3(0f, 8f, 0f), Vector3.down);
+                if (NetTool.MakeControlPoint(ray, 16f, pathInfo.m_finalNetInfo, true, NetNode.Flags.Untouchable, NetSegment.Flags.Untouchable, Building.Flags.All, pathInfo.m_nodes[j].y - pathInfo.m_finalNetInfo.m_buildHeight, true, out NetTool.ControlPoint controlPoint2))
+                {
+                    Vector3 vector3 = controlPoint2.m_position - vector;
+                    if (!pathInfo.m_finalNetInfo.m_useFixedHeight)
+                    {
+                        vector3.y = 0f;
+                    }
+                    var sqrMagnitude2 = vector3.sqrMagnitude;
+                    if (sqrMagnitude2 > pathInfo.m_maxSnapDistance * pathInfo.m_maxSnapDistance)
+                    {
+                        controlPoint2.m_position = vector;
+                        controlPoint2.m_elevation = 0f;
+                        controlPoint2.m_node = 0;
+                        controlPoint2.m_segment = 0;
+                    }
+                    else
+                    {
+                        controlPoint2.m_position.y = vector.y;
+                    }
+                }
+                else
+                {
+                    controlPoint2.m_position = vector;
+                }
+                NetTool.ControlPoint middlePoint = controlPoint2;
+                if (pathInfo.m_curveTargets != null && pathInfo.m_curveTargets.Length >= j)
+                {
+                    middlePoint.m_position = Building.CalculatePosition(Vector3.zero, 0, pathInfo.m_curveTargets[j - 1]);
+                    if (!pathInfo.m_finalNetInfo.m_useFixedHeight)
+                    {
+                        middlePoint.m_position.y = NetSegment.SampleTerrainHeight(pathInfo.m_finalNetInfo, middlePoint.m_position, false, pathInfo.m_curveTargets[j - 1].y);
+                    }
+                }
+                else
+                {
+                    middlePoint.m_position = (controlPoint.m_position + controlPoint2.m_position) * 0.5f;
+                }
+                middlePoint.m_direction = VectorUtils.NormalizeXZ(middlePoint.m_position - controlPoint.m_position);
+                controlPoint2.m_direction = VectorUtils.NormalizeXZ(controlPoint2.m_position - middlePoint.m_position);
+                NetSegment.CalculateMiddlePoints(controlPoint.m_position, middlePoint.m_direction, controlPoint2.m_position, -controlPoint2.m_direction, true, true, out b, out c);
+                //controlPoint = controlPoint2;
+
+            }
+        }
+
         public static int VehicleToPriority(VehicleInfo.VehicleType tt)
         {
             switch (tt)
