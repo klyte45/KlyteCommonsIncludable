@@ -59,9 +59,9 @@ namespace Klyte.Commons.Utils
         {
 
             // Counting the perceptive luminance - human eye favors green color... 
-            double a = (0.299 * color.r) + (0.587 * color.g) + (0.114 * color.b);
+            float a = (0.299f * color.r) + (0.587f * color.g) + (0.114f * color.b);
 
-            int d;
+            float d;
             if (a > 0.5)
             {
                 d = 0; // bright colors - black font

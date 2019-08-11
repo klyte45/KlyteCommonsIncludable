@@ -25,25 +25,25 @@ namespace Klyte.Commons.Utils
         }
         public static bool IsFileCreated(string fileName) => File.Exists(fileName);
 
-        public static void ScanPrefabsFolders(string filenameToSearch, Action<FileStream> action)
+        public static void ScanPrefabsFolders(string filenameToSearch, Action<FileStream, BuildingInfo> action)
         {
-            List<string> list = new List<string>();
+            var list = new List<string>();
             ForEachLoadedPrefab<BuildingInfo>((loaded) =>
             {
                 Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
                 if (!(asset == null) && !(asset.package == null))
                 {
-                    string packagePath = asset.package.packagePath;
+                    var packagePath = asset.package.packagePath;
                     if (packagePath != null)
                     {
-                        string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
+                        var filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
                         if (!list.Contains(filePath))
                         {
                             list.Add(filePath);
                             if (File.Exists(filePath))
                             {
                                 using FileStream stream = File.OpenRead(filePath);
-                                action(stream);
+                                action(stream, loaded);
                             }
                         }
                     }

@@ -1,13 +1,8 @@
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using ICities;
 using ColossalFramework.UI;
-using ColossalFramework;
-using ColossalFramework.Plugins;
-using System.Threading;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Klyte.Commons.Extensors
 {
@@ -20,9 +15,7 @@ namespace Klyte.Commons.Extensors
         public string name;
         public T SelectedItem
         {
-            get {
-                return m_selectedItem;
-            }
+            get => m_selectedItem;
             internal set {
                 m_selectedItem = value;
                 RefreshSelection();
@@ -32,9 +25,7 @@ namespace Klyte.Commons.Extensors
 
         public Dictionary<T, string> ItemsList
         {
-            get {
-                return m_itemsList;
-            }
+            get => m_itemsList;
             set {
                 if (value == null)
                 {
@@ -46,12 +37,7 @@ namespace Klyte.Commons.Extensors
             }
         }
 
-        public UIPanel Root
-        {
-            get {
-                return m_linesListPanel.transform.GetComponentInParent<UIPanel>();
-            }
-        }
+        public UIPanel Root => m_linesListPanel.transform.GetComponentInParent<UIPanel>();
 
         public void Enable()
         {
@@ -90,9 +76,9 @@ namespace Klyte.Commons.Extensors
         {
             this.name = name;
             m_parent = parent;
-            ((UIPanel)parent).autoFitChildrenVertically = true;
-            ((UIPanel)parent).padding = new RectOffset(20, 20, 20, 20);
-            UIPanel panelListing = m_parent.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+            ((UIPanel) parent).autoFitChildrenVertically = true;
+            ((UIPanel) parent).padding = new RectOffset(20, 20, 20, 20);
+            var panelListing = m_parent.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
             panelListing.name = "TextList";
             panelListing.height = height;
             panelListing.width = width;
@@ -109,7 +95,7 @@ namespace Klyte.Commons.Extensors
                 GameObject.Destroy(t.gameObject);
             }
 
-            GameObject scrollObj = new GameObject("Lines Listing Scroll", new Type[] { typeof(UIScrollablePanel) });
+            var scrollObj = new GameObject("Lines Listing Scroll", new Type[] { typeof(UIScrollablePanel) });
             //			DebugOutputPanel.AddMessage (PluginManager.MessageType.Message, "SCROLL LOADED");
             m_linesListPanel = scrollObj.GetComponent<UIScrollablePanel>();
             m_linesListPanel.autoLayout = false;
@@ -143,8 +129,8 @@ namespace Klyte.Commons.Extensors
 
         private static void InitButton(UIButton button, string baseSprite)
         {
-            string sprite = baseSprite;//"ButtonMenu";
-            string spriteHov = baseSprite;
+            var sprite = baseSprite;//"ButtonMenu";
+            var spriteHov = baseSprite;
             button.normalBgSprite = sprite;
             button.disabledBgSprite = sprite;
             button.hoveredBgSprite = spriteHov;
@@ -155,10 +141,7 @@ namespace Klyte.Commons.Extensors
             button.hoveredTextColor = Color.gray;
         }
 
-        public void Redraw()
-        {
-            RedrawButtons();
-        }
+        public void Redraw() => RedrawButtons();
 
         private void RedrawButtons()
         {
@@ -166,9 +149,9 @@ namespace Klyte.Commons.Extensors
             {
                 GameObject.Destroy(t.gameObject);
             }
-            foreach (var entry in m_itemsList)
+            foreach (KeyValuePair<T, string> entry in m_itemsList)
             {
-                GameObject itemContainer = new GameObject();
+                var itemContainer = new GameObject();
 
                 itemContainer.transform.parent = m_linesListPanel.transform;
                 UIButtonWithId itemButton = itemContainer.AddComponent<UIButtonWithId>();
@@ -190,7 +173,7 @@ namespace Klyte.Commons.Extensors
                 itemButton.id = entry.Key;
                 itemButton.eventClick += (component, eventParam) =>
                 {
-                    SelectedItem = (T)itemButton.id;
+                    SelectedItem = (T) itemButton.id;
                     EventOnSelect(SelectedItem);
                     eventParam.Use();
                 };
@@ -204,7 +187,7 @@ namespace Klyte.Commons.Extensors
         {
             foreach (Transform t in m_linesListPanel.transform)
             {
-                var b = t.GetComponent<UIButtonWithId>();
+                UIButtonWithId b = t.GetComponent<UIButtonWithId>();
                 if (b.id.Equals(SelectedItem))
                 {
                     b.color = new Color(255, 255, 255, 1f);
@@ -228,24 +211,16 @@ namespace Klyte.Commons.Extensors
         }
 
 
-        public void Unselect()
-        {
-            SelectedItem = default;
-        }
+        public void Unselect() => SelectedItem = default;
 
-        public bool Unselected
-        {
-            get {
-                return SelectedItem == null || SelectedItem.Equals(default(T));
-            }
-        }
+        public bool Unselected => SelectedItem == null || SelectedItem.Equals(default(T));
 
         public event OnButtonSelect<T> EventOnSelect;
 
         public delegate void addItemCallback(int idx, string text);
     }
 
-    class UIButtonWithId : UIButton
+    internal class UIButtonWithId : UIButton
     {
         public object id;
     }

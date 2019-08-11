@@ -154,9 +154,9 @@ namespace Klyte.Commons.Interfaces
                 LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
                 m_showLangDropDown = true;
             }
-            foreach (string lang in KlyteLocaleManager.locales)
+            foreach (var lang in KlyteLocaleManager.locales)
             {
-                string content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
+                var content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
                 if (content != null)
                 {
                     File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}1_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
@@ -168,8 +168,10 @@ namespace Klyte.Commons.Interfaces
                 }
 
             }
+            KlyteLocaleManager.ReloadLanguage(true);
             DoWithSettingsUI(new UIHelperExtension(m_onSettingsUiComponent));
         }
+
         private void DoWithSettingsUI(UIHelperExtension helper)
         {
             foreach (Transform child in helper.Self?.transform)
@@ -240,10 +242,10 @@ namespace Klyte.Commons.Interfaces
                         BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
                         if (component != null)
                         {
-                            string title = $"{SimpleName.Replace("&", "and")} v{Version}";
-                            string notes = Singleton<R>.instance.LoadResourceString("UI.VersionNotes.txt");
-                            string text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
-                            string img = "IconMessage";
+                            var title = $"{SimpleName.Replace("&", "and")} v{Version}";
+                            var notes = Singleton<R>.instance.LoadResourceString("UI.VersionNotes.txt");
+                            var text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
+                            var img = "IconMessage";
                             component.SetProperties(TooltipHelper.Format(new string[]
                             {
                             "title",

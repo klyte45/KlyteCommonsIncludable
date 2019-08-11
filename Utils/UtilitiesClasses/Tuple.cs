@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
-
-namespace Klyte.Commons.Utils
+﻿namespace Klyte.Commons.Utils
 {
 
     public class Tuple<T1, T2, T3, T4>
@@ -10,7 +7,7 @@ namespace Klyte.Commons.Utils
         public T2 Second { get; private set; }
         public T3 Third { get; private set; }
         public T4 Fourth { get; private set; }
-        internal Tuple(T1 first, T2 second, T3 third, T4 fourth)
+        internal Tuple(ref T1 first, ref T2 second, ref T3 third, ref T4 fourth)
         {
             First = first;
             Second = second;
@@ -24,7 +21,7 @@ namespace Klyte.Commons.Utils
         public T1 First { get; private set; }
         public T2 Second { get; private set; }
         public T3 Third { get; private set; }
-        internal Tuple(T1 first, T2 second, T3 third)
+        internal Tuple(ref T1 first, ref T2 second, ref T3 third)
         {
             First = first;
             Second = second;
@@ -36,7 +33,7 @@ namespace Klyte.Commons.Utils
     {
         public T1 First { get; private set; }
         public T2 Second { get; private set; }
-        internal Tuple(T1 first, T2 second)
+        internal Tuple(ref T1 first, ref T2 second)
         {
             First = first;
             Second = second;
@@ -47,17 +44,32 @@ namespace Klyte.Commons.Utils
     {
         public static Tuple<T1, T2, T3, T4> New<T1, T2, T3, T4>(T1 first, T2 second, T3 third, T4 fourth)
         {
-            var tuple = new Tuple<T1, T2, T3, T4>(first, second, third, fourth);
+            Tuple<T1, T2, T3, T4> tuple = new Tuple<T1, T2, T3, T4>(ref first, ref second, ref third, ref fourth);
             return tuple;
         }
         public static Tuple<T1, T2, T3> New<T1, T2, T3>(T1 first, T2 second, T3 third)
         {
-            var tuple = new Tuple<T1, T2, T3>(first, second, third);
+            Tuple<T1, T2, T3> tuple = new Tuple<T1, T2, T3>(ref first, ref second, ref third);
             return tuple;
         }
         public static Tuple<T1, T2> New<T1, T2>(T1 first, T2 second)
         {
-            var tuple = new Tuple<T1, T2>(first, second);
+            Tuple<T1, T2> tuple = new Tuple<T1, T2>(ref first, ref second);
+            return tuple;
+        }
+        public static Tuple<T1, T2, T3, T4> NewRef<T1, T2, T3, T4>(T1 first, T2 second, T3 third, T4 fourth)
+        {
+            Tuple<T1, T2, T3, T4> tuple = new Tuple<T1, T2, T3, T4>(ref first, ref second, ref third, ref fourth);
+            return tuple;
+        }
+        public static Tuple<T1, T2, T3> NewRef<T1, T2, T3>(ref T1 first, ref T2 second, ref T3 third)
+        {
+            Tuple<T1, T2, T3> tuple = new Tuple<T1, T2, T3>(ref first, ref second, ref third);
+            return tuple;
+        }
+        public static Tuple<T1, T2> NewRef<T1, T2>(ref T1 first, ref T2 second)
+        {
+            Tuple<T1, T2> tuple = new Tuple<T1, T2>(ref first, ref second);
             return tuple;
         }
     }
