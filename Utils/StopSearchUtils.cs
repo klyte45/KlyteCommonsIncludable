@@ -143,11 +143,10 @@ namespace Klyte.Commons.Utils
                     Vector3 normalized = Vector3.Cross(Vector3.up, direction).normalized;
                     positionR += normalized * (MathUtils.SmootherStep(0.5f, 0f, Mathf.Abs(m_defaultStopOffset - 0.5f)) * lane.m_stopOffset);
                     LogUtils.DoLog($"[{buildingInfo}]2positionR = {positionR}; direction = {direction}; {normalized}");
-                    var divider = (lane.m_stopType == VehicleInfo.VehicleType.Car ? 1f : 2);
                     result.Add(new StopPointDescriptorLanes
                     {
                         platformLine = refBezier,
-                        width = lane.m_width / divider,
+                        width = lane.m_width,
                         vehicleType = lane.m_stopType
                     });
 
