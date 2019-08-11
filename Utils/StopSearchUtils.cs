@@ -119,8 +119,8 @@ namespace Klyte.Commons.Utils
                         continue;
                     }
 
-                    Vector3 lanePos = position + (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                    Vector3 lanePos2 = position2 + (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                    Vector3 lanePos = position + (lane.m_position/2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                    Vector3 lanePos2 = position2 + (lane.m_position/2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
                     Vector3 b3, c;
                     if (path.m_curveTargets == null || path.m_curveTargets.Length == 0)
                     {
@@ -143,10 +143,11 @@ namespace Klyte.Commons.Utils
                     Vector3 normalized = Vector3.Cross(Vector3.up, direction).normalized;
                     positionR += normalized * (MathUtils.SmootherStep(0.5f, 0f, Mathf.Abs(m_defaultStopOffset - 0.5f)) * lane.m_stopOffset);
                     LogUtils.DoLog($"[{buildingInfo}]2positionR = {positionR}; direction = {direction}; {normalized}");
+                    var divider = (lane.m_stopType == VehicleInfo.VehicleType.Car ? 1f : 2);
                     result.Add(new StopPointDescriptorLanes
                     {
                         platformLine = refBezier,
-                        width = (lane.m_width / 2) + path.m_netInfo.m_halfWidth,
+                        width = lane.m_width / divider,
                         vehicleType = lane.m_stopType
                     });
 
