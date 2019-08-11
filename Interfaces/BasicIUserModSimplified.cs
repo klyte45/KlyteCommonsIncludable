@@ -14,11 +14,10 @@ using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserModSimplified<U, R, C, T> : IUserMod, ILoadingExtension
-        where U : BasicIUserModSimplified<U, R, C, T>, new()
+    public abstract class BasicIUserModSimplified<U, R, C> : IUserMod, ILoadingExtension
+        where U : BasicIUserModSimplified<U, R, C>, new()
         where R : KlyteResourceLoader<R>
         where C : MonoBehaviour
-        where T : UICustomControl
     {
 
         public abstract string SimpleName { get; }

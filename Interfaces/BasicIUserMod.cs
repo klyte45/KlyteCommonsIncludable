@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserMod<U, R, C, A, T, S> : BasicIUserModSimplified<U, R, C, T>
+    public abstract class BasicIUserMod<U, R, C, A, T, S> : BasicIUserModSimplified<U, R, C>
         where U : BasicIUserMod<U, R, C, A, T, S>, new()
         where R : KlyteResourceLoader<R>
         where C : MonoBehaviour
