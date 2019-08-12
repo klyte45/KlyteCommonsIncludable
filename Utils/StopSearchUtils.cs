@@ -129,8 +129,10 @@ namespace Klyte.Commons.Utils
                     else
                     {
                         GetMiddlePointsFor(path, out b3, out c);
+                        LogUtils.DoLog($"[{buildingInfo}] GetMiddlePointsFor path =  ({b3} {c})");
                         b3 += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
                         c += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                        b3.y = c.y = (lanePos.y + lanePos2.y) / 2;
                     }
                     var refBezier = new Bezier3(lanePos, b3, c, lanePos2);
                     LogUtils.DoLog($"[{buildingInfo}]refBezier = {refBezier} ({lanePos} {b3} {c} {lanePos2})");
