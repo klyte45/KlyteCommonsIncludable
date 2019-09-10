@@ -3,6 +3,8 @@ using ColossalFramework.Packaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using static ColossalFramework.Packaging.Package;
 
 namespace Klyte.Commons.Utils
 {
@@ -25,10 +27,10 @@ namespace Klyte.Commons.Utils
         }
         public static bool IsFileCreated(string fileName) => File.Exists(fileName);
 
-        public static void ScanPrefabsFolders(string filenameToSearch, Action<FileStream, BuildingInfo> action)
+        public static void ScanPrefabsFolders<T>(string filenameToSearch, Action<FileStream, T> action) where T : PrefabInfo
         {
             var list = new List<string>();
-            ForEachLoadedPrefab<BuildingInfo>((loaded) =>
+            ForEachLoadedPrefab<T>((loaded) =>
             {
                 Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
                 if (!(asset == null) && !(asset.package == null))
@@ -49,6 +51,83 @@ namespace Klyte.Commons.Utils
                     }
                 }
             });
+        }
+        public static void ScanPrefabsFoldersDirectory<T>(string directoryToFind, Action<string, T> action) where T : PrefabInfo
+        {
+            var list = new List<string>();
+            ForEachLoadedPrefab<T>((loaded) =>
+            {
+                Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
+                if (!(asset == null) && !(asset.package == null))
+                {
+                    var packagePath = asset.package.packagePath;
+                    if (packagePath != null)
+                    {
+                        var filePath = Path.Combine(Path.GetDirectoryName(packagePath), directoryToFind);
+                        if (!list.Contains(filePath))
+                        {
+                            list.Add(filePath);
+                            LogUtils.DoLog("DIRECTORY TO FIND: " + filePath);
+                            if (Directory.Exists(filePath))
+                            {
+                                action(filePath, loaded);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        public static void ScanPrefabsFoldersDirectoryNoLoad(string directoryToFind, Action<string, Package, Asset> action)
+        {
+            var list = new List<string>();
+            ForEachNonLoadedPrefab((package, asset) =>
+            {
+                var packagePath = asset.package.packagePath;
+                if (packagePath != null)
+                {
+                    var filePath = Path.Combine(Path.GetDirectoryName(packagePath), directoryToFind);
+                    if (!list.Contains(filePath))
+                    {
+                        list.Add(filePath);
+                        if (Directory.Exists(filePath))
+                        {
+                            action(filePath, package, asset);
+                        }
+                    }
+                }
+            });
+        }
+        public static void ScanPrefabsFoldersFileNoLoad(string file, Action<FileStream, Package, Asset> action)
+        {
+            var list = new List<string>();
+            ForEachNonLoadedPrefab((package, asset) =>
+            {
+                var packagePath = asset.package.packagePath;
+                if (packagePath != null)
+                {
+                    var filePath = Path.Combine(Path.GetDirectoryName(packagePath), file);
+                    if (!list.Contains(filePath))
+                    {
+                        list.Add(filePath);
+                        if (File.Exists(filePath))
+                        {
+                            using FileStream stream = File.OpenRead(filePath);
+                            action(stream, package, asset);
+                        }
+                    }
+                }
+            });
+        }
+        public static void ForEachNonLoadedPrefab(Action<Package, Asset> action)
+        {
+            foreach (var pack in PackageManager.allPackages)
+            {
+                var assets = pack.FilterAssets((AssetType) 103);
+                if (assets.Count() == 0)
+                    continue;
+                action(pack, assets.First());
+            }
         }
 
         public static void ForEachLoadedPrefab<PI>(Action<PI> action) where PI : PrefabInfo
