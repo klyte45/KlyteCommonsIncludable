@@ -7,9 +7,9 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Utils
 {
-    [XmlRoot("LibableList")]
+    [XmlRoot("NonSequentialList")]
 
-    public class LibableList<TValue> : Dictionary<string, TValue>, IXmlSerializable where TValue : ILibable
+    public class NonSequentialList<TValue> : Dictionary<long, TValue>, IXmlSerializable where TValue : IIdentifiable
     {
 
         #region IXmlSerializable Members
@@ -23,7 +23,6 @@ namespace Klyte.Commons.Utils
         {
             var valueSerializer = new XmlSerializer(typeof(TValue), "");
             reader.ReadStartElement();
-            var counterUnknown = 0;
             while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
             {
                 if (reader.NodeType != System.Xml.XmlNodeType.Element)
@@ -33,11 +32,11 @@ namespace Klyte.Commons.Utils
                 }
 
                 var value = (TValue) valueSerializer.Deserialize(reader);
-                if (value.SaveName == null)
+                if (value.Id == null)
                 {
-                    value.SaveName = $"<UNNAMED_{counterUnknown++}>";
+                    continue;
                 }
-                Add(value.SaveName, value);
+                Add(value.Id.Value, value);
 
             }
 
@@ -59,36 +58,36 @@ namespace Klyte.Commons.Utils
             foreach (var key in Keys)
             {
                 TValue value = this[key];
-                if (value.SaveName == null)
+                if (value.Id == null)
                 {
-                    value.SaveName = key;
+                    value.Id = key;
                 }
                 valueSerializer.Serialize(writer, value, ns);
             }
 
         }
 
-        public new TValue this[string key]
+        public new TValue this[long key]
         {
             get => base[key];
             set {
                 Remove(key);
-                if(value.SaveName == null)
+                if (value.Id == null)
                 {
-                    value.SaveName = key;
+                    value.Id = key;
                 }
-                base[value.SaveName] = value;
+                base[value.Id.Value] = value;
             }
         }
 
-        public new void Add(string key, TValue value)
+        public new void Add(long key, TValue value)
         {
             Remove(key);
-            if (value.SaveName == null)
+            if (value.Id == null)
             {
-                value.SaveName = key;
+                value.Id = key;
             }
-            base.Add(value.SaveName, value);
+            base.Add(value.Id.Value, value);
         }
 
 
