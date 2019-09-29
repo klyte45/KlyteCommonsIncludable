@@ -21,7 +21,13 @@ namespace Klyte.Commons.Utils
         public void ReadXml(System.Xml.XmlReader reader)
 
         {
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return;
+            }
             var valueSerializer = new XmlSerializer(typeof(TValue), "");
+            LogUtils.DoErrorLog($"reader = {reader}; empty = {reader.IsEmptyElement}");
             reader.ReadStartElement();
             var counterUnknown = 0;
             while (reader.NodeType != System.Xml.XmlNodeType.EndElement)

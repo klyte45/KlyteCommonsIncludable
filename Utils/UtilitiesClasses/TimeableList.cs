@@ -2,7 +2,7 @@
 using Klyte.Commons.Interfaces;
 using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using System.Xml.Serialization;
 
 
@@ -17,33 +17,44 @@ namespace Klyte.Commons.Utils
 
         public System.Xml.Schema.XmlSchema GetSchema() => null;
 
-
+        private bool m_readingXml = false;
 
         public void ReadXml(System.Xml.XmlReader reader)
 
         {
-            var valueSerializer = new XmlSerializer(typeof(TValue), "");
-            reader.ReadStartElement();
-            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+            if (reader.IsEmptyElement)
             {
-                if (reader.NodeType != System.Xml.XmlNodeType.Element)
-                {
-                    reader.Read();
-                    continue;
-                }
-
-                var value = (TValue) valueSerializer.Deserialize(reader);
-                if (value.TimeOfDay == null)
-                {
-                    continue;
-                }
-                Add(value.TimeOfDay.Ticks, value);
-
+                reader.Read();
+                return;
             }
+            m_readingXml = true;
+            try
+            {
+                var valueSerializer = new XmlSerializer(typeof(TValue), "");
+                reader.ReadStartElement();
+                while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+                {
+                    if (reader.NodeType != System.Xml.XmlNodeType.Element)
+                    {
+                        reader.Read();
+                        continue;
+                    }
 
-            reader.ReadEndElement();
+                    var value = (TValue) valueSerializer.Deserialize(reader);
+                    if (value.TimeOfDay == null)
+                    {
+                        continue;
+                    }
+                    Add(value.TimeOfDay.Ticks, value);
 
+                }
 
+                reader.ReadEndElement();
+            }
+            finally
+            {
+                m_readingXml = false;
+            }
         }
 
 
@@ -56,13 +67,10 @@ namespace Klyte.Commons.Utils
 
             var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
-            foreach (var key in Keys)
+            foreach (long key in Keys)
             {
                 TValue value = this[key];
-                if (value.TimeOfDay == null)
-                {
-                    value.TimeOfDay = new TimeSpan(key);
-                }
+                PrepareValue(key, value);
                 valueSerializer.Serialize(writer, value, ns);
             }
 
@@ -73,24 +81,32 @@ namespace Klyte.Commons.Utils
             get => base[key];
             set {
                 Remove(key);
-                if(value.TimeOfDay == null)
-                {
-                    value.TimeOfDay = new TimeSpan(key);
-                }
+                PrepareValue(key, value);
                 base[value.TimeOfDay.Ticks] = value;
+            }
+        }
+
+        private void PrepareValue(long key, TValue value)
+        {
+            if (value.TimeOfDay == null)
+            {
+                value.TimeOfDay = new TimeSpan(key % TimeSpan.TicksPerDay);
+            }
+            if (!m_readingXml && value.TimeOfDay.Ticks < Keys.Min())
+            {
+                value.TimeOfDay = new TimeSpan(0);
             }
         }
 
         public new void Add(long key, TValue value)
         {
             Remove(key);
-            if (value.TimeOfDay == null)
-            {
-                value.TimeOfDay = new TimeSpan(key);
-            }
+            PrepareValue(key, value);
             base.Add(value.TimeOfDay.Ticks, value);
         }
 
+
+        public TValue GetAtHour(float hour) => TryGetValue(this.Where(x => x.Key < hour * TimeSpan.TicksPerHour).Max(x => x.Key), out TValue result) ? result : default;
 
 
         #endregion

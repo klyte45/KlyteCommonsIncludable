@@ -261,6 +261,18 @@ namespace Klyte.Commons.Extensors
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create space of " + height + " height");
             return null;
         }
+        public UISprite AddUiSprite(string spriteName, UITextureAtlas textureAtlas)
+        {
+            if (textureAtlas != null && !string.IsNullOrEmpty(spriteName))
+            {
+                var uIButton = m_root.AddUIComponent<UISprite>();
+                uIButton.spriteName = spriteName;
+                uIButton.atlas = textureAtlas;
+                return uIButton;
+            }
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create sprite with no name or no atlas");
+            return null;
+        }
 
         public UIHelperExtension(UIComponent panel) => m_root = panel;
 

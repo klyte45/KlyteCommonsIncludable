@@ -9,12 +9,14 @@ namespace Klyte.Commons.Utils
         public static string ToRomanNumeral(ushort value)
         {
             if (value < 0)
+            {
                 throw new ArgumentOutOfRangeException("Please use a positive integer greater than zero.");
+            }
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             if (value >= 4000)
             {
-                RomanizeCore(sb, (ushort)(value / 1000));
+                RomanizeCore(sb, (ushort) (value / 1000));
                 sb.Append("·");
                 value %= 1000;
             }
@@ -28,88 +30,79 @@ namespace Klyte.Commons.Utils
             {
                 if (remain >= 1000)
                 {
-                    sb.Append("Ⅿ");
+                    sb.Append("M");
                     remain -= 1000;
                 }
                 else if (remain >= 900)
                 {
-                    sb.Append("ⅭⅯ");
+                    sb.Append("CM");
                     remain -= 900;
                 }
                 else if (remain >= 500)
                 {
-                    sb.Append("Ⅾ");
+                    sb.Append("D");
                     remain -= 500;
                 }
                 else if (remain >= 400)
                 {
-                    sb.Append("ⅭⅮ");
+                    sb.Append("CD");
                     remain -= 400;
                 }
                 else if (remain >= 100)
                 {
-                    sb.Append("Ⅽ");
+                    sb.Append("C");
                     remain -= 100;
                 }
                 else if (remain >= 90)
                 {
-                    sb.Append("ⅩⅭ");
+                    sb.Append("XC");
                     remain -= 90;
                 }
                 else if (remain >= 50)
                 {
-                    sb.Append("Ⅼ");
+                    sb.Append("L");
                     remain -= 50;
                 }
                 else if (remain >= 40)
                 {
-                    sb.Append("ⅩⅬ");
+                    sb.Append("XL");
                     remain -= 40;
                 }
-                else if (remain >= 13)
+                else if (remain >= 10)
                 {
-                    sb.Append("Ⅹ");
+                    sb.Append("X");
                     remain -= 10;
                 }
                 else
                 {
                     switch (remain)
                     {
-                        case 12:
-                            sb.Append("Ⅻ");
-                            break;
-                        case 11:
-                            sb.Append("Ⅺ");
-                            break;
-                        case 10:
-                            sb.Append("Ⅹ");
-                            break;
                         case 9:
-                            sb.Append("Ⅸ");
+                            sb.Append("IX");
                             break;
                         case 8:
-                            sb.Append("Ⅷ");
+                            sb.Append("VIII");
                             break;
                         case 7:
-                            sb.Append("Ⅶ");
+                            sb.Append("VII");
                             break;
                         case 6:
-                            sb.Append("Ⅵ");
+                            sb.Append("VI");
                             break;
                         case 5:
-                            sb.Append("Ⅴ");
+                            sb.Append("V");
                             break;
                         case 4:
-                            sb.Append("Ⅳ");
+                            sb.Append("IV");
                             break;
                         case 3:
-                            sb.Append("Ⅲ");
+                            sb.Append("III");
                             break;
                         case 2:
-                            sb.Append("Ⅱ");
+                            sb.Append("II");
                             break;
                         case 1:
-                            sb.Append("Ⅰ");
+                            sb.Append("I");
                             break;
                     }
                     remain = 0;
@@ -118,7 +111,7 @@ namespace Klyte.Commons.Utils
 
             return remain;
         }
-        public static string GetStringFromNumber(string[] array, int number)
+        public static string GetStringFromNumber(char[] array, int number)
         {
             int arraySize = array.Length;
             string saida = "";
