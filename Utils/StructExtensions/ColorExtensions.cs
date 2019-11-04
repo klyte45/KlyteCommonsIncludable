@@ -7,9 +7,11 @@ namespace Klyte.Commons.Utils
     {
         public static string ToRGBA(this Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
         public static string ToRGB(this Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
+        public static string ToRGBA(this Color color) => ToRGBA((Color32) color);
+        public static string ToRGB(this Color color) => ToRGB((Color32) color);
         public static Color32 FromRGBA(string rgba)
         {
-            var value = Convert.ToInt64(rgba, 16);
+            long value = Convert.ToInt64(rgba, 16);
             return FromRGBA(value);
         }
 
@@ -17,7 +19,7 @@ namespace Klyte.Commons.Utils
 
         public static Color32 FromRGB(string rgb)
         {
-            var value = Convert.ToInt32(rgb, 16);
+            int value = Convert.ToInt32(rgb, 16);
             return FromRGB(value);
         }
 

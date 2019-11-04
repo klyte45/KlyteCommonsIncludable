@@ -3,7 +3,6 @@ using ColossalFramework.UI;
 using Harmony;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
-using Klyte.UltimateVehicleManager.TextureAtlas;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -15,7 +14,7 @@ namespace Klyte.Commons.Redirectors
 
     public class UIDynamicFontRendererRedirector : Redirector, IRedirectable
     {
-        private const string TAG_LINE = "k45LineSymbol";
+        public const string TAG_LINE = "k45LineSymbol";
 
         private static UIDynamicFontRendererRedirector Instance { get; set; }
 
@@ -30,10 +29,7 @@ namespace Klyte.Commons.Redirectors
             }
             Instance = this;
 
-            LineIconsTextureAtlas.Ensure();
-            LogUtils.DoErrorLog($"!!!! {string.Join(",", GetList().ToArray())}");
             GetList().Add(TAG_LINE);
-            LogUtils.DoErrorLog($"!!!2! {string.Join(",", GetList().ToArray())}");
 
 
             AddRedirect(typeof(DynamicFontRenderer).GetMethod("CalculateTokenRenderSize", RedirectorUtils.allFlags), null, null, GetType().GetMethod("CalculateTokenRenderSizeTranspile", RedirectorUtils.allFlags));
@@ -182,97 +178,111 @@ namespace Klyte.Commons.Redirectors
             else
             {
                 Texture2D texture = renderer.spriteAtlas.texture;
-                float calcHeight = ((UIDynamicFont) renderer.font).baseline * renderer.textScale * 2;
+                float calcHeight = ((UIDynamicFont) renderer.font).size * renderer.textScale * 2;
                 float calcProportion = spriteInfo.region.width * texture.width / (spriteInfo.region.height * texture.height);
                 float calcWidth = Mathf.CeilToInt(calcHeight * calcProportion);
 
                 int height = Mathf.CeilToInt(calcHeight);
                 int width = Mathf.CeilToInt(calcWidth);
 
-
-                Color32 color2 = ApplyOpacity(renderer, ColorExtensions.FromRGB(args[1]));
+                Color32 bgColor = ColorExtensions.FromRGB(args[1]);
+                Color32 color2 = ApplyOpacity(renderer, bgColor);
                 var size = new Vector3(width, height);
+                float midLineOffset = (((UIDynamicFont) renderer.font).size / 2 * renderer.textScale);
                 var options = new RenderOptions
                 {
                     atlas = renderer.spriteAtlas,
                     color = color2,
                     fillAmount = 1f,
                     flip = UISpriteFlip.None,
-                    offset = position - new Vector3(0, -height / 4),
+                    offset = position - new Vector3(0, -(height / 2) + midLineOffset),
                     pixelsToUnits = renderer.pixelRatio,
                     size = size,
                     spriteInfo = spriteInfo
                 };
-                int textWidth = MeasureTextWidth(renderer, args[2]);
                 RenderSprite(renderer.spriteBuffer, options);
-                float multipler = Mathf.Min(1, size.x / textWidth);
-                LogUtils.DoErrorLog($"size.x {size.x} / textWidth {textWidth} = {multipler}");
-                RenderText(renderer, args[2], true, position + new Vector3((size.x / 2) - (textWidth * multipler / 2), 0), multipler, destination);
+                float textScale = renderer.textScale;
+                Vector2 textDimensions = MeasureTextWidth(renderer, args[2], textScale, out Vector2 yBounds);
+                float multipler = Mathf.Min(Mathf.Min(3.5f, size.x / textDimensions.x), Mathf.Min(3.5f, size.y / textDimensions.y));
+                if (multipler > 1)
+                {
+                    textScale *= 1 + ((multipler - 1) / 2.1f);
+                    multipler = 1;
+                    textDimensions = MeasureTextWidth(renderer, args[2], textScale, out yBounds);
+                }
+
+                RenderText(renderer, args[2], position + new Vector3((size.x / 2) - (textDimensions.x * multipler / 2), -(height / 2) + midLineOffset - (textDimensions.y / 2) - (yBounds.x / 2)), multipler, destination, textScale, KlyteMonoUtils.ContrastColor(bgColor), bgColor);
+
             }
         }
 
-        private static int MeasureTextWidth(DynamicFontRenderer renderer, string text)
+        private static Vector2 MeasureTextWidth(DynamicFontRenderer renderer, string text, float textScale, out Vector2 yBounds)
         {
-            float num = 1f;
-            int size = Mathf.CeilToInt(renderer.font.size * renderer.textScale);
+            float width = 1f;
+            float height = 0;
+            int size = Mathf.CeilToInt(renderer.font.size * textScale) * 2;
             ((UIDynamicFont) renderer.font).RequestCharacters(text, size, FontStyle.Normal);
+            yBounds = new Vector2(9999999f, -999999999f);
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
                 ((UIDynamicFont) renderer.font).baseFont.GetCharacterInfo(c, out CharacterInfo characterInfo, size, FontStyle.Normal);
                 if (c == '\t')
                 {
-                    num += renderer.tabSize;
+                    width += renderer.tabSize;
                 }
                 else
                 {
-                    num += ((c != ' ') ? characterInfo.maxX : (characterInfo.advance + (renderer.characterSpacing * renderer.textScale)));
+                    width += ((c != ' ') ? characterInfo.maxX : (characterInfo.advance + (renderer.characterSpacing * textScale)));
+                    height = Mathf.Max(characterInfo.glyphHeight, height);
+                    yBounds.x = Mathf.Min(yBounds.x, characterInfo.minY);
+                    yBounds.y = Mathf.Max(yBounds.x, characterInfo.maxY);
                 }
             }
             if (text.Length > 2)
             {
-                num += (text.Length - 2) * renderer.characterSpacing * renderer.textScale;
+                width += (text.Length - 2) * renderer.characterSpacing * textScale;
             }
-            return Mathf.CeilToInt(num);
+            return new Vector2(width, height) / 2f;
         }
 
-        private static void RenderText(DynamicFontRenderer renderer, string text, bool outline, Vector3 position, float rescale, UIRenderData renderData)
+        private static void RenderText(DynamicFontRenderer renderer, string text, Vector3 position, float rescale, UIRenderData renderData, float textScale, Color textColor, Color outlineColor)
         {
-            Color32 color = Color.white;
             var uidynamicFont = (UIDynamicFont) renderer.font;
-            int num = Mathf.CeilToInt(renderer.font.size * renderer.textScale);
+            float size = (renderer.font.size * textScale);
             FontStyle style = FontStyle.Normal;
             int descent = uidynamicFont.Descent;
+            int ascent = renderer.font.baseFont.ascent;
             PoolList<Vector3> vertices = renderData.vertices;
             PoolList<int> triangles = renderData.triangles;
             PoolList<Vector2> uvs = renderData.uvs;
             PoolList<Color32> colors = renderData.colors;
-            float num2 = position.x;
+            float x = position.x;
             float y = position.y;
             renderData.material = uidynamicFont.material;
-            Color color2 = ApplyOpacity(renderer, color);
+            Color color2 = ApplyOpacity(renderer, textColor);
             Color c = color2;
             if (renderer.bottomColor != null)
             {
-                c = ApplyOpacity(renderer, color);
+                c = ApplyOpacity(renderer, textColor);
             }
             for (int i = 0; i < text.Length; i++)
             {
                 if (i > 0)
                 {
-                    num2 += renderer.characterSpacing * renderer.textScale;
+                    x += renderer.characterSpacing * textScale;
                 }
-                if (uidynamicFont.baseFont.GetCharacterInfo(text[i], out CharacterInfo glyph, num, style))
+                if (uidynamicFont.baseFont.GetCharacterInfo(text[i], out CharacterInfo glyph, Mathf.CeilToInt(size) * 2, style))
                 {
-                    float num3 = renderer.font.size + glyph.maxY - renderer.font.baseFont.ascent - num + descent;
-                    float v00 = num2 + glyph.minX;
-                    float v10 = y + num3;
-                    float v01 = v00 + (glyph.glyphWidth * rescale);
-                    float y2 = v10 - glyph.glyphHeight;
-                    Vector3 vector = new Vector3(v00, v10) * renderer.pixelRatio;
-                    Vector3 vector2 = new Vector3(v01, v10) * renderer.pixelRatio;
-                    Vector3 vector3 = new Vector3(v01, y2) * renderer.pixelRatio;
-                    Vector3 vector4 = new Vector3(v00, y2) * renderer.pixelRatio;
+                    float num3 = (glyph.maxY / 2f);
+                    float minX = x + (glyph.minX / 2f);
+                    float maxY = y + num3;
+                    float maxX = minX + (glyph.glyphWidth * rescale / 2f);
+                    float minY = maxY - (glyph.glyphHeight / 2f);
+                    Vector3 vector = new Vector3(minX, maxY) * renderer.pixelRatio;
+                    Vector3 vector2 = new Vector3(maxX, maxY) * renderer.pixelRatio;
+                    Vector3 vector3 = new Vector3(maxX, minY) * renderer.pixelRatio;
+                    Vector3 vector4 = new Vector3(minX, minY) * renderer.pixelRatio;
                     if (renderer.shadow)
                     {
                         AddTriangleIndices(vertices, triangles);
@@ -289,7 +299,7 @@ namespace Klyte.Commons.Redirectors
                         colors.Add(item);
                         AddUVCoords(uvs, glyph);
                     }
-                    if (outline)
+                    if (outlineColor != default)
                     {
                         for (int j = 0; j < kOutlineOffsets.Length; j++)
                         {
@@ -299,7 +309,7 @@ namespace Klyte.Commons.Redirectors
                             vertices.Add(vector2 + b2);
                             vertices.Add(vector3 + b2);
                             vertices.Add(vector4 + b2);
-                            Color c3 = ApplyOpacity(renderer, renderer.outlineColor);
+                            Color c3 = ApplyOpacity(renderer, outlineColor);
                             Color32 item2 = c3.linear;
                             colors.Add(item2);
                             colors.Add(item2);
@@ -320,7 +330,7 @@ namespace Klyte.Commons.Redirectors
                     colors.Add(item4);
                     colors.Add(item4);
                     AddUVCoords(uvs, glyph);
-                    num2 += glyph.maxX * rescale;
+                    x += glyph.maxX / 2f * rescale;
                 }
             }
         }
@@ -347,17 +357,18 @@ namespace Klyte.Commons.Redirectors
             return color;
         }
 
-        internal static void RenderSprite(UIRenderData data, RenderOptions options)
+        internal static Rect RenderSprite(UIRenderData data, RenderOptions options)
         {
             options.baseIndex = data.vertices.Count;
             RebuildTriangles(data, options);
-            RebuildVertices(data, options);
+            Rect bounds = RebuildVertices(data, options);
             RebuildUV(data, options);
             RebuildColors(data, options);
             if (options.fillAmount < 1f)
             {
                 DoFill(data, options);
             }
+            return bounds;
         }
         internal static readonly int[] kTriangleIndices = new int[]{
             0,
@@ -386,7 +397,7 @@ namespace Klyte.Commons.Redirectors
             }
         }
 
-        private static void RebuildVertices(UIRenderData renderData, RenderOptions options)
+        private static Rect RebuildVertices(UIRenderData renderData, RenderOptions options)
         {
             PoolList<Vector3> vertices = renderData.vertices;
             int baseIndex = options.baseIndex;
@@ -398,11 +409,12 @@ namespace Klyte.Commons.Redirectors
             vertices.Add(new Vector3(x2, y, 0f) * options.pixelsToUnits);
             vertices.Add(new Vector3(x2, y2, 0f) * options.pixelsToUnits);
             vertices.Add(new Vector3(x, y2, 0f) * options.pixelsToUnits);
-            Vector3 b = options.offset.RoundToInt() * options.pixelsToUnits;
+            Vector3 b = (options.offset * 10).RoundToInt() * options.pixelsToUnits / 10;
             for (int i = 0; i < 4; i++)
             {
                 vertices[baseIndex + i] = (vertices[baseIndex + i] + b).Quantize(options.pixelsToUnits);
             }
+            return new Rect(vertices[0], vertices[2]);
         }
         private static void RebuildUV(UIRenderData renderData, RenderOptions options)
         {
