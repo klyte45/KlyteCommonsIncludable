@@ -1,6 +1,5 @@
 ﻿
 using Klyte.Commons.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
@@ -10,54 +9,46 @@ namespace Klyte.Commons.Utils
 {
     [XmlRoot("TimeableList")]
 
-    public class TimeableList<TValue> : SortedDictionary<long, TValue>, IXmlSerializable where TValue : ITimeable
+    public class TimeableList<TValue> : IXmlSerializable where TValue : ITimeable<TValue>
     {
 
         #region IXmlSerializable Members
 
         public System.Xml.Schema.XmlSchema GetSchema() => null;
 
-        private bool m_readingXml = false;
+        private List<TValue> m_items = new List<TValue>();
+        private Tuple<TValue, int>[] m_hourTable;
 
         public void ReadXml(System.Xml.XmlReader reader)
 
         {
+            m_items = new List<TValue>();
             if (reader.IsEmptyElement)
             {
                 reader.Read();
                 return;
             }
-            m_readingXml = true;
-            try
+            var valueSerializer = new XmlSerializer(typeof(TValue), "");
+            reader.ReadStartElement();
+            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
             {
-                var valueSerializer = new XmlSerializer(typeof(TValue), "");
-                reader.ReadStartElement();
-                while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+                if (reader.NodeType != System.Xml.XmlNodeType.Element)
                 {
-                    if (reader.NodeType != System.Xml.XmlNodeType.Element)
-                    {
-                        reader.Read();
-                        continue;
-                    }
-
-                    var value = (TValue) valueSerializer.Deserialize(reader);
-                    if (value.TimeOfDay == null)
-                    {
-                        continue;
-                    }
-                    Add(value.TimeOfDay.Ticks, value);
-
+                    reader.Read();
+                    continue;
                 }
 
-                reader.ReadEndElement();
+                var value = (TValue) valueSerializer.Deserialize(reader);
+                if (value.HourOfDay == null)
+                {
+                    continue;
+                }
+                value.OnEntryChanged += CleanCache;
+                m_items.Add(value);
+
             }
-            finally
-            {
-                m_readingXml = false;
-            }
+            reader.ReadEndElement();
         }
-
-
 
         public void WriteXml(System.Xml.XmlWriter writer)
 
@@ -67,49 +58,67 @@ namespace Klyte.Commons.Utils
 
             var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
-            foreach (long key in Keys)
+            foreach (TValue value in m_items.Distinct(new ITimeableComparer()))
             {
-                TValue value = this[key];
-                PrepareValue(key, value);
                 valueSerializer.Serialize(writer, value, ns);
             }
-
         }
-
-        public new TValue this[long key]
+        public Tuple<Tuple<TValue, int>, Tuple<TValue, int>, float> GetAtHour(float hour)
         {
-            get => base[key];
-            set {
-                Remove(key);
-                PrepareValue(key, value);
-                base[value.TimeOfDay.Ticks] = value;
-            }
-        }
-
-        private void PrepareValue(long key, TValue value)
-        {
-            if (value.TimeOfDay == null)
+            if (m_hourTable == null)
             {
-                value.TimeOfDay = new TimeSpan(key % TimeSpan.TicksPerDay);
+                RebuildHourTable();
             }
-            if (!m_readingXml && value.TimeOfDay.Ticks < Keys.Min())
+            int fullHour = (int) hour;
+            if (hour % 1 < 0.5f)
             {
-                value.TimeOfDay = new TimeSpan(0);
+                return Tuple.New(m_hourTable[(fullHour + 23) % 24], m_hourTable[fullHour], (hour % 1) + 0.5f);
+            }
+            else
+            {
+                return Tuple.New(m_hourTable[fullHour], m_hourTable[(fullHour + 1) % 24], (hour % 1) - 0.5f);
             }
         }
 
-        public new void Add(long key, TValue value)
+        private class ITimeableComparer : IEqualityComparer<TValue>
         {
-            Remove(key);
-            PrepareValue(key, value);
-            base.Add(value.TimeOfDay.Ticks, value);
+            public bool Equals(TValue x, TValue y) => x.HourOfDay == y.HourOfDay;
+            public int GetHashCode(TValue obj) => obj?.GetHashCode() ?? 0;
         }
-
-
-        public TValue GetAtHour(float hour) => TryGetValue(this.Where(x => x.Key < hour * TimeSpan.TicksPerHour).Max(x => x.Key), out TValue result) ? result : default;
-
-
         #endregion
+
+
+        public int Count => m_items?.Count ?? 0;
+
+        internal void Add(TValue entry)
+        {
+            entry.OnEntryChanged -= CleanCache;
+            m_items.Add(entry);
+            entry.OnEntryChanged += CleanCache;
+        }
+
+        internal TValue this[int idx] => m_items[idx];
+
+        internal void Remove(TValue entry)
+        {
+            m_items.Remove(entry);
+            entry.OnEntryChanged -= CleanCache;
+        }
+
+        private void CleanCache(TValue dirtyObj)
+        {
+            m_hourTable = null;
+        }
+
+        private void RebuildHourTable()
+        {
+            m_hourTable = new Tuple<TValue, int>[24];
+            m_hourTable[0] = m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == 0).FirstOrDefault() ?? m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == m_items.Max(x => x.HourOfDay)).FirstOrDefault();
+            for (int i = 1; i < 24; i++)
+            {
+                m_hourTable[i] = m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == i).FirstOrDefault() ?? m_hourTable[i - 1];
+            }
+        }
 
     }
 }

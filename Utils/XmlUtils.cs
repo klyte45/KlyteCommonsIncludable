@@ -29,7 +29,8 @@ namespace Klyte.Commons.Utils
             }
             catch (Exception e)
             {
-                LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.Message}\n{e.StackTrace}");
+                LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.GetType().Name}: {e.Message}\n{e.StackTrace}");
+                throw e;
             }
             return default;
         }

@@ -2,8 +2,9 @@
 
 namespace Klyte.Commons.Interfaces
 {
-    public interface ITimeable
+    public interface ITimeable<T> where T : ITimeable<T>
     {
-        TimeSpan TimeOfDay { get; set; }
+        int? HourOfDay { get; set; }
+        event Action<T> OnEntryChanged;
     }
 }

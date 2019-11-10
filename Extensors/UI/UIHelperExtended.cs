@@ -148,7 +148,7 @@ namespace Klyte.Commons.Extensors
             UIDropDown uIDropDown = AddDropdownBase(text, options, eventCallback, limitLabelByPanelWidth);
             if (uIDropDown != null)
             {
-                var hasIdx = options.Contains(defaultSelection);
+                bool hasIdx = options.Contains(defaultSelection);
                 if (hasIdx)
                 {
                     uIDropDown.selectedIndex = options.ToList().IndexOf(defaultSelection);
@@ -227,12 +227,20 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public object AddSlider(string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback)
+        public object AddSlider(string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback) => AddSlider(m_root, text, min, max, step, defaultValue, eventCallback);
+        public static UISlider AddSlider(UIComponent parent, string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback)
         {
-            if (eventCallback != null && !string.IsNullOrEmpty(text))
+            if (eventCallback != null)
             {
-                var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kSliderTemplate)) as UIPanel;
-                uIPanel.Find<UILabel>("Label").text = text;
+                var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kSliderTemplate)) as UIPanel;
+                if (string.IsNullOrEmpty(text))
+                {
+                    GameObject.Destroy(uIPanel.Find<UILabel>("Label"));
+                }
+                else
+                {
+                    uIPanel.Find<UILabel>("Label").text = text;
+                }
                 UISlider uISlider = uIPanel.Find<UISlider>("Slider");
                 uISlider.minValue = min;
                 uISlider.maxValue = max;
@@ -265,7 +273,7 @@ namespace Klyte.Commons.Extensors
         {
             if (textureAtlas != null && !string.IsNullOrEmpty(spriteName))
             {
-                var uIButton = m_root.AddUIComponent<UISprite>();
+                UISprite uIButton = m_root.AddUIComponent<UISprite>();
                 uIButton.spriteName = spriteName;
                 uIButton.atlas = textureAtlas;
                 return uIButton;
@@ -385,7 +393,7 @@ namespace Klyte.Commons.Extensors
                 void textSubmitAction(UIComponent c, string sel)
                 {
                     result.text = result.text.Replace(LocaleManager.cultureInfo.NumberFormat.NumberDecimalSeparator, ".");
-                    float.TryParse(result.text, out var val);
+                    float.TryParse(result.text, out float val);
                     eventSubmittedCallback?.Invoke(val);
                 }
                 result.eventTextSubmitted += textSubmitAction;
@@ -586,7 +594,7 @@ namespace Klyte.Commons.Extensors
             {
                 UIPanel propertyContainer = groupInfo.m_PropertyContainer;
                 propertyContainer.Show();
-                var endValue = CalculateHeight(propertyContainer);
+                float endValue = CalculateHeight(propertyContainer);
                 ValueAnimator.Animate("PropGroupProp general", delegate (float val)
                 {
                     Vector2 size = groupInfo.m_Container.size;
@@ -597,7 +605,7 @@ namespace Klyte.Commons.Extensors
             else
             {
                 UIPanel container = groupInfo.m_PropertyContainer;
-                var startValue = CalculateHeight(container);
+                float startValue = CalculateHeight(container);
                 ValueAnimator.Animate("PropGroupProp general", delegate (float val)
                 {
                     Vector2 size = groupInfo.m_Container.size;
@@ -614,8 +622,8 @@ namespace Klyte.Commons.Extensors
         // Token: 0x0600125B RID: 4699 RVA: 0x000FA85C File Offset: 0x000F8C5C
         private float CalculatePropertiesHeight(UIPanel comp)
         {
-            var num = 0f;
-            for (var i = 0; i < comp.childCount; i++)
+            float num = 0f;
+            for (int i = 0; i < comp.childCount; i++)
             {
                 num += comp.components[i].size.y + comp.autoLayoutPadding.vertical;
             }
@@ -625,7 +633,7 @@ namespace Klyte.Commons.Extensors
         // Token: 0x0600125C RID: 4700 RVA: 0x000FA8B0 File Offset: 0x000F8CB0
         private float CalculateHeight(UIPanel container)
         {
-            var num = 0f;
+            float num = 0f;
             num += m_defaultGroupHeight;
             num += container.padding.top + container.padding.bottom;
             return num + CalculatePropertiesHeight(container);
