@@ -98,7 +98,7 @@ namespace Klyte.Commons.Utils
         public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo)
         {
             var result = new List<StopPointDescriptorLanes>();
-            if (buildingInfo == null)
+            if (buildingInfo?.m_paths == null)
             {
                 return result.ToArray();
             }
