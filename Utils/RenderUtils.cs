@@ -8,22 +8,21 @@ namespace Klyte.Commons.Utils
     public class TextureRenderUtils
     {
         public static Texture2D RenderSpriteLineToTexture(UIDynamicFont font, UITextureAtlas atlas, string spriteName, Color bgColor, string text) => RenderSpriteLine(font, atlas, spriteName, bgColor, text);
-        public static Texture2D RenderTextToTexture(UIDynamicFont font, string text, Color textColor, Color outlineColor = default)
+        public static Texture2D RenderTextToTexture(UIDynamicFont font, string text, Color textColor, out Vector2 textDimensions, Color outlineColor = default)
         {
             float textScale = 2f;
 
-            Vector2 textDimensions = MeasureTextWidth(font, text, textScale, out Vector2 yBounds);
-            
-            var imageSize = new Vector2(Mathf.NextPowerOfTwo((int) textDimensions.x), Mathf.NextPowerOfTwo((int) textDimensions.y));
+            textDimensions = MeasureTextWidth(font, text, textScale, out Vector2 yBounds);
 
-            var tex = new Texture2D((int) imageSize.x, (int) imageSize.y, TextureFormat.ARGB32, false);
-            tex.SetPixels(new Color[(int) (imageSize.x * imageSize.y)]);
 
-            RenderText(font, text, new Vector3((imageSize.x - textDimensions.x) / 2, -yBounds.x), textScale, textColor, outlineColor, tex);
-            tex.Apply();
+            var tex = new Texture2D((int) textDimensions.x, (int) textDimensions.y, TextureFormat.ARGB32, false);
+            tex.SetPixels(new Color[(int) (textDimensions.x * textDimensions.y)]);
 
-            byte[] bytes = tex.EncodeToPNG();
-            System.IO.File.WriteAllBytes(FileUtils.BASE_FOLDER_PATH + "TEST2TXT.PNG", bytes);
+            RenderText(font, text, new Vector3(0, -yBounds.x), textScale, textColor, outlineColor, tex);
+
+            var imageSize = new Vector2(Mathf.Max(Mathf.NextPowerOfTwo((int) textDimensions.x), 1), Mathf.Max(Mathf.NextPowerOfTwo((int) textDimensions.y), 1));
+
+            TextureScaler.scale(tex, (int) imageSize.x, (int) imageSize.y);
             return tex;
 
         }
@@ -88,7 +87,6 @@ namespace Klyte.Commons.Utils
                 Object.Destroy(texText);
                 tex.Apply();
 
-                byte[] bytes = tex.EncodeToPNG();
                 return tex;
             }
         }
@@ -110,7 +108,7 @@ namespace Klyte.Commons.Utils
                 {
                     width += ((c != ' ') ? characterInfo.maxX : (characterInfo.advance + (characterSpacing * textScale)));
                     yBounds.x = Mathf.Min(yBounds.x, characterInfo.minY);
-                    yBounds.y = Mathf.Max(yBounds.x, characterInfo.maxY);
+                    yBounds.y = Mathf.Max(yBounds.y, characterInfo.maxY);
                 }
             }
             if (text.Length > 2)
