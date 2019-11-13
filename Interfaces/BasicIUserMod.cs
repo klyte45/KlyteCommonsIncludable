@@ -93,12 +93,7 @@ namespace Klyte.Commons.Interfaces
 
                 m_modPanelButton.eventClicked += TogglePanel;
 
-                KlyteMonoUtils.CreateUIElement(out m_modsTabstrip, m_modsPanel.transform, "K45_Tabstrip", new Vector4(74, 0, m_modsPanel.width - 84, 40));
-
-                KlyteMonoUtils.CreateUIElement(out UITabContainer tabContainer, m_modsPanel.transform, "K45_TabContainer", new Vector4(64, 40, m_modsPanel.width - 64, m_modsPanel.height));
-                m_modsTabstrip.tabPages = tabContainer;
-                m_modsTabstrip.selectedIndex = 0;
-                m_modsTabstrip.selectedIndex = -1;
+                KlyteMonoUtils.CreateTabsComponent(out m_modsTabstrip, out _, m_modsPanel.transform, "K45", new Vector4(74, 0, m_modsPanel.width - 84, 40), new Vector4(64, 40, m_modsPanel.width - 64, m_modsPanel.height));
             }
             else
             {
@@ -108,6 +103,8 @@ namespace Klyte.Commons.Interfaces
 
             AddTab();
         }
+
+
 
         internal void AddTab()
         {

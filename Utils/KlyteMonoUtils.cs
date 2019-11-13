@@ -16,7 +16,7 @@ namespace Klyte.Commons.Utils
         }
         public static void CreateElement<T>(out T uiItem, Transform parent, string name = null) where T : MonoBehaviour
         {
-            GameObject container = new GameObject();
+            var container = new GameObject();
             container.transform.parent = parent;
             uiItem = (T) container.AddComponent(typeof(T));
             if (name != null)
@@ -26,14 +26,14 @@ namespace Klyte.Commons.Utils
         }
         public static GameObject CreateElement(Type type, Transform parent)
         {
-            GameObject container = new GameObject();
+            var container = new GameObject();
             container.transform.parent = parent;
             container.AddComponent(type);
             return container;
         }
         public static void CreateUIElement<T>(out T uiItem, Transform parent, string name = null, Vector4 area = default) where T : UIComponent
         {
-            GameObject container = new GameObject();
+            var container = new GameObject();
             container.transform.parent = parent;
             uiItem = container.AddComponent<T>();
             if (name != null)
@@ -156,7 +156,7 @@ namespace Klyte.Commons.Utils
 
         public UISlider GenerateSliderField(UIHelperExtension uiHelper, OnValueChanged action, out UILabel label, out UIPanel container)
         {
-            UISlider budgetMultiplier = (UISlider) uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
+            var budgetMultiplier = (UISlider) uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
             label = budgetMultiplier.transform.parent.GetComponentInChildren<UILabel>();
             label.autoSize = true;
             label.wordWrap = false;
@@ -317,7 +317,7 @@ namespace Klyte.Commons.Utils
                     return null;
                 }
             }
-            GameObject go = GameObject.Instantiate(m_colorFieldTemplate.gameObject, parent.transform);
+            var go = GameObject.Instantiate(m_colorFieldTemplate.gameObject, parent.transform);
             UIColorField component = go.GetComponent<UIColorField>();
             component.pickerPosition = UIColorField.ColorPickerPosition.RightAbove;
             component.transform.SetParent(parent.transform);
@@ -357,6 +357,15 @@ namespace Klyte.Commons.Utils
         }
 
         #endregion
+        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parent, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer)
+        {
+            KlyteMonoUtils.CreateUIElement(out tabstrip, parent, $"{namePrefix}_Tabstrip", areaTabstrip);
+
+            KlyteMonoUtils.CreateUIElement(out tabContainer, parent, $"{namePrefix}_TabContainer", areaContainer);
+            tabstrip.tabPages = tabContainer;
+            tabstrip.selectedIndex = 0;
+            tabstrip.selectedIndex = -1;
+        }
     }
 
 }

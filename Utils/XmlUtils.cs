@@ -12,14 +12,14 @@ namespace Klyte.Commons.Utils
 
         public static T DefaultXmlDeserialize<T>(string s)
         {
-            XmlSerializer xmlser = new XmlSerializer(typeof(T));
+            var xmlser = new XmlSerializer(typeof(T));
             try
             {
                 using TextReader tr = new StringReader(s);
-                using XmlReader reader = XmlReader.Create(tr);
+                using var reader = XmlReader.Create(tr);
                 if (xmlser.CanDeserialize(reader))
                 {
-                    var val = (T)xmlser.Deserialize(reader);
+                    var val = (T) xmlser.Deserialize(reader);
                     return val;
                 }
                 else
@@ -29,18 +29,19 @@ namespace Klyte.Commons.Utils
             }
             catch (Exception e)
             {
-                LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.Message}\n{e.StackTrace}");
+                LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.GetType().Name}: {e.Message}\n{e.StackTrace}");
+                throw e;
             }
             return default;
         }
 
         public static string DefaultXmlSerialize<T>(T targetObj, bool indent = true)
         {
-            XmlSerializer xmlser = new XmlSerializer(typeof(T));
-            XmlWriterSettings settings = new XmlWriterSettings { Indent = indent };
-            using StringWriter textWriter = new StringWriter();
-            using XmlWriter xw = XmlWriter.Create(textWriter, settings);
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            var xmlser = new XmlSerializer(typeof(T));
+            var settings = new XmlWriterSettings { Indent = indent };
+            using var textWriter = new StringWriter();
+            using var xw = XmlWriter.Create(textWriter, settings);
+            var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
             xmlser.Serialize(xw, targetObj, ns);
             return textWriter.ToString();

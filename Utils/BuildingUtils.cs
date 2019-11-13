@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static ItemClass;
 
 namespace Klyte.Commons.Utils
 {
@@ -29,24 +30,24 @@ namespace Klyte.Commons.Utils
             //}
 
 
-            int num = Mathf.Max((int)((pos.x - maxDistance) / 64f + 135f), 0);
-            int num2 = Mathf.Max((int)((pos.z - maxDistance) / 64f + 135f), 0);
-            int num3 = Mathf.Min((int)((pos.x + maxDistance) / 64f + 135f), 269);
-            int num4 = Mathf.Min((int)((pos.z + maxDistance) / 64f + 135f), 269);
+            int num = Mathf.Max((int) (((pos.x - maxDistance) / 64f) + 135f), 0);
+            int num2 = Mathf.Max((int) (((pos.z - maxDistance) / 64f) + 135f), 0);
+            int num3 = Mathf.Min((int) (((pos.x + maxDistance) / 64f) + 135f), 269);
+            int num4 = Mathf.Min((int) (((pos.z + maxDistance) / 64f) + 135f), 269);
             ushort result = 0;
             float currentDistance = maxDistance * maxDistance;
             for (int i = num2; i <= num4; i++)
             {
                 for (int j = num; j <= num3; j++)
                 {
-                    ushort buildingId = bm.m_buildingGrid[i * 270 + j];
+                    ushort buildingId = bm.m_buildingGrid[(i * 270) + j];
                     int num7 = 0;
                     while (buildingId != 0)
                     {
                         BuildingInfo info = bm.m_buildings.m_buffer[buildingId].Info;
                         if (!CheckInfoCompatibility(pos, service, subService, allowedTypes, flagsRequired, flagsForbidden, bm, ref result, ref currentDistance, buildingId, info) && info.m_subBuildings?.Length > 0)
                         {
-                            foreach (var subBuilding in info.m_subBuildings)
+                            foreach (BuildingInfo.SubInfo subBuilding in info.m_subBuildings)
                             {
                                 if (subBuilding != null && CheckInfoCompatibility(pos, service, subService, allowedTypes, flagsRequired, flagsForbidden, bm, ref result, ref currentDistance, buildingId, subBuilding.m_buildingInfo))
                                 {
@@ -54,7 +55,7 @@ namespace Klyte.Commons.Utils
                                 }
                             }
                         }
-                        buildingId = bm.m_buildings.m_buffer[(int)buildingId].m_nextGridBuilding;
+                        buildingId = bm.m_buildings.m_buffer[buildingId].m_nextGridBuilding;
                         if (++num7 >= 49152)
                         {
                             CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
@@ -72,7 +73,7 @@ namespace Klyte.Commons.Utils
             if (info != null && (info.m_class.m_service == service || service == ItemClass.Service.None) && (info.m_class.m_subService == subService || subService == ItemClass.SubService.None))
             {
                 //doErrorLog("CheckInfoCompatibility 1");
-                Building.Flags flags = bm.m_buildings.m_buffer[(int)buildingId].m_flags;
+                Building.Flags flags = bm.m_buildings.m_buffer[buildingId].m_flags;
                 //doErrorLog("CheckInfoCompatibility 2");
                 if ((flags & (flagsRequired | flagsForbidden)) == flagsRequired)
                 {
@@ -84,7 +85,7 @@ namespace Klyte.Commons.Utils
                         || (depotAI.m_secondaryTransportInfo != null && allowedTypes.Contains(depotAI.m_secondaryTransportInfo.m_vehicleReason)))
                     {
                         //doErrorLog("CheckInfoCompatibility 4");
-                        float dist = Vector3.SqrMagnitude(pos - bm.m_buildings.m_buffer[(int)buildingId].m_position);
+                        float dist = Vector3.SqrMagnitude(pos - bm.m_buildings.m_buffer[buildingId].m_position);
                         //doErrorLog("CheckInfoCompatibility 5");
                         if (dist < lastNearest)
                         {
@@ -99,18 +100,9 @@ namespace Klyte.Commons.Utils
         }
 
 
-        public static ushort GetBuildingDistrict(uint bId)
-        {
-            return GetBuildingDistrict(Singleton<BuildingManager>.instance.m_buildings.m_buffer[bId]);
-        }
-        public static ushort GetBuildingDistrict(Building b)
-        {
-            return DistrictManager.instance.GetDistrict(b.m_position);
-        }
-        public static ushort GetPark(Vector3 location)
-        {
-            return Singleton<DistrictManager>.instance.GetPark(location);
-        }
+        public static ushort GetBuildingDistrict(uint bId) => GetBuildingDistrict(Singleton<BuildingManager>.instance.m_buildings.m_buffer[bId]);
+        public static ushort GetBuildingDistrict(Building b) => DistrictManager.instance.GetDistrict(b.m_position);
+        public static ushort GetPark(Vector3 location) => Singleton<DistrictManager>.instance.GetPark(location);
 
 
 
@@ -120,7 +112,7 @@ namespace Klyte.Commons.Utils
             {
                 return null;
             }
-            List<StopPointDescriptor> stops = new List<StopPointDescriptor>();
+            var stops = new List<StopPointDescriptor>();
             if (depotAI.m_spawnPoints != null && depotAI.m_spawnPoints.Length != 0)
             {
                 for (int i = 0; i < depotAI.m_spawnPoints.Length; i++)
@@ -146,9 +138,9 @@ namespace Klyte.Commons.Utils
                     AddSpawnPoint(depotAI.m_secondaryTransportInfo, stops, depotAI.m_spawnPosition2, depotAI.m_spawnTarget2, depotAI.m_canInvertTarget);
                 }
             }
-            foreach (var subBuilding in depotAI.m_info.m_subBuildings)
+            foreach (BuildingInfo.SubInfo subBuilding in depotAI.m_info.m_subBuildings)
             {
-                var subPlats = GetAllSpawnPoints(subBuilding.m_buildingInfo.m_buildingAI);
+                StopPointDescriptor[] subPlats = GetAllSpawnPoints(subBuilding.m_buildingInfo.m_buildingAI);
                 if (subPlats != null)
                 {
                     stops.AddRange(subPlats.Select(x =>
@@ -160,8 +152,16 @@ namespace Klyte.Commons.Utils
             }
             stops.Sort((x, y) =>
             {
-                if (x.relativePosition.x != y.relativePosition.x) return x.relativePosition.x.CompareTo(y.relativePosition.x);
-                if (x.relativePosition.z != y.relativePosition.z) return x.relativePosition.z.CompareTo(y.relativePosition.z);
+                if (x.relativePosition.x != y.relativePosition.x)
+                {
+                    return x.relativePosition.x.CompareTo(y.relativePosition.x);
+                }
+
+                if (x.relativePosition.z != y.relativePosition.z)
+                {
+                    return x.relativePosition.z.CompareTo(y.relativePosition.z);
+                }
+
                 return x.relativePosition.y.CompareTo(y.relativePosition.y);
             });
             return stops.ToArray();
@@ -178,7 +178,7 @@ namespace Klyte.Commons.Utils
             {
                 stops.Add(new StopPointDescriptor
                 {
-                    relativePosition = position * 2 - target,
+                    relativePosition = (position * 2) - target,
                     vehicleType = info.m_vehicleType
                 });
             }
@@ -189,6 +189,31 @@ namespace Klyte.Commons.Utils
             public Vector3 relativePosition;
             public VehicleInfo.VehicleType vehicleType;
         }
+
+        public static string GetBuildingName(ushort buildingId, out ItemClass.Service serviceFound, out ItemClass.SubService subserviceFound)
+        {
+
+            BuildingManager bm = Singleton<BuildingManager>.instance;
+
+            while (bm.m_buildings.m_buffer[buildingId].m_parentBuilding > 0)
+            {
+                LogUtils.DoLog("getBuildingName(): building id {0} - parent = {1}", buildingId, bm.m_buildings.m_buffer[buildingId].m_parentBuilding);
+                buildingId = bm.m_buildings.m_buffer[buildingId].m_parentBuilding;
+                bm.m_buildings.m_buffer[buildingId] = bm.m_buildings.m_buffer[buildingId];
+            }
+            InstanceID iid = default;
+            iid.Building = buildingId;
+            serviceFound = bm.m_buildings.m_buffer[buildingId].Info?.GetService() ?? default;
+            subserviceFound = bm.m_buildings.m_buffer[buildingId].Info?.GetSubService() ?? default;
+
+            return bm.GetBuildingName(buildingId, iid);
+        }
+        public static bool IsBuildingValidForStation(bool excludeCargo, BuildingManager bm, ushort tempBuildingId) => tempBuildingId > 0 && (
+    !excludeCargo
+    || !(bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is DepotAI || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is CargoStationAI)
+    || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is TransportStationAI
+    );
+      
         #endregion
     }
 }
