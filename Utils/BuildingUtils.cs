@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static ItemClass;
 
 namespace Klyte.Commons.Utils
 {
@@ -207,6 +208,12 @@ namespace Klyte.Commons.Utils
 
             return bm.GetBuildingName(buildingId, iid);
         }
+        public static bool IsBuildingValidForStation(bool excludeCargo, BuildingManager bm, ushort tempBuildingId) => tempBuildingId > 0 && (
+    !excludeCargo
+    || !(bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is DepotAI || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is CargoStationAI)
+    || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is TransportStationAI
+    );
+      
         #endregion
     }
 }

@@ -18,21 +18,21 @@ namespace Klyte.Commons.Utils
 
 
             var bounds = new Bounds(position, new Vector3(maxDistance * 2f, maxDistance * 2f, maxDistance * 2f));
-            var num = Mathf.Max((int) (((bounds.min.x - 64f) / 64f) + 135f), 0);
-            var num2 = Mathf.Max((int) (((bounds.min.z - 64f) / 64f) + 135f), 0);
-            var num3 = Mathf.Min((int) (((bounds.max.x + 64f) / 64f) + 135f), 269);
-            var num4 = Mathf.Min((int) (((bounds.max.z + 64f) / 64f) + 135f), 269);
+            int num = Mathf.Max((int) (((bounds.min.x - 64f) / 64f) + 135f), 0);
+            int num2 = Mathf.Max((int) (((bounds.min.z - 64f) / 64f) + 135f), 0);
+            int num3 = Mathf.Min((int) (((bounds.max.x + 64f) / 64f) + 135f), 269);
+            int num4 = Mathf.Min((int) (((bounds.max.z + 64f) / 64f) + 135f), 269);
             NetManager instance = Singleton<NetManager>.instance;
             var result = new List<Tuple<ushort, float, Vector3>>();
 
-            var maxDistSqr = maxDistance * maxDistance;
-            for (var i = num2; i <= num4; i++)
+            float maxDistSqr = maxDistance * maxDistance;
+            for (int i = num2; i <= num4; i++)
             {
-                for (var j = num; j <= num3; j++)
+                for (int j = num; j <= num3; j++)
                 {
-                    var idx = (i * 270) + j;
+                    int idx = (i * 270) + j;
                     ushort nodeId = 0;
-                    var num7 = 0;
+                    int num7 = 0;
                     try
                     {
                         nodeId = instance.m_nodeGrid[idx];
@@ -54,10 +54,10 @@ namespace Klyte.Commons.Utils
                                 {
                                     goto GOTO_NEXT;
                                 }
-                                var delta = Mathf.Max(Mathf.Max(bounds.min.x - 64f - nodePos.x, bounds.min.z - 64f - nodePos.z), Mathf.Max(nodePos.x - bounds.max.x - 64f, nodePos.z - bounds.max.z - 64f));
+                                float delta = Mathf.Max(Mathf.Max(bounds.min.x - 64f - nodePos.x, bounds.min.z - 64f - nodePos.z), Mathf.Max(nodePos.x - bounds.max.x - 64f, nodePos.z - bounds.max.z - 64f));
                                 if (delta < 0f && instance.m_nodes.m_buffer[nodeId].m_bounds.Intersects(bounds))
                                 {
-                                    var num14 = Vector3.SqrMagnitude(position - nodePos);
+                                    float num14 = Vector3.SqrMagnitude(position - nodePos);
                                     if (num14 < maxDistSqr)
                                     {
                                         result.Add(Tuple.New(nodeId, num14, nodePos));
@@ -93,6 +93,7 @@ namespace Klyte.Commons.Utils
             public Bezier3 platformLine;
             public float width;
             public VehicleInfo.VehicleType vehicleType;
+            public ushort laneId;            
         }
 
         public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo)
@@ -112,15 +113,20 @@ namespace Klyte.Commons.Utils
                 Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
 
                 LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
-                foreach (NetInfo.Lane lane in path.m_netInfo.m_lanes)
+                foreach (NetInfo.Lane refLane in path.m_netInfo.m_lanes)
                 {
-                    if (lane.m_stopType == VehicleInfo.VehicleType.None)
+                    if (refLane.m_stopType == VehicleInfo.VehicleType.None)
+                    {
+                        continue;
+                    }
+                    NetInfo.Lane lane = FindNearestVehicleStopLane(path.m_netInfo.m_lanes, refLane, out ushort laneId);
+                    if (lane == null)
                     {
                         continue;
                     }
 
-                    Vector3 lanePos = position + (lane.m_position/2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                    Vector3 lanePos2 = position2 + (lane.m_position/2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                    Vector3 lanePos = position + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                    Vector3 lanePos2 = position2 + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
                     Vector3 b3, c;
                     if (path.m_curveTargets == null || path.m_curveTargets.Length == 0)
                     {
@@ -149,7 +155,8 @@ namespace Klyte.Commons.Utils
                     {
                         platformLine = refBezier,
                         width = lane.m_width,
-                        vehicleType = lane.m_stopType
+                        vehicleType = refLane.m_stopType,
+                        laneId = laneId
                     });
 
                 }
@@ -171,8 +178,8 @@ namespace Klyte.Commons.Utils
             }
             result.Sort((x, y) =>
             {
-                var priorityX = VehicleToPriority(x.vehicleType);
-                var priorityY = VehicleToPriority(y.vehicleType);
+                int priorityX = VehicleToPriority(x.vehicleType);
+                int priorityY = VehicleToPriority(y.vehicleType);
                 if (priorityX != priorityY)
                 {
                     return priorityX.CompareTo(priorityY);
@@ -195,6 +202,29 @@ namespace Klyte.Commons.Utils
             return result.ToArray();
         }
 
+        private static NetInfo.Lane FindNearestVehicleStopLane(NetInfo.Lane[] laneGroup, NetInfo.Lane refLane, out ushort laneId)
+        {
+            NetInfo.Lane nearestLane = null;
+            float nearestDist = float.MaxValue;
+            laneId = 0xffff;
+            for (ushort i = 0; i < laneGroup.Length; i++)
+            {
+                NetInfo.Lane lane = laneGroup[i];
+                if ((lane.m_vehicleType & refLane.m_stopType) != VehicleInfo.VehicleType.None)
+                {
+                    float dist = Mathf.Abs(lane.m_position - refLane.m_position);
+                    if (dist < nearestDist)
+                    {
+                        nearestDist = dist;
+                        nearestLane = lane;
+                        laneId = i;
+                    }
+                }
+            }
+
+            return nearestLane;
+        }
+
         private static void GetMiddlePointsFor(BuildingInfo.PathInfo pathInfo, out Vector3 b, out Vector3 c)
         {
             b = Vector3.zero;
@@ -214,7 +244,7 @@ namespace Klyte.Commons.Utils
                     {
                         vector2.y = 0f;
                     }
-                    var sqrMagnitude = vector2.sqrMagnitude;
+                    float sqrMagnitude = vector2.sqrMagnitude;
                     if (sqrMagnitude > pathInfo.m_maxSnapDistance * pathInfo.m_maxSnapDistance)
                     {
                         controlPoint.m_position = vector;
@@ -231,7 +261,7 @@ namespace Klyte.Commons.Utils
                 {
                     controlPoint.m_position = vector;
                 }
-                var j = 1;
+                int j = 1;
 
                 vector = Building.CalculatePosition(Vector3.zero, 0, pathInfo.m_nodes[j]);
                 if (!pathInfo.m_finalNetInfo.m_useFixedHeight)
@@ -246,7 +276,7 @@ namespace Klyte.Commons.Utils
                     {
                         vector3.y = 0f;
                     }
-                    var sqrMagnitude2 = vector3.sqrMagnitude;
+                    float sqrMagnitude2 = vector3.sqrMagnitude;
                     if (sqrMagnitude2 > pathInfo.m_maxSnapDistance * pathInfo.m_maxSnapDistance)
                     {
                         controlPoint2.m_position = vector;
