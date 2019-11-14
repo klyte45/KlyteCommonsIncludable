@@ -163,7 +163,7 @@ namespace Klyte.Commons.Redirectors
 
         public static void RenderSpriteLine(DynamicFontRenderer renderer, UIMarkupToken token, Vector3 position, UIRenderData destination)
         {
-            string[] args = token.GetAttribute(0)?.m_Value?.value?.Split(',');
+            string[] args = token.GetAttribute(0)?.m_Value?.value?.Split(new char[] { ',' }, 3);
             if (args == null || args.Length != 3)
             {
                 LogUtils.DoErrorLog($"INVALID ARGUMENT: {token.GetAttribute(0)?.m_Value?.value ?? "<NULL>"}");
