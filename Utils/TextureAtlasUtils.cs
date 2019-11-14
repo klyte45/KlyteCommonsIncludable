@@ -57,13 +57,15 @@ namespace Klyte.Commons.Utils
                         string generatedSpriteName = $"K45_{prefix}_{Path.GetFileNameWithoutExtension(filename)}";
                         if (textureName.StartsWith("%"))
                         {
-                            generatedSpriteName = textureName.Substring(1);
+                            textureName = textureName.Substring(1);
+                            generatedSpriteName = textureName;
                         }
+                        borderDescriptors.TryGetValue(generatedSpriteName, out RectOffset border);
                         newFiles.Add(new SpriteInfo
                         {
                             texture = tex,
                             name = generatedSpriteName,
-                            border = new RectOffset()
+                            border = border ?? new RectOffset()
                         });
                     }
                 }
