@@ -7,10 +7,12 @@ using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
 using Klyte.Commons.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using static ColossalFramework.UI.UITextureAtlas;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -21,6 +23,7 @@ namespace Klyte.Commons.Interfaces
     {
 
         public abstract string SimpleName { get; }
+        public abstract List<Tuple<string, Type, int, int>> SpriteSheets { get; }
         public virtual bool UseGroup9 => true;
         public abstract void LoadSettings();
         public abstract void DoLog(string fmt, params object[] args);
@@ -154,9 +157,9 @@ namespace Klyte.Commons.Interfaces
                 LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
                 m_showLangDropDown = true;
             }
-            foreach (var lang in KlyteLocaleManager.locales)
+            foreach (string lang in KlyteLocaleManager.locales)
             {
-                var content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
+                string content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
                 if (content != null)
                 {
                     File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}1_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
@@ -177,6 +180,16 @@ namespace Klyte.Commons.Interfaces
             foreach (Transform child in helper.Self?.transform)
             {
                 GameObject.Destroy(child?.gameObject);
+            }
+
+            if (SpriteSheets.Count > 0)
+            {
+                var newSprites = new List<SpriteInfo>();
+                foreach (Tuple<string, Type, int, int> item in SpriteSheets)
+                {
+                    TextureAtlasUtils.ParseImageIntoDefaultTextureAtlas<R>(item.Second, item.First, item.Third, item.Fourth, ref newSprites);
+                }
+                TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
             }
 
             helper.Self.eventVisibilityChanged += delegate (UIComponent component, bool b)
@@ -242,10 +255,10 @@ namespace Klyte.Commons.Interfaces
                         BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
                         if (component != null)
                         {
-                            var title = $"{SimpleName.Replace("&", "and")} v{Version}";
-                            var notes = Singleton<R>.instance.LoadResourceString("UI.VersionNotes.txt");
-                            var text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
-                            var img = "IconMessage";
+                            string title = $"{SimpleName.Replace("&", "and")} v{Version}";
+                            string notes = Singleton<R>.instance.LoadResourceString("UI.VersionNotes.txt");
+                            string text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
+                            string img = "IconMessage";
                             component.SetProperties(TooltipHelper.Format(new string[]
                             {
                             "title",

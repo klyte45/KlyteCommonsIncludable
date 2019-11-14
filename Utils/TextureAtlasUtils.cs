@@ -1,4 +1,6 @@
-﻿using ColossalFramework.UI;
+﻿using ColossalFramework;
+using ColossalFramework.UI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -87,5 +89,22 @@ namespace Klyte.Commons.Utils
             defaultTextureAtlas.RebuildIndexes();
             UIView.RefreshAll(false);
         }
+        public static void ParseImageIntoDefaultTextureAtlas<R>(Type enumType, string resourceName, int width, int height, ref List<SpriteInfo> sprites) where R : KlyteResourceLoader<R>
+        {
+
+            Array spriteValues = Enum.GetValues(enumType);
+            Texture2D image = Singleton<R>.instance.LoadTexture(resourceName);
+            for (int i = 0; i < spriteValues.Length && i * width < image.width; i++)
+            {
+                var textureQuad = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                textureQuad.SetPixels(image.GetPixels(i * width, 0, width, height));
+                sprites.Add(new SpriteInfo()
+                {
+                    texture = textureQuad,
+                    name = Singleton<R>.instance.GetDefaultSpriteNameFor(spriteValues.GetValue(i) as Enum)
+                });
+            }
+        }
+        public static void ParseImageIntoDefaultTextureAtlas<R, E>(string resourceName, int width, int height, ref List<SpriteInfo> sprites) where E : Enum where R : KlyteResourceLoader<R> => ParseImageIntoDefaultTextureAtlas<R>(typeof(E), resourceName, width, height, ref sprites);
     }
 }
