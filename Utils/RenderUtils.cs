@@ -1,5 +1,9 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using Klyte.Commons.Extensors;
+using Klyte.Commons.Redirectors;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -20,13 +24,19 @@ namespace Klyte.Commons.Utils
 
             RenderText(font, text, new Vector3(0, -yBounds.x), textScale, textColor, outlineColor, tex);
 
-            var imageSize = new Vector2(Mathf.Max(Mathf.NextPowerOfTwo((int) textDimensions.x), 1), Mathf.Max(Mathf.NextPowerOfTwo((int) textDimensions.y), 1));
+            return RescalePowerOf2(tex);
+
+        }
+
+        private static Texture2D RescalePowerOf2(Texture2D tex)
+        {
+            var imageSize = new Vector2(Mathf.Max(Mathf.NextPowerOfTwo(tex.width), 1), Mathf.Max(Mathf.NextPowerOfTwo(tex.height), 1));
 
             TextureScaler.scale(tex, (int) imageSize.x, (int) imageSize.y);
             return tex;
-
         }
-        public static Texture2D RenderSpriteLine(UIDynamicFont font, UITextureAtlas atlas, string spriteName, Color bgColor, string text)
+
+        public static Texture2D RenderSpriteLine(UIDynamicFont font, UITextureAtlas atlas, string spriteName, Color bgColor, string text, float textScale = 1)
         {
 
             UITextureAtlas.SpriteInfo spriteInfo = atlas[spriteName];
@@ -37,7 +47,7 @@ namespace Klyte.Commons.Utils
             }
             else
             {
-                float textScale = 2f;
+                textScale *= 2;
 
                 Texture2D texture = atlas.texture;
                 float calcHeight = font.size * textScale * 2;
@@ -61,7 +71,6 @@ namespace Klyte.Commons.Utils
                     multipler = 1;
                     textDimensions = MeasureTextWidth(font, text, textScale, out yBounds);
                 }
-                float midLineOffset = (font).baseline / 2 * textScale;
 
                 var imageSize = new Vector2(Mathf.NextPowerOfTwo((int) Mathf.Max(textDimensions.x * multipler, width)), Mathf.NextPowerOfTwo((int) Mathf.Max(textDimensions.y, height)));
 
@@ -73,18 +82,35 @@ namespace Klyte.Commons.Utils
                 var texText = new Texture2D((int) textDimensions.x, (int) textDimensions.y, TextureFormat.ARGB32, false);
                 texText.SetPixels(new Color[(int) (textDimensions.x * textDimensions.y)]);
 
+                Color contrastColor = KlyteMonoUtils.ContrastColor(bgColor);
 
-                Vector2 position = RenderSprite(atlas, spriteName, bgColor, tex, textureScale);
+                Vector2 position = RenderSprite(atlas, spriteName, contrastColor, tex, textureScale);
+                RenderSprite(atlas, spriteName, bgColor, tex, null, tex.height - (int) (textScale * 6), null, new Vector2((textScale / 2) - 0.5f, (textScale / 2) - 0.5f), (a, b) =>
+                          {
+                              if (b.a == 1)
+                              {
+                                  return b;
+                              }
+
+                              if (b.a == 0)
+                              {
+                                  return a;
+                              }
+
+                              float totalAlpha = a.a + b.a;
+                              return (a * (1 - b.a)) + (b * b.a);
+
+                          });
                 Vector2 posText = position + new Vector2((size.x / 2) - (textDimensions.x * multipler / 2) + 1, (size.y / 2) - (textDimensions.y / 2) - (yBounds.x / 2));
 
-                RenderText(font, text, new Vector3(0, -yBounds.x), textScale, KlyteMonoUtils.ContrastColor(bgColor), bgColor, texText);
+                RenderText(font, text, new Vector3(0, -yBounds.x), textScale, contrastColor, bgColor, texText);
 
                 if (multipler < 1)
                 {
                     TextureScaler.scale(texText, (int) (texText.width * multipler), texText.height);
                 }
                 MergeTextures(tex, texText.GetPixels(), (int) posText.x, (int) posText.y, texText.width, texText.height, false);
-                Object.Destroy(texText);
+                UnityEngine.Object.Destroy(texText);
                 tex.Apply();
 
                 return tex;
@@ -117,7 +143,190 @@ namespace Klyte.Commons.Utils
             }
             return new Vector2(width + 6, yBounds.y - yBounds.x + 6);
         }
-        private static void RenderText(UIDynamicFont uidynamicFont, string text, Vector3 position, float textScale, Color textColor, Color outlineColor, Texture2D tex)
+
+        private static ColorInfo ParseColor(UIMarkupToken token, Color defaultColor)
+        {
+            var result = new ColorInfo(Color.white, true);
+            if (token.attributeCount == 1)
+            {
+                string value = token.GetAttribute(0).m_Value.value;
+                result.color = UIMarkupStyle.ParseColor(value, defaultColor);
+                result.overrideColor = true;
+            }
+            return result;
+        }
+
+
+        public static Texture2D RenderTokenizedText(string text, UIDynamicFont uidynamicFont, float textScale, out Vector2 textRealSize)
+        {
+            var textColors = new Stack<ColorInfo>();
+            textColors.Clear();
+            textColors.Push(new ColorInfo(Color.white));
+            var tokens = (PoolList<UIMarkupToken>) typeof(UIMarkupTokenizer).GetMethod("Tokenize", RedirectorUtils.allFlags).Invoke(null, new object[] { text });
+            Vector2 texSize = CalculateTextureSize(uidynamicFont, textScale, ref tokens, out int startYPos);
+            var position = new Vector3(0, startYPos);
+            var result = new Texture2D((int) texSize.x, (int) texSize.y, TextureFormat.RGBA32, false);
+            result.SetPixels(new Color[result.width * result.height]);
+            RenderLine(tokens, uidynamicFont, textScale, textColors, position, result);
+            tokens.Release();
+            textRealSize = new Vector2(result.width, result.height);
+            return RescalePowerOf2(result);
+        }
+
+        private static Vector2 CalculateTextureSize(UIDynamicFont font, float textScale, ref PoolList<UIMarkupToken> tokens, out int startYPos)
+        {
+            float xAdvance = 0;
+            var yBounds = new Vector2(999999999999999999999999f, -99999999999999999999999999f);
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                UIMarkupToken token = tokens[i];
+                if (token.tokenType == UIMarkupTokenType.Text)
+                {
+                    Vector2 textDimensions = MeasureTextWidth(font, token.value, textScale, out Vector2 yBoundsCalc);
+                    xAdvance += textDimensions.x;
+                    yBounds.x = Mathf.Min(yBounds.x, yBoundsCalc.x);
+                    yBounds.y = Mathf.Max(yBounds.y, yBoundsCalc.y);
+                }
+                else if (token.tokenType == UIMarkupTokenType.Whitespace)
+                {
+                    int size2 = Mathf.CeilToInt(font.size * textScale);
+                    float num2 = characterSpacing * textScale;
+                    float num = 0;
+                    font.RequestCharacters(" ", size2, FontStyle.Normal);
+                    for (int j = 0; j < token.length; j++)
+                    {
+                        char c = token[j];
+                        int multiplier = 1;
+                        if (c == '\t')
+                        {
+                            multiplier = 4;
+                        }
+                        font.baseFont.GetCharacterInfo(' ', out CharacterInfo characterInfo, size2, FontStyle.Normal);
+                        num += (characterInfo.advance + num2) * multiplier;
+                    }
+                    token.height = Mathf.CeilToInt(num);
+                    xAdvance += token.height;
+                }
+                else if (token.tokenType == UIMarkupTokenType.StartTag)
+                {
+                    if (UIDynamicFontRendererRedirector.Matches(token, "sprite"))
+                    {
+                        if (token.attributeCount != 1)
+                        {
+                            tokens.RemoveAt(i);
+                            i--;
+                            continue;
+                        }
+                        UITextureAtlas.SpriteInfo spriteInfo = UIView.GetAView().defaultAtlas[token.GetAttribute(0).m_Value.value];
+                        if (spriteInfo == null)
+                        {
+                            tokens.RemoveAt(i);
+                            i--;
+                            continue;
+                        }
+                        float targetScale = font.baseline * textScale / spriteInfo.texture.height;
+
+                        token.height = (int) (targetScale * spriteInfo.texture.height);
+                        xAdvance += (int) (targetScale * spriteInfo.texture.width);
+                        yBounds.x = Mathf.Min(yBounds.x, 0);
+                        yBounds.y = Mathf.Max(yBounds.y, token.height);
+                    }
+                    else if (UIDynamicFontRendererRedirector.Matches(token, UIDynamicFontRendererRedirector.TAG_LINE))
+                    {
+                        if (token.attributeCount != 1)
+                        {
+                            tokens.RemoveAt(i);
+                            i--;
+                            continue;
+                        }
+                        string[] attrs = token.GetAttribute(0).m_Value.value.Split(',');
+                        if (attrs.Length != 3)
+                        {
+                            tokens.RemoveAt(i);
+                            i--;
+                            continue;
+                        }
+                        UITextureAtlas.SpriteInfo spriteInfo = UIView.GetAView().defaultAtlas[attrs[0]];
+                        if (spriteInfo == null)
+                        {
+                            tokens.RemoveAt(i);
+                            i--;
+                            continue;
+                        }
+                        float baseScale = font.baseline * textScale / spriteInfo.texture.height;
+                        float targetScale = baseScale * 2;
+
+                        token.height = (int) (targetScale * spriteInfo.texture.height);
+                        xAdvance += (int) (targetScale * spriteInfo.texture.width);
+                        yBounds.x = Mathf.Min(yBounds.x, -token.height / 3);
+                        yBounds.y = Mathf.Max(yBounds.y, token.height / 3 * 2);
+                    }
+                }
+            }
+            if (tokens.Count == 0)
+            {
+                startYPos = 0;
+                return new Vector2(1, 1);
+            }
+            float ySize = yBounds.y - yBounds.x;
+            startYPos = (int) (-yBounds.x);
+            return new Vector2(xAdvance, ySize);
+        }
+
+        // Token: 0x06001451 RID: 5201 RVA: 0x00058EF8 File Offset: 0x000570F8
+        private static void RenderLine(PoolList<UIMarkupToken> m_Tokens, UIDynamicFont uidynamicFont, float textScale, Stack<ColorInfo> colors, Vector3 position, Texture2D outputTexture)
+        {
+            for (int i = 0; i < m_Tokens.Count; i++)
+            {
+                UIMarkupToken uimarkupToken = m_Tokens[i];
+                UIMarkupTokenType tokenType = uimarkupToken.tokenType;
+                if (tokenType == UIMarkupTokenType.Text)
+                {
+                    ColorInfo colorInfo = colors.Peek();
+                    position.x = RenderText(uidynamicFont, uimarkupToken.value, position, textScale, colorInfo.color, default, outputTexture);
+                }
+                else if (tokenType == UIMarkupTokenType.Whitespace)
+                {
+                    position.x += uimarkupToken.height;
+                }
+                else if (tokenType == UIMarkupTokenType.StartTag)
+                {
+                    if (UIDynamicFontRendererRedirector.Matches(uimarkupToken, "sprite"))
+                    {
+                        ColorInfo colorInfo2 = colors.Peek();
+                        position.x += RenderSprite(UIView.GetAView().defaultAtlas, uimarkupToken.GetAttribute(0).m_Value.value, colorInfo2.color, outputTexture, null, uimarkupToken.height, position).z;
+                    }
+                    else if (UIDynamicFontRendererRedirector.Matches(uimarkupToken, "color"))
+                    {
+                        colors.Push(ParseColor(uimarkupToken, colors.First().color));
+                    }
+                    else if (UIDynamicFontRendererRedirector.Matches(uimarkupToken, UIDynamicFontRendererRedirector.TAG_LINE))
+                    {
+                        string[] args = uimarkupToken.GetAttribute(0)?.m_Value?.value?.Split(new char[] { ',' }, 3);
+                        if (args == null || args.Length != 3)
+                        {
+                            LogUtils.DoErrorLog($"INVALID ARGUMENT: {uimarkupToken.GetAttribute(0)?.m_Value?.value ?? "<NULL>"}");
+                            continue;
+                        }
+                        Texture2D spriteLineTex = RenderSpriteLine(uidynamicFont, UIView.GetAView().defaultAtlas, args[0], ColorExtensions.FromRGB(args[1]), args[2], textScale);
+                        if (spriteLineTex.height > outputTexture.height)
+                        {
+                            float scale = ((float) outputTexture.height) / spriteLineTex.height;
+                            TextureScaler.scale(spriteLineTex, Mathf.RoundToInt(spriteLineTex.width * scale), Mathf.RoundToInt(spriteLineTex.height * scale));
+                        }
+                        int targetY = (outputTexture.height - spriteLineTex.height) / 2;
+                        outputTexture.SetPixels((int) position.x, targetY, spriteLineTex.width, spriteLineTex.height, spriteLineTex.GetPixels());
+                        position.x += spriteLineTex.width;
+                    }
+                }
+                else if (tokenType == UIMarkupTokenType.EndTag && UIDynamicFontRendererRedirector.Matches(uimarkupToken, "color") && colors.Count > 1)
+                {
+                    colors.Pop();
+                }
+            }
+        }
+
+        private static float RenderText(UIDynamicFont uidynamicFont, string text, Vector3 position, float textScale, Color textColor, Color outlineColor, Texture2D tex)
         {
             float size = (uidynamicFont.size * textScale);
             FontStyle style = FontStyle.Normal;
@@ -167,6 +376,7 @@ namespace Klyte.Commons.Utils
                     x += glyph.maxX;
                 }
             }
+            return x;
         }
 
         private static void MergeTextures(Texture2D tex, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
@@ -188,17 +398,32 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        internal static Vector2 RenderSprite(UITextureAtlas atlas, string spriteName, Color color, Texture2D tex, float textureScale)
+        internal static Vector4 RenderSprite(UITextureAtlas atlas, string spriteName, Color color, Texture2D tex, float? targetScale, int? targetHeight = null, Vector2? position = null, Vector2 positionOffset = default, Func<Color, Color, Color> blendFunction = null)
         {
-            Texture2D readableTexture = atlas.texture.MakeReadable();
             UITextureAtlas.SpriteInfo spriteInfo = atlas[spriteName];
-            TextureScaler.scale(readableTexture, (int) (readableTexture.width * textureScale), (int) (readableTexture.height * textureScale));
+            if (targetScale == null)
+            {
+                if (targetHeight == null)
+                {
+                    LogUtils.DoErrorLog("Target scale or target height must be set to render sprite!");
+                    return new Vector2();
+                }
+                targetScale = (float) targetHeight / spriteInfo.height;
+            }
+            Texture2D readableTexture = spriteInfo.texture.MakeReadable();
+            TextureScaler.scale(readableTexture, (int) (readableTexture.width * targetScale), (int) (readableTexture.height * targetScale));
             int width = readableTexture.width;
             int height = readableTexture.height;
-            Color[] colors = readableTexture.GetPixels((int) (spriteInfo.region.xMin * width), (int) (spriteInfo.region.yMin * height), (int) (spriteInfo.region.width * width), (int) (spriteInfo.region.height * height));
-            tex.SetPixels((int) (tex.width - (spriteInfo.region.width * width)) / 2, (int) (tex.height - (spriteInfo.region.height * height)) / 2, (int) (spriteInfo.region.width * width), (int) (spriteInfo.region.height * height), colors.Select(x => x * color).ToArray());
+            Vector2 targetPosition = (position ?? new Vector2((tex.width - width) / 2, (tex.height - height) / 2)) + positionOffset;
+            Color[] colors = readableTexture.GetPixels();
+            if (blendFunction == null)
+            {
+                blendFunction = (x, y) => y;
+            }
 
-            return new Vector2((int) (tex.width - (spriteInfo.region.width * width)) / 2, (int) (tex.height - (spriteInfo.region.height * height)) / 2);
+            tex.SetPixels((int) targetPosition.x, (int) targetPosition.y, width, height, colors.Select((x, y) => blendFunction(tex.GetPixel((int) targetPosition.x + (y % width), (int) targetPosition.y + (y / width)), x * color)).ToArray());
+            Debug.Log($"ALKJDLKAJDKL { targetPosition.x}, {targetPosition.y}, (int) {(width)}, (int) {height}");
+            return new Vector4(targetPosition.x, targetPosition.y, width, height);
         }
 
         private static Vector2[] kOutlineOffsets = new Vector2[]
@@ -215,5 +440,28 @@ namespace Klyte.Commons.Utils
         private static float characterSpacing = 0;
 
 
+        private struct ColorInfo
+        {
+            // Token: 0x06001442 RID: 5186 RVA: 0x000589EE File Offset: 0x00056BEE
+            public ColorInfo(Color32 c)
+            {
+                color = c;
+                overrideColor = false;
+            }
+
+            // Token: 0x06001443 RID: 5187 RVA: 0x000589FE File Offset: 0x00056BFE
+            public ColorInfo(Color32 c, bool o)
+            {
+                color = c;
+                overrideColor = o;
+            }
+
+            // Token: 0x04000881 RID: 2177
+            public Color32 color;
+
+            // Token: 0x04000882 RID: 2178
+            public bool overrideColor;
+        }
     }
+
 }
