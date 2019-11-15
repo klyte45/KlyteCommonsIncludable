@@ -57,7 +57,10 @@ namespace Klyte.Commons.Utils
         }
         public static Color ContrastColor(Color color)
         {
-
+            if (color == default)
+            {
+                return Color.black;
+            }
             // Counting the perceptive luminance - human eye favors green color... 
             float a = (0.299f * color.r) + (0.587f * color.g) + (0.114f * color.b);
 
