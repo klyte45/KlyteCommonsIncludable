@@ -1,20 +1,15 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.UI.Images;
+using Klyte.Commons.UI.SpriteNames;
 using Klyte.Commons.Utils;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using static ColossalFramework.UI.UITextureAtlas;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserMod<U, R, C, T, S> : BasicIUserModSimplified<U, R, C>
-        where U : BasicIUserMod<U, R, C, T, S>, new()
-        where R : KlyteResourceLoader<R>
+    public abstract class BasicIUserMod<U, C, T> : BasicIUserModSimplified<U, C>
+        where U : BasicIUserMod<U, C, T>, new()
         where C : MonoBehaviour
-        where S : Enum
         where T : UICustomControl
     {
         protected virtual float? TabWidth => null;
@@ -29,10 +24,6 @@ namespace Klyte.Commons.Interfaces
             m_modsPanel = UIView.Find<UIPanel>("K45_ModsPanel");
             if (m_modsPanel == null)
             {
-                var newSpriteList = new List<SpriteInfo>();
-                TextureAtlasUtils.ParseImageIntoDefaultTextureAtlas<CommonResourceLoader, CommonsSpriteNames>("commons.UI.Images.sprites.png", 64, 64, ref newSpriteList);
-                TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSpriteList);
-
                 UIComponent uicomponent = UIView.Find("TSBar");
                 UIPanel bg = uicomponent.AddUIComponent<UIPanel>();
                 bg.name = "K45_MB";
@@ -73,7 +64,7 @@ namespace Klyte.Commons.Interfaces
                 bg.color = new Color32(96, 96, 96, byte.MaxValue);
                 m_modPanelButton = bg.AddUIComponent<UIButton>();
                 m_modPanelButton.disabledTextColor = new Color32(128, 128, 128, byte.MaxValue);
-                KlyteMonoUtils.InitButton(m_modPanelButton, false, CommonResourceLoader.instance.GetDefaultSpriteNameFor(CommonsSpriteNames.K45Button), false);
+                KlyteMonoUtils.InitButton(m_modPanelButton, false, KlyteResourceLoader.GetDefaultSpriteNameFor(CommonsSpriteNames.K45_K45Button), false);
                 m_modPanelButton.relativePosition = new Vector3(5f, 0f);
                 m_modPanelButton.size = new Vector2(64, 64);
                 m_modPanelButton.name = "K45_ModsButton";
@@ -118,7 +109,7 @@ namespace Klyte.Commons.Interfaces
             }
 
             UIButton superTab = CreateTabTemplate();
-            superTab.normalFgSprite = Singleton<R>.instance.GetDefaultSpriteNameFor((Enum.GetValues(typeof(S)) as S[])[0]);
+            superTab.normalFgSprite = IconName;
             superTab.color = Color.gray;
             superTab.focusedColor = Color.white;
             superTab.hoveredColor = Color.white;

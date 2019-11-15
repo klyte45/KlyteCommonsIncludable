@@ -1,10 +1,12 @@
 ﻿using ColossalFramework;
+using ColossalFramework.Math;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.Redirectors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -62,9 +64,13 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"height = {height} - width = {width} -  renderer.pixelRatio = 1 - textureScale = {height} / {(spriteInfo.region.height * texture.height)}");
 
                 var size = new Vector3(width, height);
+                float borderWidth = textScale * 3;
 
                 Vector2 textDimensions = MeasureTextWidth(font, text, textScale, out Vector2 yBounds);
-                float multipler = Mathf.Min(Mathf.Min(3.5f, size.x / textDimensions.x), Mathf.Min(3.5f, size.y / textDimensions.y));
+                float borderBottom = Mathf.Max(0, (spriteInfo.border.bottom * textScale * 2) + Mathf.Min(0, yBounds.x));
+                var textAreaSize = new Vector4((spriteInfo.border.left * textScale * 2) + borderWidth, borderBottom + borderWidth, width - (spriteInfo.border.horizontal * textScale * 2) - borderWidth, height - (spriteInfo.border.top * textScale * 2) - borderBottom - borderWidth);
+
+                float multipler = Mathf.Min(Mathf.Min(3.5f, textAreaSize.z / textDimensions.x), Mathf.Min(3.5f, textAreaSize.w / textDimensions.y));
                 if (multipler > 1)
                 {
                     textScale *= 1 + ((multipler - 1) / 2.1f);
@@ -85,7 +91,7 @@ namespace Klyte.Commons.Utils
                 Color contrastColor = KlyteMonoUtils.ContrastColor(bgColor);
 
                 Vector2 position = RenderSprite(atlas, spriteName, contrastColor, tex, textureScale);
-                RenderSprite(atlas, spriteName, bgColor, tex, null, tex.height - (int) (textScale * 6), null, new Vector2((textScale / 2) - 0.5f, (textScale / 2) - 0.5f), (a, b) =>
+                RenderSprite(atlas, spriteName, bgColor, tex, null, tex.height - (int) (borderWidth * 2), null, new Vector2((textScale / 2) - 0.5f, (textScale / 2) - 0.5f), (a, b) =>
                           {
                               if (b.a == 1)
                               {
@@ -101,7 +107,7 @@ namespace Klyte.Commons.Utils
                               return (a * (1 - b.a)) + (b * b.a);
 
                           });
-                Vector2 posText = position + new Vector2((size.x / 2) - (textDimensions.x * multipler / 2) + 1, (size.y / 2) - (textDimensions.y / 2) - (yBounds.x / 2));
+                Vector2 posText = position + VectorUtils.XY(textAreaSize) + new Vector2((textAreaSize.z / 2) - (textDimensions.x * multipler / 2) + 1, (textAreaSize.w / 2) - (textDimensions.y / 2) - (yBounds.x / 2));
 
                 RenderText(font, text, new Vector3(0, -yBounds.x), textScale, contrastColor, bgColor, texText);
 
@@ -157,11 +163,15 @@ namespace Klyte.Commons.Utils
         }
 
 
-        public static Texture2D RenderTokenizedText(string text, UIDynamicFont uidynamicFont, float textScale, out Vector2 textRealSize)
+        public static Texture2D RenderTokenizedText(UIDynamicFont uidynamicFont, float textScale, string text, Color baseColor, out Vector2 textRealSize)
         {
+            if (text.IsNullOrWhiteSpace())
+            {
+                text = " ";
+            }
             var textColors = new Stack<ColorInfo>();
             textColors.Clear();
-            textColors.Push(new ColorInfo(Color.white));
+            textColors.Push(new ColorInfo(baseColor));
             var tokens = (PoolList<UIMarkupToken>) typeof(UIMarkupTokenizer).GetMethod("Tokenize", RedirectorUtils.allFlags).Invoke(null, new object[] { text });
             Vector2 texSize = CalculateTextureSize(uidynamicFont, textScale, ref tokens, out int startYPos);
             var position = new Vector3(0, startYPos);
@@ -240,7 +250,7 @@ namespace Klyte.Commons.Utils
                             continue;
                         }
                         string[] attrs = token.GetAttribute(0).m_Value.value.Split(',');
-                        if (attrs.Length != 3)
+                        if (attrs.Length != 3 || !Regex.IsMatch(attrs[1], "^[0-9a-fA-F]{6}$"))
                         {
                             tokens.RemoveAt(i);
                             i--;
@@ -330,8 +340,8 @@ namespace Klyte.Commons.Utils
         {
             float size = (uidynamicFont.size * textScale);
             FontStyle style = FontStyle.Normal;
-            float x = position.x + 3;
-            float y = position.y + 3;
+            float x = position.x;
+            float y = position.y;
             Color color2 = textColor;
             Color c = color2;
             Texture2D readableTex = ((Texture2D) uidynamicFont.baseFont.material.mainTexture).MakeReadable();
@@ -367,12 +377,12 @@ namespace Klyte.Commons.Utils
                         {
                             Vector3 b2 = kOutlineOffsets[j] * 3;
                             Vector3 targetOffset = vector4 + b2;
-                            MergeTextures(tex, colors.Select(x => x.a * outlineColor).ToArray(), Mathf.RoundToInt(targetOffset.x), Mathf.RoundToInt(targetOffset.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped, true);
+                            MergeTextures(tex, colors.Select(x => new Color(outlineColor.r, outlineColor.g, outlineColor.b, x.a)).ToArray(), Mathf.RoundToInt(targetOffset.x), Mathf.RoundToInt(targetOffset.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped, true);
                         }
                     }
 
 
-                    MergeTextures(tex, colors.Select(x => x.a * textColor).ToArray(), Mathf.RoundToInt(vector4.x), Mathf.RoundToInt(vector4.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped);
+                    MergeTextures(tex, colors.Select(x => new Color(textColor.r, textColor.g, textColor.b, x.a)).ToArray(), Mathf.RoundToInt(vector4.x), Mathf.RoundToInt(vector4.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped);
                     x += glyph.maxX;
                 }
             }
@@ -422,7 +432,6 @@ namespace Klyte.Commons.Utils
             }
 
             tex.SetPixels((int) targetPosition.x, (int) targetPosition.y, width, height, colors.Select((x, y) => blendFunction(tex.GetPixel((int) targetPosition.x + (y % width), (int) targetPosition.y + (y / width)), x * color)).ToArray());
-            Debug.Log($"ALKJDLKAJDKL { targetPosition.x}, {targetPosition.y}, (int) {(width)}, (int) {height}");
             return new Vector4(targetPosition.x, targetPosition.y, width, height);
         }
 

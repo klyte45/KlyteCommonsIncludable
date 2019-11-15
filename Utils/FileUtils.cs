@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using static ColossalFramework.Packaging.Package;
 
 namespace Klyte.Commons.Utils
@@ -35,10 +36,10 @@ namespace Klyte.Commons.Utils
                 Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
                 if (!(asset == null) && !(asset.package == null))
                 {
-                    var packagePath = asset.package.packagePath;
+                    string packagePath = asset.package.packagePath;
                     if (packagePath != null)
                     {
-                        var filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
+                        string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
                         if (!list.Contains(filePath))
                         {
                             list.Add(filePath);
@@ -60,10 +61,10 @@ namespace Klyte.Commons.Utils
                 Package.Asset asset = PackageManager.FindAssetByName(loaded.name);
                 if (!(asset == null) && !(asset.package == null))
                 {
-                    var packagePath = asset.package.packagePath;
+                    string packagePath = asset.package.packagePath;
                     if (packagePath != null)
                     {
-                        var filePath = Path.Combine(Path.GetDirectoryName(packagePath), directoryToFind);
+                        string filePath = Path.Combine(Path.GetDirectoryName(packagePath), directoryToFind);
                         if (!list.Contains(filePath))
                         {
                             list.Add(filePath);
@@ -83,10 +84,10 @@ namespace Klyte.Commons.Utils
             var list = new List<string>();
             ForEachNonLoadedPrefab((package, asset) =>
             {
-                var packagePath = asset.package.packagePath;
+                string packagePath = asset.package.packagePath;
                 if (packagePath != null)
                 {
-                    var filePath = Path.Combine(Path.GetDirectoryName(packagePath), directoryToFind);
+                    string filePath = Path.Combine(Path.GetDirectoryName(packagePath), directoryToFind);
                     if (!list.Contains(filePath))
                     {
                         list.Add(filePath);
@@ -103,10 +104,10 @@ namespace Klyte.Commons.Utils
             var list = new List<string>();
             ForEachNonLoadedPrefab((package, asset) =>
             {
-                var packagePath = asset.package.packagePath;
+                string packagePath = asset.package.packagePath;
                 if (packagePath != null)
                 {
-                    var filePath = Path.Combine(Path.GetDirectoryName(packagePath), file);
+                    string filePath = Path.Combine(Path.GetDirectoryName(packagePath), file);
                     if (!list.Contains(filePath))
                     {
                         list.Add(filePath);
@@ -121,11 +122,14 @@ namespace Klyte.Commons.Utils
         }
         public static void ForEachNonLoadedPrefab(Action<Package, Asset> action)
         {
-            foreach (var pack in PackageManager.allPackages)
+            foreach (Package pack in PackageManager.allPackages)
             {
-                var assets = pack.FilterAssets((AssetType) 103);
+                IEnumerable<Asset> assets = pack.FilterAssets((AssetType) 103);
                 if (assets.Count() == 0)
+                {
                     continue;
+                }
+
                 action(pack, assets.First());
             }
         }
@@ -140,6 +144,18 @@ namespace Klyte.Commons.Utils
                     action(loaded);
                 }
             }
+        }
+
+        public static string[] GetAllFilesEmbeddedAtFolder(string packageDirectory, string extension)
+        {
+
+            var executingAssembly = Assembly.GetExecutingAssembly();
+            string folderName = $"Klyte.{packageDirectory}";
+            return executingAssembly
+                .GetManifestResourceNames()
+                .Where(r => r.StartsWith(folderName) && r.EndsWith(extension))
+                .Select(r => r.Substring(folderName.Length + 1))
+                .ToArray();
         }
         #endregion
     }

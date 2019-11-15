@@ -16,14 +16,13 @@ using static ColossalFramework.UI.UITextureAtlas;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserModSimplified<U, R, C> : IUserMod, ILoadingExtension
-        where U : BasicIUserModSimplified<U, R, C>, new()
-        where R : KlyteResourceLoader<R>
+    public abstract class BasicIUserModSimplified<U, C> : IUserMod, ILoadingExtension
+        where U : BasicIUserModSimplified<U, C>, new()
         where C : MonoBehaviour
     {
 
         public abstract string SimpleName { get; }
-        public abstract List<Tuple<string, Type, int, int>> SpriteSheets { get; }
+        public abstract string IconName { get; }
         public virtual bool UseGroup9 => true;
         public abstract void LoadSettings();
         public abstract void DoLog(string fmt, params object[] args);
@@ -159,12 +158,12 @@ namespace Klyte.Commons.Interfaces
             }
             foreach (string lang in KlyteLocaleManager.locales)
             {
-                string content = Singleton<R>.instance.LoadResourceString($"UI.i18n.{lang}.properties");
+                string content = KlyteResourceLoader.LoadResourceString($"UI.i18n.{lang}.properties");
                 if (content != null)
                 {
                     File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}1_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
                 }
-                content = Singleton<R>.instance.LoadResourceString($"commons.UI.i18n.{lang}.properties");
+                content = KlyteResourceLoader.LoadResourceString($"commons.UI.i18n.{lang}.properties");
                 if (content != null)
                 {
                     File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_common.txt", content);
@@ -182,15 +181,12 @@ namespace Klyte.Commons.Interfaces
                 GameObject.Destroy(child?.gameObject);
             }
 
-            if (SpriteSheets.Count > 0)
-            {
-                var newSprites = new List<SpriteInfo>();
-                foreach (Tuple<string, Type, int, int> item in SpriteSheets)
-                {
-                    TextureAtlasUtils.ParseImageIntoDefaultTextureAtlas<R>(item.Second, item.First, item.Third, item.Fourth, ref newSprites);
-                }
-                TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
-            }
+            var newSprites = new List<SpriteInfo>();
+            TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
+            LogUtils.DoErrorLog($"ADDING {newSprites.Count} sprites!");
+            TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites); 
+
 
             helper.Self.eventVisibilityChanged += delegate (UIComponent component, bool b)
             {
@@ -225,6 +221,8 @@ namespace Klyte.Commons.Interfaces
             LogUtils.DoLog("End Loading Options");
         }
 
+
+
         protected void CreateGroup9(UIHelperExtension helper)
         {
             UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("K45_BETAS_EXTRA_INFO"));
@@ -256,7 +254,7 @@ namespace Klyte.Commons.Interfaces
                         if (component != null)
                         {
                             string title = $"{SimpleName.Replace("&", "and")} v{Version}";
-                            string notes = Singleton<R>.instance.LoadResourceString("UI.VersionNotes.txt");
+                            string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
                             string text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
                             string img = "IconMessage";
                             component.SetProperties(TooltipHelper.Format(new string[]
