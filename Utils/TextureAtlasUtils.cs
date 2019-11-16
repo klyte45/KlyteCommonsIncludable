@@ -25,7 +25,7 @@ namespace Klyte.Commons.Utils
             {
                 return;
             }
-            var borderDescriptors = new Dictionary<string, RectOffset>();
+            var borderDescriptors = new Dictionary<string, Tuple<RectOffset, bool>>();
             if (File.Exists($"{path}{Path.DirectorySeparatorChar}{BORDER_FILENAME}"))
             {
                 ParseBorderDescriptors(File.ReadAllLines($"{path}{Path.DirectorySeparatorChar}{BORDER_FILENAME}"), out borderDescriptors);
@@ -38,13 +38,13 @@ namespace Klyte.Commons.Utils
                     var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     if (tex.LoadImage(fileData))
                     {
-                        newFiles.Add(CreateSpriteInfo(borderDescriptors, filename, tex));
+                        newFiles.AddRange(CreateSpriteInfo(borderDescriptors, filename, tex));
                     }
                 }
             }
         }
 
-        public static SpriteInfo CreateSpriteInfo(Dictionary<string, RectOffset> borderDescriptors, string filename, Texture2D tex)
+        public static List<SpriteInfo> CreateSpriteInfo(Dictionary<string, Tuple<RectOffset, bool>> borderDescriptors, string filename, Texture2D tex)
         {
             string textureName = Path.GetFileNameWithoutExtension(filename);
             string generatedSpriteName;
@@ -56,37 +56,51 @@ namespace Klyte.Commons.Utils
             {
                 generatedSpriteName = KlyteResourceLoader.GetDefaultSpriteNameFor(textureName);
             }
-            borderDescriptors.TryGetValue(generatedSpriteName, out RectOffset border);
+            borderDescriptors.TryGetValue(generatedSpriteName, out Tuple<RectOffset, bool> border);
             var res = new SpriteInfo
             {
                 texture = tex,
                 name = generatedSpriteName,
-                border = border ?? new RectOffset()
+                border = border?.First ?? new RectOffset()
             };
-
-            return res;
+            if (border?.Second ?? false)
+            {
+                return new List<SpriteInfo>() {
+                    res,
+                    new SpriteInfo
+                        {
+                            texture = tex,
+                            name = generatedSpriteName + "_NOBORDER",
+                            border =new RectOffset()
+                        }
+                    };
+            }
+            else
+            {
+                return new List<SpriteInfo>() { res };
+            }
         }
         public static void LoadIamgesFromResources(string path, ref List<SpriteInfo> newSprites)
         {
             string[] imagesFiles = FileUtils.GetAllFilesEmbeddedAtFolder(path, ".png");
-            TextureAtlasUtils.ParseBorderDescriptors(KlyteResourceLoader.LoadResourceStringLines($"{path}.{BORDER_FILENAME}"), out Dictionary<string, RectOffset> borderDescriptor);
+            TextureAtlasUtils.ParseBorderDescriptors(KlyteResourceLoader.LoadResourceStringLines($"{path}.{BORDER_FILENAME}"), out Dictionary<string, Tuple<RectOffset, bool>> borderDescriptor);
             foreach (string file in imagesFiles)
             {
                 Texture2D tex = KlyteResourceLoader.LoadTexture($"{path}.{file}");
                 if (tex != null)
                 {
-                    newSprites.Add(TextureAtlasUtils.CreateSpriteInfo(borderDescriptor, file, tex));
+                    newSprites.AddRange(TextureAtlasUtils.CreateSpriteInfo(borderDescriptor, file, tex));
                 }
             }
         }
 
-        public static void ParseBorderDescriptors(IEnumerable<string> lines, out Dictionary<string, RectOffset> borderDescriptors)
+        public static void ParseBorderDescriptors(IEnumerable<string> lines, out Dictionary<string, Tuple<RectOffset, bool>> borderDescriptors)
         {
-            borderDescriptors = new Dictionary<string, RectOffset>();
+            borderDescriptors = new Dictionary<string, Tuple<RectOffset, bool>>();
             foreach (string line in lines)
             {
                 string[] lineSpilt = line.Split('=');
-                if (lineSpilt.Length == 2)
+                if (lineSpilt.Length >= 2)
                 {
                     string[] lineValues = lineSpilt[1].Split(',');
                     if (lineValues.Length == 4
@@ -96,7 +110,7 @@ namespace Klyte.Commons.Utils
                         && int.TryParse(lineValues[3], out int bottom)
                         )
                     {
-                        borderDescriptors[lineSpilt[0]] = new RectOffset(left, right, top, bottom);
+                        borderDescriptors[lineSpilt[0]] = Tuple.New(new RectOffset(left, right, top, bottom), lineSpilt.Length >= 3 && bool.TryParse(lineSpilt[2], out bool noBorder) && noBorder);
                     }
                 }
             }
