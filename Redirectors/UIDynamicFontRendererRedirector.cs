@@ -14,7 +14,7 @@ namespace Klyte.Commons.Redirectors
 
     public class UIDynamicFontRendererRedirector : Redirector, IRedirectable
     {
-        public const string TAG_LINE = "k45LineSymbol";
+        public const string TAG_LINE = "k45Symbol";
 
         private static UIDynamicFontRendererRedirector Instance { get; set; }
 

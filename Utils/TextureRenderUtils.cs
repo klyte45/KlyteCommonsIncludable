@@ -167,13 +167,19 @@ namespace Klyte.Commons.Utils
         {
             if (text.IsNullOrWhiteSpace())
             {
-                text = " ";
+                textRealSize = Vector2.zero;
+                return new Texture2D(1, 1);
             }
             var textColors = new Stack<ColorInfo>();
             textColors.Clear();
             textColors.Push(new ColorInfo(baseColor));
             var tokens = (PoolList<UIMarkupToken>) typeof(UIMarkupTokenizer).GetMethod("Tokenize", RedirectorUtils.allFlags).Invoke(null, new object[] { text });
             Vector2 texSize = CalculateTextureSize(uidynamicFont, textScale, ref tokens, out int startYPos);
+            if (texSize.x <= 0 || texSize.y <= 0)
+            {
+                textRealSize = Vector2.zero;
+                return new Texture2D(1, 1);
+            }
             var position = new Vector3(0, startYPos);
             var result = new Texture2D((int) texSize.x, (int) texSize.y, TextureFormat.RGBA32, false);
             result.SetPixels(new Color[result.width * result.height]);
@@ -216,6 +222,8 @@ namespace Klyte.Commons.Utils
                     }
                     token.height = Mathf.CeilToInt(num);
                     xAdvance += token.height;
+                    yBounds.x = Mathf.Min(yBounds.x, 0);
+                    yBounds.y = Mathf.Max(yBounds.y, token.height);
                 }
                 else if (token.tokenType == UIMarkupTokenType.StartTag)
                 {
