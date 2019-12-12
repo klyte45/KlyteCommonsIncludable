@@ -93,7 +93,7 @@ namespace Klyte.Commons.Utils
             public Bezier3 platformLine;
             public float width;
             public VehicleInfo.VehicleType vehicleType;
-            public ushort laneId;            
+            public ushort laneId;
         }
 
         public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo)
@@ -166,12 +166,13 @@ namespace Klyte.Commons.Utils
                 StopPointDescriptorLanes[] subPlats = MapStopPoints(subBuilding.m_buildingInfo);
                 if (subPlats != null)
                 {
+                    var rotationToApply = Quaternion.AngleAxis(subBuilding.m_angle, Vector3.up);
                     result.AddRange(subPlats.Select(x =>
                     {
-                        x.platformLine.a += subBuilding.m_position;
-                        x.platformLine.b += subBuilding.m_position;
-                        x.platformLine.c += subBuilding.m_position;
-                        x.platformLine.d += subBuilding.m_position;
+                        x.platformLine.a = (rotationToApply * x.platformLine.a) + subBuilding.m_position;
+                        x.platformLine.b = (rotationToApply * x.platformLine.b) + subBuilding.m_position;
+                        x.platformLine.c = (rotationToApply * x.platformLine.c) + subBuilding.m_position;
+                        x.platformLine.d = (rotationToApply * x.platformLine.d) + subBuilding.m_position;
                         return x;
                     }));
                 }
