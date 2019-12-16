@@ -179,8 +179,28 @@ namespace Klyte.Commons.Utils
                 ClearAllVisibilityEvents(u.components[i]);
             }
         }
+
+        public static PropertyChangedEventHandler<Vector2> LimitWidthAndBox<T>(T x) where T : UIComponent => LimitWidthAndBox(x, x.minimumSize.x);
+        public static PropertyChangedEventHandler<Vector2> LimitWidthAndBox<T>(T label, float maxWidth, bool alsoMinSize = false) where T : UIComponent
+        {
+            CreateUIElement(out UIPanel boxContainer, label.parent.transform, "CompoentContainer", new Vector4(0, 0, maxWidth, label.height));
+            boxContainer.autoLayout = true;
+            boxContainer.autoSize = true;
+            boxContainer.zOrder = 0;
+            boxContainer.maximumSize = new Vector2(maxWidth, label.height);
+            if (alsoMinSize)
+            {
+                boxContainer.minimumSize = new Vector2(maxWidth, label.height);
+            }
+            label.transform.SetParent(boxContainer.transform);
+            return LimitWidthPrivate(label, maxWidth, true);
+        }
+
+        [Obsolete("Use box version")]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x) => LimitWidth(x, x.minimumSize.x);
-        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false)
+        [Obsolete("Use box version")]
+        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
+        private static PropertyChangedEventHandler<Vector2> LimitWidthPrivate(UIComponent x, float maxWidth, bool alsoMinSize)
         {
             x.autoSize = true;
             void callback(UIComponent y, Vector2 z) => x.transform.localScale = new Vector3(Math.Min(1, maxWidth / x.width), x.transform.localScale.y, x.transform.localScale.z);
