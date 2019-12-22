@@ -88,15 +88,19 @@ namespace Klyte.Commons.Utils
 
         private const float m_defaultStopOffset = 0.5019608f;
 
-        public class StopPointDescriptorLanes
+        public struct StopPointDescriptorLanes
         {
             public Bezier3 platformLine;
             public float width;
             public VehicleInfo.VehicleType vehicleType;
-            public ushort laneId;            
+            public ushort laneId;
+            public sbyte subbuildingId;
+            public Vector3 directionPath;
+
+            public override string ToString() => $"{platformLine.Position(0.5f)} (w={width} | {vehicleType} | {subbuildingId} | {laneId} | DIR = {directionPath} ({directionPath.GetAngleXZ()}°))";
         }
 
-        public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo)
+        public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo, float thresold)
         {
             var result = new List<StopPointDescriptorLanes>();
             if (buildingInfo?.m_paths == null)
@@ -108,11 +112,12 @@ namespace Klyte.Commons.Utils
             {
                 Vector3 position = path.m_nodes[0];
                 Vector3 position2 = path.m_nodes[1];
+
+
                 position.z *= -1;
                 position2.z *= -1;
                 Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
 
-                LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
                 foreach (NetInfo.Lane refLane in path.m_netInfo.m_lanes)
                 {
                     if (refLane.m_stopType == VehicleInfo.VehicleType.None)
@@ -125,6 +130,8 @@ namespace Klyte.Commons.Utils
                         continue;
                     }
 
+
+                    LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
                     Vector3 lanePos = position + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
                     Vector3 lanePos2 = position2 + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
                     Vector3 b3, c;
@@ -156,22 +163,27 @@ namespace Klyte.Commons.Utils
                         platformLine = refBezier,
                         width = lane.m_width,
                         vehicleType = refLane.m_stopType,
-                        laneId = laneId
+                        laneId = laneId,
+                        subbuildingId = -1,
+                        directionPath = directionPath * (path.m_invertSegments == (refLane.m_finalDirection == NetInfo.Direction.AvoidForward || refLane.m_finalDirection == NetInfo.Direction.Backward) ? 1 : -1)
+
                     });
 
                 }
             }
-            foreach (BuildingInfo.SubInfo subBuilding in buildingInfo.m_subBuildings)
+            for (int i = 0; i < buildingInfo.m_subBuildings.Length; i++)
             {
-                StopPointDescriptorLanes[] subPlats = MapStopPoints(subBuilding.m_buildingInfo);
+                StopPointDescriptorLanes[] subPlats = MapStopPoints(buildingInfo.m_subBuildings[i].m_buildingInfo, thresold);
                 if (subPlats != null)
                 {
+                    var rotationToApply = Quaternion.AngleAxis(buildingInfo.m_subBuildings[i].m_angle, Vector3.up);
                     result.AddRange(subPlats.Select(x =>
                     {
-                        x.platformLine.a += subBuilding.m_position;
-                        x.platformLine.b += subBuilding.m_position;
-                        x.platformLine.c += subBuilding.m_position;
-                        x.platformLine.d += subBuilding.m_position;
+                        x.platformLine.a = (rotationToApply * x.platformLine.a) + buildingInfo.m_subBuildings[i].m_position;
+                        x.platformLine.b = (rotationToApply * x.platformLine.b) + buildingInfo.m_subBuildings[i].m_position;
+                        x.platformLine.c = (rotationToApply * x.platformLine.c) + buildingInfo.m_subBuildings[i].m_position;
+                        x.platformLine.d = (rotationToApply * x.platformLine.d) + buildingInfo.m_subBuildings[i].m_position;
+                        x.subbuildingId = (sbyte) i;
                         return x;
                     }));
                 }
@@ -185,20 +197,24 @@ namespace Klyte.Commons.Utils
                     return priorityX.CompareTo(priorityY);
                 }
 
-                Vector3 centerX = x.platformLine.Position(0.5f);
-                Vector3 centerY = y.platformLine.Position(0.5f);
-                if (centerX.y != centerY.y)
+                Vector3 centerX = (x.platformLine.Position(0.5f));
+                Vector3 centerY = (y.platformLine.Position(0.5f));
+                if (Mathf.Abs(centerX.y - centerY.y) >= thresold)
                 {
                     return -centerX.y.CompareTo(centerY.y);
                 }
 
-                if (centerX.z != centerY.z)
+                if (Mathf.Abs(centerX.z - centerY.z) >= thresold)
                 {
                     return -centerX.z.CompareTo(centerY.z);
                 }
 
                 return -centerX.x.CompareTo(centerY.x);
             });
+            if (CommonProperties.DebugMode)
+            {
+                LogUtils.DoLog($"{buildingInfo.name} PLAT ORDER:\n{string.Join("\n", result.Select((x, y) => $"{y}=> {x.ToString()}").ToArray())}");
+            }
             return result.ToArray();
         }
 
