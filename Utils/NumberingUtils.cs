@@ -111,7 +111,7 @@ namespace Klyte.Commons.Utils
 
             return remain;
         }
-        public static string GetStringFromNumber(char[] array, int number)
+        public static string GetStringFromNumber(string[] array, int number)
         {
             int arraySize = array.Length;
             string saida = "";

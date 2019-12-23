@@ -30,6 +30,7 @@
        K45_DiamondIcon,
        K45_S08StarIcon,
        K45_CircleIcon,
-       K45_RoundedSquareIcon
+       K45_RoundedSquareIcon,
+       NULL
     };
 }

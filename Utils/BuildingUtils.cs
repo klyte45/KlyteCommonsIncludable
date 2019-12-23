@@ -12,7 +12,7 @@ namespace Klyte.Commons.Utils
     public class BuildingUtils
     {
         #region Building Utils
-        public static IEnumerator SetBuildingName(ushort buildingID, string name, OnEndProcessingBuildingName function)
+        public static IEnumerator SetBuildingName(ushort buildingID, string name, Action function)
         {
             InstanceID buildingIdSelect = default;
             buildingIdSelect.Building = buildingID;
@@ -20,7 +20,6 @@ namespace Klyte.Commons.Utils
             function();
         }
 
-        public delegate void OnEndProcessingBuildingName();
         public static ushort FindBuilding(Vector3 pos, float maxDistance, ItemClass.Service service, ItemClass.SubService subService, TransferManager.TransferReason[] allowedTypes, Building.Flags flagsRequired, Building.Flags flagsForbidden)
         {
             BuildingManager bm = Singleton<BuildingManager>.instance;

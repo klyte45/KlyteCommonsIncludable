@@ -3,7 +3,7 @@
     public class NumberArrays
     {
         #region Utility Numbering Arrays
-        protected static string[] latinoMaiusculo = {
+        public static readonly string[] latinoMaiusculo = {
             "A",
             "B",
             "C",
@@ -31,7 +31,7 @@
             "Y",
             "Z"
         };
-        protected static string[] latinoMinusculo = {
+        public static readonly string[] latinoMinusculo = {
             "a",
             "b",
             "c",
@@ -59,7 +59,7 @@
             "y",
             "z"
         };
-        protected static string[] gregoMaiusculo = {
+        public static readonly string[] gregoMaiusculo = {
             "Α",
             "Β",
             "Γ",
@@ -85,7 +85,7 @@
             "Ψ",
             "Ω"
         };
-        protected static string[] gregoMinusculo = {
+        public static readonly string[] gregoMinusculo = {
             "α",
             "β",
             "γ",
@@ -111,7 +111,7 @@
             "ψ",
             "ω"
         };
-        protected static string[] cirilicoMaiusculo = {
+        public static readonly string[] cirilicoMaiusculo = {
             "А",
             "Б",
             "В",
@@ -146,7 +146,7 @@
             "Ю",
             "Я"
         };
-        protected static string[] cirilicoMinusculo = {
+        public static readonly string[] cirilicoMinusculo = {
             "а",
             "б",
             "в",
@@ -181,7 +181,7 @@
             "ю",
             "я"
         };
-        protected static string[] numeros = {
+        public static readonly string[] numeros = {
             "0",
             "1",
             "2",

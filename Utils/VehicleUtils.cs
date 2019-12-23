@@ -16,7 +16,7 @@ namespace Klyte.Commons.Utils
                 return null;
             }
 
-            Randomizer r = new Randomizer(new System.Random().Next());
+            var r = new Randomizer(new System.Random().Next());
 
             selectedModel = assetList[r.Int32(0, assetList.Count - 1)];
 
@@ -28,8 +28,8 @@ namespace Klyte.Commons.Utils
             }
             return saida;
         }
-
-        public static int GetCapacity<AI>(VehicleInfo info, AI ai, bool noLoop = false) where AI : PrefabAI
+        public static int GetCapacity(VehicleInfo info) => GetCapacity(info, info.m_vehicleAI);
+        public static int GetCapacity<AI>(VehicleInfo info, AI ai, bool noLoop = false) where AI : VehicleAI
         {
             if (info == null)
             {
@@ -43,7 +43,7 @@ namespace Klyte.Commons.Utils
                 {
                     foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                     {
-                        capacity += GetCapacity(trailer.m_info, trailer.m_info.GetAI(), true);
+                        capacity += trailer.m_info == null ? 0 : GetCapacity(trailer.m_info, trailer.m_info.m_vehicleAI, true);
                     }
                 }
             }

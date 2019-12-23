@@ -94,7 +94,7 @@ namespace Klyte.Commons.Utils
             LambdaExpression lambda =
                 Expression.Lambda(typeof(Func<TSource, TValue>), resultExpression, sourceParameter);
 
-            Func<TSource, TValue> compiled = (Func<TSource, TValue>) lambda.Compile();
+            var compiled = (Func<TSource, TValue>) lambda.Compile();
             return compiled;
         }
 
@@ -177,7 +177,7 @@ namespace Klyte.Commons.Utils
             LambdaExpression lambda = Expression.Lambda(typeof(Action<TSource, TValue>),
                                                         setFieldMethodCallExpression, sourceParameter, valueParameter);
 
-            Action<TSource, TValue> result = (Action<TSource, TValue>) lambda.Compile();
+            var result = (Action<TSource, TValue>) lambda.Compile();
             return result;
         }
 
@@ -235,7 +235,7 @@ namespace Klyte.Commons.Utils
             LambdaExpression lambda = Expression.Lambda(typeof(Action<TSource, TValue>),
                                                         setFieldMethodCallExpression, sourceParameter, valueParameter);
 
-            Action<TSource, TValue> result = (Action<TSource, TValue>) lambda.Compile();
+            var result = (Action<TSource, TValue>) lambda.Compile();
             return result;
         }
 
@@ -275,6 +275,8 @@ namespace Klyte.Commons.Utils
 
             return result;
         }
+
+        internal static T GetPrivateField<T>(object prefabAI, string v) => (T) prefabAI.GetType().GetField(v).GetValue(prefabAI);
 
 
         #region Called by reflection - Don't delete.
@@ -377,7 +379,7 @@ namespace Klyte.Commons.Utils
                                          let y = t.BaseType
                                          where t.IsClass && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
                                          select t);
-            List<Type> result = new List<Type>();
+            var result = new List<Type>();
             if (CommonProperties.DebugMode)
             {
                 LogUtils.DoLog($"classes:\r\n\t {string.Join("\r\n\t", classes.Select(x => x.ToString()).ToArray())} ");
@@ -414,7 +416,7 @@ namespace Klyte.Commons.Utils
                                          where t.IsClass && y.Contains(interfaceType) && !t.IsAbstract
                                          select t);
 
-            List<Type> result = new List<Type>();
+            var result = new List<Type>();
             if (CommonProperties.DebugMode)
             {
                 LogUtils.DoLog($"classes:\r\n\t {string.Join("\r\n\t", classes.Select(x => x.ToString()).ToArray())} ");
