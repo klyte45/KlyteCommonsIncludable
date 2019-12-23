@@ -173,7 +173,8 @@ namespace Klyte.Commons.Utils
         }
         public static void ClearAllVisibilityEvents(UIComponent u)
         {
-            u.eventVisibilityChanged += null;
+            System.Reflection.FieldInfo field = ReflectionUtils.GetEventField(u.GetType(), "eventVisibilityChanged");
+            field.SetValue(u, null);
             for (int i = 0; i < u.components.Count; i++)
             {
                 ClearAllVisibilityEvents(u.components[i]);
@@ -209,6 +210,7 @@ namespace Klyte.Commons.Utils
             {
                 x.minimumSize = new Vector2(maxWidth, x.minimumSize.y);
             }
+            callback(null, default);
             return callback;
         }
         public static UIHelperExtension CreateScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition)

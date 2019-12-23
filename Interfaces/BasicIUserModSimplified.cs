@@ -53,7 +53,7 @@ namespace Klyte.Commons.Interfaces
             {
                 m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
                 Type typeTarg = typeof(IRedirectable);
-                System.Collections.Generic.List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
+                List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
                 LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
                 foreach (Type t in instances)
                 {
@@ -185,7 +185,7 @@ namespace Klyte.Commons.Interfaces
             TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
             TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
             LogUtils.DoErrorLog($"ADDING {newSprites.Count} sprites!");
-            TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites); 
+            TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
 
             helper.Self.eventVisibilityChanged += delegate (UIComponent component, bool b)

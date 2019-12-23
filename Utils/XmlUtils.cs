@@ -13,6 +13,16 @@ namespace Klyte.Commons.Utils
         public static T DefaultXmlDeserialize<T>(string s)
         {
             var xmlser = new XmlSerializer(typeof(T));
+            return DefaultXmlDeserializeImpl<T>(s, xmlser);
+        }
+        public static object DefaultXmlDeserialize(Type t, string s)
+        {
+            var xmlser = new XmlSerializer(t);
+            return DefaultXmlDeserializeImpl<object>(s, xmlser);
+        }
+
+        private static T DefaultXmlDeserializeImpl<T>(string s, XmlSerializer xmlser)
+        {
             try
             {
                 using TextReader tr = new StringReader(s);
