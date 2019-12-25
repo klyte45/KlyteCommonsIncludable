@@ -5,7 +5,6 @@ using Harmony;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection.Emit;
 using UnityEngine;
 using static ColossalFramework.UI.UIDynamicFont;
@@ -16,7 +15,7 @@ namespace Klyte.Commons.Redirectors
     public class UIDynamicFontRendererRedirector : Redirector, IRedirectable
     {
         public const string TAG_LINE = "k45Symbol";
-        public readonly string[] LEGACY_TAG_LINE = new string[] {"k45LineSymbol"};
+        public readonly string[] LEGACY_TAG_LINE = new string[] { "k45LineSymbol" };
 
         private static UIDynamicFontRendererRedirector Instance { get; set; }
 
@@ -66,27 +65,12 @@ namespace Klyte.Commons.Redirectors
                 new CodeInstruction(OpCodes.Ldarg_1),
                 new CodeInstruction(OpCodes.Call,typeof(UIDynamicFontRendererRedirector).GetMethod("CalcTokenRenderSizeNewTags")),
             });
-            int j = 0;
-            LogUtils.DoLog($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+            LogUtils.PrintMethodIL(inst);
             return inst;
         }
 
-        private static string ParseOperand(List<CodeInstruction> instr, object operand)
-        {
-            if (operand is null)
-            {
-                return null;
-            }
 
-            if (operand is Label lbl)
-            {
-                return "LBL: " + instr.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.labels.Contains(lbl)).Select(x => $"{x.Second.ToString("D8")} {x.First.opcode.ToString().PadRight(10)} {ParseOperand(instr, x.First.operand)}").FirstOrDefault();
-            }
-            else
-            {
-                return operand.ToString();
-            }
-        }
+
 
         public static IEnumerable<CodeInstruction> RenderLineTranspile(IEnumerable<CodeInstruction> instructions)
         {
@@ -121,8 +105,7 @@ namespace Klyte.Commons.Redirectors
                 }
             }
 
-            int j = 0;
-            LogUtils.DoLog($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+            LogUtils.PrintMethodIL(inst);
             return inst;
         }
 
