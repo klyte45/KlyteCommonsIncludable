@@ -186,6 +186,7 @@ namespace Klyte.Commons.Utils
         public static PropertyChangedEventHandler<Vector2> LimitWidthAndBox<T>(T label, float maxWidth, bool alsoMinSize = false) where T : UIComponent => LimitWidthAndBox(label, maxWidth, out _, alsoMinSize);
         public static PropertyChangedEventHandler<Vector2> LimitWidthAndBox<T>(T label, float maxWidth, out UIPanel boxContainer, bool alsoMinSize = false) where T : UIComponent
         {
+            Vector3 currentRelPos = label.relativePosition;
             CreateUIElement(out boxContainer, label.parent.transform, "CompoentContainer", new Vector4(0, 0, maxWidth, label.height));
             boxContainer.autoLayout = true;
             boxContainer.autoSize = true;
@@ -196,6 +197,7 @@ namespace Klyte.Commons.Utils
                 boxContainer.minimumSize = new Vector2(maxWidth, 0);
             }
             label.transform.SetParent(boxContainer.transform);
+            boxContainer.relativePosition = currentRelPos;
             return LimitWidthPrivate(label, maxWidth, alsoMinSize);
         }
 
