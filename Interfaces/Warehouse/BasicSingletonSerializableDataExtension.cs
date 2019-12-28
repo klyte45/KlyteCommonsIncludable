@@ -1,5 +1,6 @@
 ﻿using Klyte.Commons.Utils;
 using System;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
@@ -7,8 +8,8 @@ namespace Klyte.Commons.Interfaces
     public interface IDataExtensor
     {
         string SaveId { get; }
-        IDataExtensor Deserialize(Type type, string data);
-        string Serialize();
+        IDataExtensor Deserialize(Type type, byte[] data);
+        byte[] Serialize();
     }
 
     [XmlRoot("DataExtensor")]
@@ -28,7 +29,7 @@ namespace Klyte.Commons.Interfaces
         }
 
 
-        public IDataExtensor Deserialize(Type type, string data) => XmlUtils.DefaultXmlDeserialize<U>(data);
-        public string Serialize() => XmlUtils.DefaultXmlSerialize((U) this, false);
+        public IDataExtensor Deserialize(Type type, byte[] data) => XmlUtils.DefaultXmlDeserialize<U>(Encoding.UTF8.GetString(data));
+        public byte[] Serialize() => Encoding.UTF8.GetBytes(XmlUtils.DefaultXmlSerialize((U) this, false));
     }
 }

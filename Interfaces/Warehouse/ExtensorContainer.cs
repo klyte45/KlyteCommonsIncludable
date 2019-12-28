@@ -36,9 +36,12 @@ namespace Klyte.Commons.Interfaces
                 }
                 using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId));
                 byte[] storage = memoryStream.ToArray();
-                string content = System.Text.Encoding.UTF8.GetString(storage);
-                LogUtils.DoLog($"{type} DATA => {content}");
-                instance.Instances[type] = basicInstance.Deserialize(type, content);
+                if (CommonProperties.DebugMode)
+                {
+                    string content = System.Text.Encoding.UTF8.GetString(storage);
+                    LogUtils.DoLog($"{type} DATA => {content}");
+                }
+                instance.Instances[type] = basicInstance.Deserialize(type, storage);
             }
         }
 
@@ -53,14 +56,18 @@ namespace Klyte.Commons.Interfaces
                 {
                     continue;
                 }
-                string serialData = instance.Instances[type]?.Serialize();
-                LogUtils.DoLog($"serialData: {serialData ?? "<NULL>"}");
-                if (serialData == null)
+
+
+                byte[] data = instance.Instances[type]?.Serialize();
+                if (CommonProperties.DebugMode)
+                {
+                    string content = System.Text.Encoding.UTF8.GetString(data);
+                    LogUtils.DoLog($"{type} DATA => {content}");
+                }
+                if (data.Length == 0)
                 {
                     return;
                 }
-
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(serialData);
                 try
                 {
                     SerializableDataManager.SaveData(instance.Instances[type].SaveId, data);
