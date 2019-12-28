@@ -2,7 +2,6 @@
 using Klyte.Commons.Utils;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -83,12 +82,12 @@ namespace Klyte.Commons.Interfaces
                 try
                 {
                     I defaultFile = GetConfig(GLOBAL_CONFIG_INDEX, GLOBAL_CONFIG_INDEX);
-                    foreach (string key in GameSettings.FindSettingsFileByName(defaultFile.ThisFileName).ListKeys())
+                    foreach (int value in Enum.GetValues(typeof(T)))
                     {
                         try
                         {
-                            var ci = (T) Enum.Parse(typeof(T), key);
-                            switch (ci.ToInt32(CultureInfo.CurrentCulture.NumberFormat) & TYPE_PART)
+                            var ci = (T) Enum.ToObject(typeof(T), value);
+                            switch (value & TYPE_PART)
                             {
                                 case TYPE_BOOL:
                                     result.SetBool(ci, defaultFile.GetBool(ci));
@@ -103,7 +102,7 @@ namespace Klyte.Commons.Interfaces
                         }
                         catch (Exception e)
                         {
-                            LogUtils.DoErrorLog($"Erro copiando propriedade \"{key}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
+                            LogUtils.DoErrorLog($"Erro copiando propriedade \"{value}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
                         }
                     }
                 }
@@ -122,7 +121,7 @@ namespace Klyte.Commons.Interfaces
                 {
                     result?.FallBackDefaultFile();
                 }
-                EventOnPropertyChanged += (a, b, c, d) => result.SaveAsDefault();
+                result.EventOnPropertyChanged += (a, b, c, d) => result.SaveAsDefault();
             }
             return result;
         }
@@ -228,7 +227,7 @@ namespace Klyte.Commons.Interfaces
         public void OnReleased() { }
         #endregion
 
-        public static event OnWarehouseConfigChanged EventOnPropertyChanged;
+        public event OnWarehouseConfigChanged EventOnPropertyChanged;
 
 
         public delegate void OnWarehouseConfigChanged(T idx, bool? newValueBool, int? newValueInt, string newValueString);
