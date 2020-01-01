@@ -88,36 +88,47 @@ namespace Klyte.Commons.Utils
             dh.Start();
             return dh;
         }
-        public static void InitButton(UIButton button, bool isCheck, string baseSprite, bool allLower = false)
+        public static void InitButton<T>(T component, bool isCheck, string baseSprite, bool allLower = false) where T : UIInteractiveComponent
         {
             string sprite = baseSprite;//"ButtonMenu";
             string spriteHov = baseSprite + "Hovered";
-            button.normalBgSprite = sprite;
-            button.disabledBgSprite = sprite + "Disabled";
-            button.hoveredBgSprite = spriteHov;
-            button.focusedBgSprite = spriteHov;
-            button.pressedBgSprite = isCheck ? sprite + "Pressed" : spriteHov;
+            component.normalBgSprite = sprite;
+            component.disabledBgSprite = sprite + "Disabled";
+            component.hoveredBgSprite = spriteHov;
+            component.focusedBgSprite = spriteHov;
+            if (component is UIButton button)
+            {
+                button.pressedBgSprite = isCheck ? sprite + "Pressed" : spriteHov;
+            }
 
             if (allLower)
             {
-                button.normalBgSprite = button.normalBgSprite.ToLower();
-                button.disabledBgSprite = button.disabledBgSprite.ToLower();
-                button.hoveredBgSprite = button.hoveredBgSprite.ToLower();
-                button.focusedBgSprite = button.focusedBgSprite.ToLower();
-                button.pressedBgSprite = button.pressedBgSprite.ToLower();
+                component.normalBgSprite = component.normalBgSprite.ToLower();
+                component.disabledBgSprite = component.disabledBgSprite.ToLower();
+                component.hoveredBgSprite = component.hoveredBgSprite.ToLower();
+                component.focusedBgSprite = component.focusedBgSprite.ToLower();
+
+                if (component is UIButton button2)
+                {
+                    button2.pressedBgSprite = button2.pressedBgSprite.ToLower();
+
+                }
             }
 
-            button.textColor = new Color32(255, 255, 255, 255);
+            component.textColor = new Color32(255, 255, 255, 255);
         }
-        public static void InitButtonFull(UIButton button, bool isCheck, string baseSprite)
+        public static void InitButtonFull<T>(T component, bool isCheck, string baseSprite) where T : UIInteractiveComponent
         {
             string sprite = baseSprite;
-            button.normalBgSprite = sprite;
-            button.disabledBgSprite = sprite + "Disabled";
-            button.hoveredBgSprite = baseSprite + "Focused";
-            button.focusedBgSprite = baseSprite + "Hovered";
-            button.pressedBgSprite = isCheck ? sprite + "Pressed" : button.focusedBgSprite;
-            button.textColor = new Color32(255, 255, 255, 255);
+            component.normalBgSprite = sprite;
+            component.disabledBgSprite = sprite + "Disabled";
+            component.hoveredBgSprite = baseSprite + "Focused";
+            component.focusedBgSprite = baseSprite + "Hovered"; 
+            if (component is UIButton button)
+            {
+                button.pressedBgSprite = isCheck ? sprite + "Pressed" : button.focusedBgSprite;
+            }
+            component.textColor = new Color32(255, 255, 255, 255);
         }
         public static void InitButtonSameSprite(UIButton button, string baseSprite)
         {
