@@ -80,6 +80,16 @@ namespace Klyte.Commons.Utils
             }
         }
 
+        public Tuple<TValue, int> GetAtHourExact(float hour)
+        {
+            if (m_hourTable == null)
+            {
+                RebuildHourTable();
+            }
+            int fullHour = (int) hour;
+            return m_hourTable[fullHour];
+        }
+
         private class ITimeableComparer : IEqualityComparer<TValue>
         {
             public bool Equals(TValue x, TValue y) => x.HourOfDay == y.HourOfDay;
