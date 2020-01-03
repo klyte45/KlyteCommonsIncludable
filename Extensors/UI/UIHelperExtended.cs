@@ -78,11 +78,12 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public UICheckBox AddCheckboxLocale(string text, bool defaultValue, OnCheckChanged eventCallback = null)
+        public UICheckBox AddCheckboxLocale(string text, bool defaultValue, OnCheckChanged eventCallback = null) => AddCheckboxLocale(m_root, text, defaultValue, eventCallback);
+        public static UICheckBox AddCheckboxLocale(UIComponent parent, string text, bool defaultValue, OnCheckChanged eventCallback = null)
         {
             if (!string.IsNullOrEmpty(text))
             {
-                var uICheckBox = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
+                var uICheckBox = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
                 uICheckBox.label.isLocalized = true;
                 uICheckBox.label.localeID = text;
                 uICheckBox.isChecked = defaultValue;
