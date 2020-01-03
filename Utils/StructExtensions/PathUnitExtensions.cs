@@ -33,5 +33,33 @@ namespace Klyte.Commons.Utils
             }
             return unit.GetPosition(unit.m_positionCount - 2, out position1) & unit.GetPosition(unit.m_positionCount - 1, out position2);
         }
+        public static float GetFullPathLength(this PathUnit unit)
+        {
+            uint num = unit.m_nextPathUnit;
+            float dist = 0;
+            if (num != 0u)
+            {
+                PathManager instance = Singleton<PathManager>.instance;
+                int num2 = 0;
+                dist += unit.m_length;
+                uint nextPathUnit = instance.m_pathUnits.m_buffer[(int) (num)].m_nextPathUnit;
+                while (nextPathUnit != 0u)
+                {
+                    num = nextPathUnit;
+                    nextPathUnit = instance.m_pathUnits.m_buffer[(int) (num)].m_nextPathUnit;
+                    dist += instance.m_pathUnits.m_buffer[(int) (num)].m_length;
+                    if (++num2 >= 262144)
+                    {
+                        CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                        return -1;
+                    }
+                }
+                return dist;
+            }
+            else
+            {
+                return unit.m_length;
+            }
+        }
     }
 }
