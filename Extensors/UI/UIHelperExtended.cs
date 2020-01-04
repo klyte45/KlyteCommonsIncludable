@@ -511,13 +511,16 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public UIColorField AddColorPickerNoLabel(string name, Color defaultValue, OnColorChanged eventCallback)
+        public UIColorField AddColorPickerNoLabel(string name, Color defaultValue, OnColorChanged eventCallback = null)
         {
-            if (eventCallback != null && !string.IsNullOrEmpty(name))
+            if (!string.IsNullOrEmpty(name))
             {
                 UIColorField colorField = KlyteMonoUtils.CreateColorField(m_root);
 
-                colorField.eventSelectedColorReleased += (cp, value) => eventCallback(value);
+                if (eventCallback != null)
+                {
+                    colorField.eventSelectedColorReleased += (cp, value) => eventCallback(value);
+                }
 
                 colorField.selectedColor = defaultValue;
 

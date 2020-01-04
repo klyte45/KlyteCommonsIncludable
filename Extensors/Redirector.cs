@@ -32,7 +32,7 @@ namespace Klyte.Commons.Extensors
 
         public static readonly MethodInfo semiPreventDefaultMI = new Func<bool>(() =>
         {
-            StackTrace stackTrace = new StackTrace();
+            var stackTrace = new StackTrace();
             StackFrame[] stackFrames = stackTrace.GetFrames();
             LogUtils.DoLog($"SemiPreventDefault fullStackTrace: \r\n {Environment.StackTrace}");
             for (int i = 2; i < stackFrames.Length; i++)
@@ -44,6 +44,8 @@ namespace Klyte.Commons.Extensors
             }
             return true;
         }).Method;
+
+        public static bool PreventDefault() => false;
 
         public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null) => m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
 
