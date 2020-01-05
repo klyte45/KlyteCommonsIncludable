@@ -60,6 +60,15 @@ namespace Klyte.Commons.Utils
             return @unchecked.StartsWith("VEHICLE_TITLE") || @unchecked.StartsWith("Trailer");
         }
 
+        public static void ReplaceVehicleModel(ushort idx, VehicleInfo newInfo)
+        {
+            VehicleManager instance = VehicleManager.instance;
+            CitizenManager.instance.ReleaseUnits(instance.m_vehicles.m_buffer[idx].m_citizenUnits);
+            instance.m_vehicles.m_buffer[idx].Unspawn(idx);
+            instance.m_vehicles.m_buffer[idx].Info = newInfo;
+            instance.m_vehicles.m_buffer[idx].Spawn(idx);
+            newInfo.m_vehicleAI.CreateVehicle(idx, ref instance.m_vehicles.m_buffer[idx]);
+        }
 
         #endregion
     }
