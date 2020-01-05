@@ -71,6 +71,8 @@ namespace Klyte.Commons.Utils
         #endregion
 
     }
+
+    [XmlRoot("ValueContainer")]
     public class ValueContainer<TKey, TValue> : IEnumerableIndex<TKey> where TKey : Enum
     {
         [XmlIgnore]

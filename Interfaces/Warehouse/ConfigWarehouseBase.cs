@@ -115,7 +115,30 @@ namespace Klyte.Commons.Interfaces
             {
                 if (File.Exists(result.ThisPath))
                 {
-                    result = Deserialize(File.ReadAllText(result.ThisPath));
+                    string text = File.ReadAllText(result.ThisPath);
+                    try
+                    {
+                        result = Deserialize(text);
+                        if (result == null)
+                        {
+                            result = new I
+                            {
+                                cityId = cityId,
+                                cityName = cityName
+                            };
+                            result.FallBackDefaultFile();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogUtils.DoLog($"{typeof(I)} CORRUPTED DATA! => Data:\n{text}\nException: {e.Message}\n{e.StackTrace}");
+                        result = new I
+                        {
+                            cityId = cityId,
+                            cityName = cityName
+                        };
+                        result.FallBackDefaultFile();
+                    }
                 }
                 else
                 {
@@ -222,8 +245,9 @@ namespace Klyte.Commons.Interfaces
         public virtual string GetDefaultStringValueForProperty(T i) => string.Empty;
 
         #region Serialization
-        private static I Deserialize(string data) => XmlUtils.DefaultXmlDeserialize<I>(data);
-        private static string Serialize(I data) => XmlUtils.DefaultXmlSerialize(data);
+        private static I Deserialize(string data) => XmlUtils.DefaultXmlDeserialize<I>(data) ?? new I();
+
+        private static string Serialize(I data) => XmlUtils.DefaultXmlSerialize(data, false);
         public void OnReleased() { }
         #endregion
 

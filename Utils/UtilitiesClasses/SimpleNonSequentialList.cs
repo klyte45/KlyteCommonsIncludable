@@ -76,6 +76,7 @@ namespace Klyte.Commons.Utils
         #endregion
 
     }
+    [XmlRoot("ValueContainer")]
     public class ValueContainer<TValue> : IIdentifiable
     {
         [XmlAttribute("id")]

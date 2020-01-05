@@ -41,7 +41,16 @@ namespace Klyte.Commons.Interfaces
                     string content = System.Text.Encoding.UTF8.GetString(storage);
                     LogUtils.DoLog($"{type} DATA => {content}");
                 }
-                instance.Instances[type] = basicInstance.Deserialize(type, storage);
+                try
+                {
+                    instance.Instances[type] = basicInstance.Deserialize(type, storage) ?? basicInstance;
+                }
+                catch (Exception e)
+                {
+                    string content = System.Text.Encoding.UTF8.GetString(storage);
+                    LogUtils.DoLog($"{type} CORRUPTED DATA! => Data:\n{content}\nException: {e.Message}\n{e.StackTrace}");
+                    instance.Instances[type] = null;
+                }
             }
         }
 

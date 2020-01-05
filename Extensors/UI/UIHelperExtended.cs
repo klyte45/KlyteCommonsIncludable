@@ -60,12 +60,13 @@ namespace Klyte.Commons.Extensors
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create button with no name or no event");
             return null;
         }
+        public object AddCheckbox(string text, bool defaultValue, OnCheckChanged eventCallback) => AddCheckbox(m_root, text, defaultValue, eventCallback);
 
-        public object AddCheckbox(string text, bool defaultValue, OnCheckChanged eventCallback)
+        public static UICheckBox AddCheckbox(UIComponent root, string text, bool defaultValue, OnCheckChanged eventCallback = null)
         {
-            if (eventCallback != null && !string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
-                var uICheckBox = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
+                var uICheckBox = root.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
                 uICheckBox.text = text;
                 uICheckBox.isChecked = defaultValue;
                 uICheckBox.eventCheckChanged += delegate (UIComponent c, bool isChecked)
@@ -74,7 +75,7 @@ namespace Klyte.Commons.Extensors
                 };
                 return uICheckBox;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create checkbox with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create checkbox with no name");
             return null;
         }
 
