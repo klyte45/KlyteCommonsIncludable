@@ -57,6 +57,7 @@ namespace Klyte.Commons.Interfaces
                 LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
                 foreach (Type t in instances)
                 {
+                    LogUtils.DoLog($"Redirector: {t}");
                     m_topObj.AddComponent(t);
                 }
                 if (typeof(C) != typeof(MonoBehaviour))
