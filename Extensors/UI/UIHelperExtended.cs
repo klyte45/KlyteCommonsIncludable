@@ -313,14 +313,21 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
+        public static UITextField AddTextfield(UIComponent parent, string text, string defaultContent, out UILabel label, out UIPanel panel)
+        {
+            panel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+            label = panel.Find<UILabel>("Label");
+            label.text = text;
+            UITextField uITextField = panel.Find<UITextField>("Text Field");
+            uITextField.text = defaultContent;
+            return uITextField;
+        }
+
         public object AddTextfield(string text, string defaultContent, OnTextChanged eventChangedCallback, OnTextSubmitted eventSubmittedCallback)
         {
             if ((eventChangedCallback != null || eventSubmittedCallback != null) && !string.IsNullOrEmpty(text))
             {
-                var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
-                uIPanel.Find<UILabel>("Label").text = text;
-                UITextField uITextField = uIPanel.Find<UITextField>("Text Field");
-                uITextField.text = defaultContent;
+                UITextField uITextField = AddTextfield(m_root, text, defaultContent, out _, out _);
                 uITextField.eventTextChanged += delegate (UIComponent c, string sel)
                 {
                     eventChangedCallback?.Invoke(sel);
@@ -486,21 +493,23 @@ namespace Klyte.Commons.Extensors
 
         }
 
-        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback) => AddColorPicker(name, defaultValue, eventCallback, out _);
+        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback) => AddColorPicker(name, defaultValue, eventCallback, out _, out _);
+        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback, out UILabel title) => AddColorPicker(name, defaultValue, eventCallback, out title, out _);
 
-        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback, out UILabel title)
+        public UIColorField AddColorPicker(string name, Color defaultValue, OnColorChanged eventCallback, out UILabel title, out UIPanel container)
         {
             if (eventCallback != null && !string.IsNullOrEmpty(name))
             {
-                var panel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
-                panel.name = "DropDownColorSelector";
-                title = panel.Find<UILabel>("Label");
+                container = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+                container.name = "DropDownColorSelector";
+                title = container.Find<UILabel>("Label");
                 title.text = name;
-                panel.autoLayoutDirection = LayoutDirection.Horizontal;
-                panel.wrapLayout = false;
-                panel.autoFitChildrenVertically = true;
-                GameObject.Destroy(panel.Find<UIDropDown>("Dropdown").gameObject);
-                UIColorField colorField = KlyteMonoUtils.CreateColorField(panel);
+                title.padding.top = 8;
+                container.autoLayoutDirection = LayoutDirection.Horizontal;
+                container.wrapLayout = false;
+                container.autoFitChildrenVertically = true;
+                GameObject.Destroy(container.Find<UIDropDown>("Dropdown").gameObject);
+                UIColorField colorField = KlyteMonoUtils.CreateColorField(container);
                 colorField.selectedColor = defaultValue;
 
                 colorField.eventSelectedColorReleased += (cp, value) => eventCallback(value);
@@ -509,6 +518,7 @@ namespace Klyte.Commons.Extensors
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name or no event");
             title = null;
+            container = null;
             return null;
         }
 

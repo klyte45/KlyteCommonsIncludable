@@ -123,7 +123,7 @@ namespace Klyte.Commons.Utils
             component.normalBgSprite = sprite;
             component.disabledBgSprite = sprite + "Disabled";
             component.hoveredBgSprite = baseSprite + "Focused";
-            component.focusedBgSprite = baseSprite + "Hovered"; 
+            component.focusedBgSprite = baseSprite + "Hovered";
             if (component is UIButton button)
             {
                 button.pressedBgSprite = isCheck ? sprite + "Pressed" : button.focusedBgSprite;
@@ -216,6 +216,7 @@ namespace Klyte.Commons.Utils
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x) => LimitWidth(x, x.minimumSize.x);
         [Obsolete("Use box version")]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
+        public static PropertyChangedEventHandler<Vector2> LimitWidth(UIInteractiveComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
         private static PropertyChangedEventHandler<Vector2> LimitWidthPrivate(UIComponent x, float maxWidth, bool alsoMinSize)
         {
             x.autoSize = true;
