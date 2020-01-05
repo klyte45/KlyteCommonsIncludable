@@ -1,15 +1,14 @@
 ﻿using ColossalFramework;
-using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Klyte.Commons.Utils
 {
     public class DistrictUtils
     {
-        #region Districts Utils
         public static Dictionary<string, int> GetValidDistricts()
         {
-            Dictionary<string, int> districts = new Dictionary<string, int>
+            var districts = new Dictionary<string, int>
             {
                 [$"<{Singleton<SimulationManager>.instance.m_metaData.m_CityName}>"] = 0
             };
@@ -17,7 +16,7 @@ namespace Klyte.Commons.Utils
             {
                 if ((Singleton<DistrictManager>.instance.m_districts.m_buffer[i].m_flags & District.Flags.Created) != District.Flags.None)
                 {
-                    String districtName = Singleton<DistrictManager>.instance.GetDistrictName(i);
+                    string districtName = Singleton<DistrictManager>.instance.GetDistrictName(i);
                     if (districts.ContainsKey(districtName))
                     {
                         districtName += $" (ID:{i})";
@@ -28,6 +27,5 @@ namespace Klyte.Commons.Utils
 
             return districts;
         }
-        #endregion
     }
 }
