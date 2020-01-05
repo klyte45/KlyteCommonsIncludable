@@ -377,7 +377,7 @@ namespace Klyte.Commons.Utils
                 catch { return new Type[0]; }
             })
                                          let y = t.BaseType
-                                         where t.IsClass && y != null && y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg
+                                         where t.IsClass && y != null && ((!typeTarg.IsGenericType && y == typeTarg) || (y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg))
                                          select t);
             var result = new List<Type>();
             if (CommonProperties.DebugMode)
