@@ -111,8 +111,9 @@ namespace Klyte.Commons.Utils
 
         private void Remove(TValue entry)
         {
-            m_items.Remove(entry);
             entry.OnEntryChanged -= CleanCache;
+            m_items.Remove(entry);
+            entry.OnEntryChanged += CleanCache;
         }
         internal void RemoveAtHour(int hour)
         {

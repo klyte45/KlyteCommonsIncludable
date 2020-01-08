@@ -1,7 +1,9 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.Math;
+using Klyte.Commons.Extensors;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Klyte.Commons.Utils
 {
@@ -35,23 +37,72 @@ namespace Klyte.Commons.Utils
             {
                 return -1;
             }
-
-            int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>("m_passengerCapacity", ai.GetType())(ai);
-            try
+            System.Reflection.FieldInfo fieldInfo = ai.GetType().GetField("m_passengerCapacity", RedirectorUtils.allFlags);
+            if (fieldInfo != null)
             {
-                if (!noLoop)
+                int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>(fieldInfo)(ai);
+                try
+                {
+                    if (!noLoop)
+                    {
+                        foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
+                        {
+                            capacity += trailer.m_info == null ? 0 : GetCapacity(trailer.m_info, trailer.m_info.m_vehicleAI, true);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogUtils.DoLog($"ERRO AO OBTER CAPACIDADE: [{info}] {e} {e.Message}\n{e.StackTrace}");
+                }
+                return capacity;
+            }
+            else
+            {
+                LogUtils.DoLog($"AI \"{ai.GetType()}\" in asset {info} has no passenger Field!");
+                return 0;
+            }
+        }
+        public static Dictionary<string, float> GetCapacityRelative(VehicleInfo info)
+        {
+            var relativeParts = new Dictionary<string, float>();
+            GetCapacityRelative(info, info.m_vehicleAI, ref relativeParts, out _);
+            return relativeParts;
+        }
+
+        private static void GetCapacityRelative<AI>(VehicleInfo info, AI ai, ref Dictionary<string, float> relativeParts, out int totalCapacity, bool noLoop = false) where AI : VehicleAI
+        {
+            if (info == null)
+            {
+                totalCapacity = 0;
+                return;
+            }
+
+            totalCapacity = ReflectionUtils.GetGetFieldDelegate<AI, int>("m_passengerCapacity", ai.GetType())(ai);
+            relativeParts[info.name] = totalCapacity;
+            if (!noLoop)
+            {
+                try
                 {
                     foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                     {
-                        capacity += trailer.m_info == null ? 0 : GetCapacity(trailer.m_info, trailer.m_info.m_vehicleAI, true);
+                        if (trailer.m_info != null)
+                        {
+                            GetCapacityRelative(trailer.m_info, trailer.m_info.m_vehicleAI, ref relativeParts, out int capacity, true);
+                            totalCapacity += capacity;
+                        }
+                    }
+
+                    for (int i = 0; i < relativeParts.Keys.Count; i++)
+                    {
+                        relativeParts[relativeParts.Keys.ElementAt(i)] /= totalCapacity;
                     }
                 }
+                catch (Exception e)
+                {
+                    LogUtils.DoLog($"ERRO AO OBTER CAPACIDADE REL: [{info}] {e} {e.Message}\n{e.StackTrace}");
+                }
             }
-            catch (Exception e)
-            {
-                LogUtils.DoLog("ERRO AO OBTER CAPACIDADE: [{0}] {1}", info, e.Message);
-            }
-            return capacity;
         }
 
         public static bool IsTrailer(PrefabInfo prefab)
