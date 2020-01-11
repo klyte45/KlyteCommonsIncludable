@@ -27,6 +27,14 @@ namespace Klyte.Commons.Utils
             return new FileInfo(folderName);
         }
         public static bool IsFileCreated(string fileName) => File.Exists(fileName);
+        public static bool TryGetWorkshopId(PrefabInfo info, out long workshopId)
+        {
+            workshopId = -1L;
+            return info != null && info.name != null && info.name.Contains(".") && long.TryParse(info.name.Split(new char[]
+            {
+                '.'
+            })[0], out workshopId);
+        }
 
         public static void ScanPrefabsFolders<T>(string filenameToSearch, Action<FileStream, T> action) where T : PrefabInfo
         {
