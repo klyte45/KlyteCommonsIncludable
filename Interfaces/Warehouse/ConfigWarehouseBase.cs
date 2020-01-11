@@ -1,17 +1,18 @@
 ﻿using ColossalFramework;
+using ICities;
 using Klyte.Commons.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
     [XmlRoot("ConfigWarehouse")]
-    public abstract class ConfigWarehouseBase<T, I> : SingletonLite<I> where T : Enum, IConvertible where I : ConfigWarehouseBase<T, I>, new()
+    public abstract class ConfigWarehouseBase<T, I> : SingletonLite<I>, ICities.ISerializableDataExtension where T : Enum, IConvertible where I : ConfigWarehouseBase<T, I>, new()
     {
 
-        protected const string LIST_SEPARATOR = "∂";
         public const string GLOBAL_CONFIG_INDEX = "DEFAULT";
         protected const int TYPE_STRING = 0x100;
         protected const int TYPE_INT = 0x200;
@@ -44,6 +45,9 @@ namespace Klyte.Commons.Interfaces
         public static void SetCurrentConfigString(T i, string value) => instance.CurrentLoadedCityConfig.SetString(i, value);
 
         public I CurrentLoadedCityConfig => GetConfig(CurrentCityId, CurrentCityName);
+
+       
+
 
         public I GetConfig2(string cityId, string cityName) => GetConfig(cityId, cityName);
         public I GetConfig2() => GetConfig(null, null);
@@ -249,6 +253,51 @@ namespace Klyte.Commons.Interfaces
 
         private static string Serialize(I data) => XmlUtils.DefaultXmlSerialize(data, false);
         public void OnReleased() { }
+
+        #endregion
+
+        #region Serialization
+        protected abstract string ID { get; }
+        [XmlIgnore]
+        public IManagers Managers => SerializableDataManager?.managers;
+        [XmlIgnore]
+        public ISerializableData SerializableDataManager { get; private set; }
+
+        public void OnCreated(ISerializableData serializableData) => SerializableDataManager = serializableData;
+        public void OnLoadData()
+        {
+            if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
+            {
+                return;
+            }
+            if (!SerializableDataManager.EnumerateData().Contains(ID))
+            {
+                return;
+            }
+            using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(ID));
+            byte[] storage = memoryStream.ToArray();
+            loadedCities[CurrentCityId] = Deserialize(System.Text.Encoding.UTF8.GetString(storage));
+        }
+
+        // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220
+        public void OnSaveData()
+        {
+            if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
+            {
+                return;
+            }
+
+            string serialData = Serialize(loadedCities[CurrentCityId]);
+            LogUtils.DoLog($"serialData: {serialData ?? "<NULL>"}");
+            if (serialData == null)
+            {
+                return;
+            }
+
+            byte[] data = System.Text.Encoding.UTF8.GetBytes(serialData);
+            SerializableDataManager.SaveData(ID, data);
+        }
+
         #endregion
 
         public event OnWarehouseConfigChanged EventOnPropertyChanged;

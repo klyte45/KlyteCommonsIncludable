@@ -4,6 +4,7 @@ using Klyte.Commons.Extensors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Klyte.Commons.Utils
 {
@@ -31,13 +32,16 @@ namespace Klyte.Commons.Utils
             return saida;
         }
         public static int GetCapacity(VehicleInfo info) => GetCapacity(info, info.m_vehicleAI);
+        private static Dictionary<Type, FieldInfo> m_cachedCapacityFieldForAiType = new Dictionary<Type, FieldInfo>();
+        private static Dictionary<Type, FieldInfo> m_cachedTransportInfoFieldsForAiType = new Dictionary<Type, FieldInfo>();
         public static int GetCapacity<AI>(VehicleInfo info, AI ai, bool noLoop = false) where AI : VehicleAI
         {
             if (info == null)
             {
                 return -1;
             }
-            System.Reflection.FieldInfo fieldInfo = ai.GetType().GetField("m_passengerCapacity", RedirectorUtils.allFlags);
+            System.Reflection.FieldInfo fieldInfo;
+            fieldInfo = GetVehicleCapacityField(ai);
             if (fieldInfo != null)
             {
                 int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>(fieldInfo)(ai);
@@ -63,6 +67,40 @@ namespace Klyte.Commons.Utils
                 return 0;
             }
         }
+
+        public static FieldInfo GetVehicleCapacityField<AI>(AI ai) where AI : VehicleAI
+        {
+            FieldInfo fieldInfo;
+            if (!m_cachedCapacityFieldForAiType.TryGetValue(ai.GetType(), out fieldInfo))
+            {
+                Type typeTry = ai.GetType();
+                do
+                {
+                    fieldInfo = typeTry.GetField("m_passengerCapacity", RedirectorUtils.allFlags);
+                    typeTry = typeTry.BaseType;
+                } while (typeTry != typeof(VehicleAI) && fieldInfo == null);
+                m_cachedCapacityFieldForAiType[ai.GetType()] = fieldInfo;
+            }
+
+            return fieldInfo;
+        }
+        public static FieldInfo GetTransportInfoField<AI>(AI ai) where AI : VehicleAI
+        {
+            FieldInfo fieldInfo;
+            if (!m_cachedTransportInfoFieldsForAiType.TryGetValue(ai.GetType(), out fieldInfo))
+            {
+                Type typeTry = ai.GetType();
+                do
+                {
+                    fieldInfo = typeTry.GetField("m_transportInfo", RedirectorUtils.allFlags);
+                    typeTry = typeTry.BaseType;
+                } while (typeTry != typeof(VehicleAI) && fieldInfo == null);
+                m_cachedTransportInfoFieldsForAiType[ai.GetType()] = fieldInfo;
+            }
+
+            return fieldInfo;
+        }
+
         public static Dictionary<string, float> GetCapacityRelative(VehicleInfo info)
         {
             var relativeParts = new Dictionary<string, float>();
@@ -78,7 +116,7 @@ namespace Klyte.Commons.Utils
                 return;
             }
 
-            totalCapacity = ReflectionUtils.GetGetFieldDelegate<AI, int>("m_passengerCapacity", ai.GetType())(ai);
+            totalCapacity = ReflectionUtils.GetGetFieldDelegate<AI, int>(GetVehicleCapacityField(ai))(ai);
             relativeParts[info.name] = totalCapacity;
             if (!noLoop)
             {
