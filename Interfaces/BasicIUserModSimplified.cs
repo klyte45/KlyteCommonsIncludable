@@ -22,7 +22,6 @@ namespace Klyte.Commons.Interfaces
     {
 
         public abstract string SimpleName { get; }
-        public abstract string IconName { get; }
         public virtual bool UseGroup9 => true;
         public abstract void LoadSettings();
         public abstract void DoLog(string fmt, params object[] args);

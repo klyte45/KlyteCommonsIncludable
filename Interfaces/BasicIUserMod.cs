@@ -12,6 +12,7 @@ namespace Klyte.Commons.Interfaces
         where C : MonoBehaviour
         where T : UICustomControl
     {
+        public abstract string IconName { get; }
         protected virtual float? TabWidth => null;
 
         private UIButton m_modPanelButton;
