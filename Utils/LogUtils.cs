@@ -38,12 +38,12 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static void PrintMethodIL(List<CodeInstruction> inst)
+        public static void PrintMethodIL(List<CodeInstruction> inst, bool force = false)
         {
-            if (CommonProperties.DebugMode)
+            if (force || CommonProperties.DebugMode)
             {
                 int j = 0;
-                LogUtils.DoLog($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+                Console.WriteLine($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
             }
         }
 
