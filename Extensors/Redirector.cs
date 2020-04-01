@@ -23,6 +23,7 @@ namespace Klyte.Commons.Extensors
     {
         #region Class Base
         private static readonly HarmonyInstance m_harmony = HarmonyInstance.Create($"com.klyte.redirectors.{CommonProperties.Acronym}");
+        private static readonly List<MethodInfo> m_patches = new List<MethodInfo>();
 
         private readonly List<DynamicMethod> m_detourList = new List<DynamicMethod>();
 
@@ -47,19 +48,22 @@ namespace Klyte.Commons.Extensors
 
         public static bool PreventDefault() => false;
 
-        public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null) => m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
-
-        public void OnDestroy()
+        public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null)
         {
-            foreach (DynamicMethod patch in m_detourList)
+
+            LogUtils.DoLog($"Adding patch! {oldMethod}");
+            m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
+            m_patches.Add(oldMethod);
+        }
+
+        public static void UnpatchAll()
+        {
+            LogUtils.DoLog($"Unpatching all: {m_harmony.Id}");
+            foreach (MethodInfo method in m_patches)
             {
-                foreach (HarmonyMethod method in patch.GetHarmonyMethods())
-                {
-                    GetHarmonyInstance().Unpatch(patch.GetBaseDefinition(), method.method);
-
-                }
-
+                m_harmony.Unpatch(method, HarmonyPatchType.All, m_harmony.Id);
             }
+            m_patches.Clear();
         }
 
         public void EnableDebug() => HarmonyInstance.DEBUG = true;

@@ -2,6 +2,7 @@
 using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
 using ColossalFramework.UI;
+using Harmony;
 using ICities;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
@@ -20,7 +21,6 @@ namespace Klyte.Commons.Interfaces
         where U : BasicIUserModSimplified<U, C>, new()
         where C : MonoBehaviour
     {
-
         public abstract string SimpleName { get; }
         public abstract string IconName { get; }
         public virtual bool UseGroup9 => true;
@@ -64,14 +64,6 @@ namespace Klyte.Commons.Interfaces
                 {
                     Controller = m_topObj.AddComponent<C>();
                 }
-
-                UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
-                if (toMainMenuButton != null)
-                {
-                    toMainMenuButton.isEnabled = false;
-                    toMainMenuButton.tooltipLocaleID = "K45_TO_MAIN_MENU_DISABLE_WARNING";
-                    toMainMenuButton.isTooltipLocalized = true;
-                }
             }
         }
 
@@ -86,10 +78,7 @@ namespace Klyte.Commons.Interfaces
 
         public void OnLevelUnloading()
         {
-            if (typeof(U).Assembly.GetName().Version.Revision != 9999)
-            {
-                Application.Quit();
-            }
+            Redirector.UnpatchAll();
         }
         public virtual void OnReleased() => OnLevelUnloading();
 
