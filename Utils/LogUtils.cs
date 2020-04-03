@@ -54,7 +54,7 @@ namespace Klyte.Commons.Utils
             if (force || CommonProperties.DebugMode)
             {
                 int j = 0;
-                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("X8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
             }
         }
 

@@ -11,8 +11,7 @@ namespace Klyte.Commons.Interfaces
         {
             StartActions();
             BasicIUserModSimplified<U, C>.Instance.ShowVersionInfoPopup();
-            BasicIUserModSimplified<U, C>.Instance.SearchIncompatibilities();
-            GameObject.Find("Esc").GetComponent<UIButton>().eventClick += (x, y) => GameObject.FindObjectOfType<ToolsModifierControl>().CloseEverything();
+            BasicIUserModSimplified<U, C>.Instance.SearchIncompatibilitiesModal();
         }
 
         protected virtual void StartActions() { }

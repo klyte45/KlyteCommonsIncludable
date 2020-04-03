@@ -1,6 +1,7 @@
 ﻿using ColossalFramework;
 using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
+using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
@@ -57,6 +58,11 @@ namespace Klyte.Commons.Interfaces
                 {
                     m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
                     Controller = m_topObj.AddComponent<C>();
+                }
+                UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
+                if (toMainMenuButton != null)
+                {
+                    toMainMenuButton.eventClick += (x, y) => GameObject.FindObjectOfType<ToolsModifierControl>().CloseEverything();
                 }
             }
         }
@@ -291,21 +297,25 @@ namespace Klyte.Commons.Interfaces
             }
             return false;
         }
-        public void SearchIncompatibilities()
+        public void SearchIncompatibilitiesModal()
         {
             try
             {
-                string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
+                Dictionary<ulong, string> notes = SearchIncompatibilities();
                 ExceptionPanel uIComponent = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
-                if (uIComponent != null && !notes.IsNullOrWhiteSpace())
+                if (uIComponent != null && notes != null && notes.Count > 0)
                 {
                     Cursor.lockState = CursorLockMode.None;
                     Cursor.visible = true;
                     BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
                     if (component != null)
                     {
-                        string title = $"{SimpleName.Replace("&", "and")} v{Version} - Incompatibility report";
-                        string text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the \"{SimpleName.Replace("&", "and")}\" work properly.\r\n\r\n";
+                        string title = $"{SimpleName.Replace("&", "and")} - Incompatibility report";
+                        string text;
+                        unchecked
+                        {
+                            text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the \"{SimpleName.Replace("&", "and")}\" work properly.\n\n{string.Join("\n", notes.Select(x => $"{x.Value} (id: {(x.Key == (ulong)-1 ? "<LOCAL>" : x.Key.ToString())})").ToArray())}";
+                        }
                         uIComponent.SetMessage(title, text, false);
                     }
                 }
@@ -319,6 +329,26 @@ namespace Klyte.Commons.Interfaces
                 DoErrorLog("showVersionInfoPopup ERROR {0} {1}", e.GetType(), e.Message);
             }
         }
+
+        public Dictionary<ulong, string> SearchIncompatibilities()
+        {
+            if (IncompatibleModList.Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
+            }
+        }
+        private static Dictionary<ulong, string> VerifyModsEnabled(List<ulong> modIds, List<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+            pi.assemblyCount > 0
+            && pi.isEnabled
+            && (modIds.Contains(pi.publishedFileID.AsUInt64) || pi.GetAssemblies().Where(x => modsDlls.Contains(x.GetName().Name)).Count() > 0)
+        ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
+
+        public virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
+        public virtual List<string> IncompatibleDllModList { get; } = new List<string>();
 
     }
 
