@@ -25,7 +25,7 @@ namespace Klyte.Commons.Utils
                 return;
             }
             var valueSerializer = new XmlSerializer(typeof(ValueContainer<TKey, TValue>), "");
-            LogUtils.DoErrorLog($"reader = {reader}; empty = {reader.IsEmptyElement}");
+            LogUtils.DoLog($"reader = {reader}; empty = {reader.IsEmptyElement}");
             reader.ReadStartElement();
             while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
             {

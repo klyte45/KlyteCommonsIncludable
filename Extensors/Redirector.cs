@@ -24,6 +24,7 @@ namespace Klyte.Commons.Extensors
         #region Class Base
         private static readonly HarmonyInstance m_harmony = HarmonyInstance.Create($"com.klyte.redirectors.{CommonProperties.Acronym}");
         private static readonly List<MethodInfo> m_patches = new List<MethodInfo>();
+        private static readonly List<Action> m_onUnpatchActions = new List<Action>();
 
         private readonly List<DynamicMethod> m_detourList = new List<DynamicMethod>();
 
@@ -55,6 +56,7 @@ namespace Klyte.Commons.Extensors
             m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
             m_patches.Add(oldMethod);
         }
+        public void AddUnpatchAction(Action unpatchAction) => m_onUnpatchActions.Add(unpatchAction);
 
         public static void UnpatchAll()
         {
@@ -63,6 +65,11 @@ namespace Klyte.Commons.Extensors
             {
                 m_harmony.Unpatch(method, HarmonyPatchType.All, m_harmony.Id);
             }
+            foreach (Action action in m_onUnpatchActions)
+            {
+                action?.Invoke();
+            }
+            m_onUnpatchActions.Clear();
             m_patches.Clear();
         }
 

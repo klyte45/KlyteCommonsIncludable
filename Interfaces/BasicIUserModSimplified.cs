@@ -2,7 +2,6 @@
 using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
 using ColossalFramework.UI;
-using Harmony;
 using ICities;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
@@ -19,7 +18,7 @@ namespace Klyte.Commons.Interfaces
 {
     public abstract class BasicIUserModSimplified<U, C> : IUserMod, ILoadingExtension
         where U : BasicIUserModSimplified<U, C>, new()
-        where C : MonoBehaviour
+        where C : BaseController<U, C>
     {
         public abstract string SimpleName { get; }
         public abstract string IconName { get; }
@@ -36,13 +35,16 @@ namespace Klyte.Commons.Interfaces
         public abstract string Description { get; }
         public C Controller { get; private set; }
 
-        public void OnCreated(ILoading loading)
+        public virtual void OnCreated(ILoading loading)
         {
-
+            if (loading == null || (!loading.loadingComplete && !IsValidLoadMode(loading)))
+            {
+                Redirector.UnpatchAll();
+            }
         }
+
         public void OnLevelLoaded(LoadMode mode)
         {
-
             OnLevelLoadedInherit(mode);
             OnLevelLoadingInternal();
         }
@@ -51,17 +53,9 @@ namespace Klyte.Commons.Interfaces
         {
             if (IsValidLoadMode(mode))
             {
-                m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
-                Type typeTarg = typeof(IRedirectable);
-                List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
-                LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
-                foreach (Type t in instances)
+                if (!typeof(C).IsGenericType)
                 {
-                    LogUtils.DoLog($"Redirector: {t}");
-                    m_topObj.AddComponent(t);
-                }
-                if (typeof(C) != typeof(MonoBehaviour))
-                {
+                    m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
                     Controller = m_topObj.AddComponent<C>();
                 }
             }
@@ -72,15 +66,35 @@ namespace Klyte.Commons.Interfaces
 
         }
 
-        private static bool IsValidLoadMode(LoadMode mode) => mode == LoadMode.LoadGame || mode == LoadMode.LoadScenario || mode == LoadMode.NewGame || mode == LoadMode.NewGameFromScenario;
-
+        protected virtual bool IsValidLoadMode(ILoading loading) => loading?.currentMode == AppMode.Game;
+        protected virtual bool IsValidLoadMode(LoadMode mode) => mode == LoadMode.LoadGame || mode == LoadMode.LoadScenario || mode == LoadMode.NewGame || mode == LoadMode.NewGameFromScenario;
         public string GeneralName => $"{SimpleName} (v{Version})";
 
         public void OnLevelUnloading()
         {
             Redirector.UnpatchAll();
+            PatchesApply();
         }
-        public virtual void OnReleased() => OnLevelUnloading();
+        public void OnReleased() { }
+
+        protected void PatchesApply()
+        {
+            m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
+            Type typeTarg = typeof(IRedirectable);
+            List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
+            LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
+            foreach (Type t in instances)
+            {
+                LogUtils.DoLog($"Redirector: {t}");
+                m_topObj.AddComponent(t);
+            }
+            OnPatchesApply();
+        }
+
+        protected virtual void OnPatchesApply() { }
+
+        public void OnEnabled() => PatchesApply();
+        public void OnDisabled() => Redirector.UnpatchAll();
 
         public static string MinorVersion => MajorVersion + "." + typeof(U).Assembly.GetName().Version.Build;
         public static string MajorVersion => typeof(U).Assembly.GetName().Version.Major + "." + typeof(U).Assembly.GetName().Version.Minor;
@@ -134,7 +148,7 @@ namespace Klyte.Commons.Interfaces
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
 
-            m_onSettingsUiComponent = new UIHelperExtension((UIHelper) helperDefault).Self ?? m_onSettingsUiComponent;
+            m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
 
             if (Locale.Get("K45_TEST_UP") != "OK")
             {
@@ -174,7 +188,7 @@ namespace Klyte.Commons.Interfaces
             var newSprites = new List<SpriteInfo>();
             TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
             TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
-            LogUtils.DoErrorLog($"ADDING {newSprites.Count} sprites!");
+            LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
 
@@ -276,6 +290,34 @@ namespace Klyte.Commons.Interfaces
                 }
             }
             return false;
+        }
+        public void SearchIncompatibilities()
+        {
+            try
+            {
+                string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
+                ExceptionPanel uIComponent = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
+                if (uIComponent != null && !notes.IsNullOrWhiteSpace())
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
+                    if (component != null)
+                    {
+                        string title = $"{SimpleName.Replace("&", "and")} v{Version} - Incompatibility report";
+                        string text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the \"{SimpleName.Replace("&", "and")}\" work properly.\r\n\r\n";
+                        uIComponent.SetMessage(title, text, false);
+                    }
+                }
+                else
+                {
+                    LogUtils.DoLog("PANEL NOT FOUND!!!!");
+                }
+            }
+            catch (Exception e)
+            {
+                DoErrorLog("showVersionInfoPopup ERROR {0} {1}", e.GetType(), e.Message);
+            }
         }
 
     }
