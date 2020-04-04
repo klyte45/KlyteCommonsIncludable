@@ -8,6 +8,7 @@ using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
 using Klyte.Commons.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -59,13 +60,25 @@ namespace Klyte.Commons.Interfaces
                     m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
                     Controller = m_topObj.AddComponent<C>();
                 }
-                UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
-                if (toMainMenuButton != null)
-                {
-                    toMainMenuButton.eventClick += (x, y) => GameObject.FindObjectOfType<ToolsModifierControl>().CloseEverything();
-                }
+                SimulationManager.instance.StartCoroutine(LevelUnloadBinds());
             }
         }
+
+        private IEnumerator LevelUnloadBinds()
+        {
+            yield return 0;
+            UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
+            if (toMainMenuButton != null)
+            {
+                toMainMenuButton.eventClick += (x, y) =>
+                {
+                    GameObject.FindObjectOfType<ToolsModifierControl>().CloseEverything();
+                    ExtraUnloadBinds();
+                };
+            }
+        }
+
+        protected virtual void ExtraUnloadBinds() { }
 
         protected virtual void OnLevelLoadingInternal()
         {
@@ -81,7 +94,7 @@ namespace Klyte.Commons.Interfaces
             Redirector.UnpatchAll();
             PatchesApply();
         }
-        public void OnReleased() { }
+        public virtual void OnReleased() { }
 
         protected void PatchesApply()
         {

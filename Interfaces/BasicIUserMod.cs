@@ -189,6 +189,11 @@ namespace Klyte.Commons.Interfaces
         public static SavedFloat ButtonPosX { get; } = new SavedFloat("K45_ButtonPosX_v2", Settings.gameSettingsFile, 5, true);
         public static SavedFloat ButtonPosY { get; } = new SavedFloat("K45_ButtonPosY_v2", Settings.gameSettingsFile, 60, true);
 
+        protected override void ExtraUnloadBinds()
+        {
+            base.ExtraUnloadBinds();
+            ClosePanel();
+        }
     }
 
 }

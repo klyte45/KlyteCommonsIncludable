@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Klyte.Commons.Interfaces
 {
-    public sealed class ExtensorContainer : SingletonLite<ExtensorContainer>, ISerializableDataExtension
+    public sealed class ExtensorContainer : Singleton<ExtensorContainer>, ISerializableDataExtension
     {
         public Dictionary<Type, IDataExtensor> Instances { get; private set; }
 
@@ -27,7 +27,7 @@ namespace Klyte.Commons.Interfaces
             foreach (Type type in instancesExt)
             {
                 LogUtils.DoLog($"LOADING DATA TYPE {type}");
-                var basicInstance = (IDataExtensor) type.GetConstructor(new Type[0]).Invoke(new Type[0]);
+                var basicInstance = (IDataExtensor)type.GetConstructor(new Type[0]).Invoke(new Type[0]);
                 if (!SerializableDataManager.EnumerateData().Contains(basicInstance.SaveId))
                 {
                     LogUtils.DoLog($"NO DATA TYPE {type}");
@@ -88,7 +88,13 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
-        public void OnReleased() { }
+        public void OnReleased()
+        {
+            foreach (IDataExtensor item in instance.Instances.Values)
+            {
+                item.OnReleased();
+            }
+        }
         #endregion
     }
 }
