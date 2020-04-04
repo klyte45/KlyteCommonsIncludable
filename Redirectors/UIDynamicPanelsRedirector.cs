@@ -13,7 +13,7 @@ namespace Klyte.Commons.Redirectors
 
         public static void PreInit(UIView view, UIDynamicPanels __instance)
         {
-            if (__instance.m_DynamicPanels.Where(x => x.name == K45DialogControl.PANEL_ID).Count() == 0)
+            if ((__instance.m_DynamicPanels?.Where(x => x?.name == K45DialogControl.PANEL_ID).Count() ?? -1) == 0)
             {
                 var listDynPanel = __instance.m_DynamicPanels.ToList();
                 listDynPanel.Add(K45DialogControl.CreatePanelInfo(view));

@@ -18,7 +18,8 @@ using static Klyte.Commons.Utils.K45DialogControl;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserModSimplified<U, C> : IUserMod, ILoadingExtension
+
+    public abstract class BasicIUserModSimplified<U, C> : IUserMod, ILoadingExtension, IViewStartActions
         where U : BasicIUserModSimplified<U, C>, new()
         where C : BaseController<U, C>
     {
@@ -353,6 +354,14 @@ namespace Klyte.Commons.Interfaces
             && pi.isEnabled
             && (modIds.Contains(pi.publishedFileID.AsUInt64) || pi.GetAssemblies().Where(x => modsDlls.Contains(x.GetName().Name)).Count() > 0)
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
+        public void OnViewStart()
+        {
+            ShowVersionInfoPopup();
+            SearchIncompatibilitiesModal();
+            ExtraOnViewStartActions();
+        }
+
+        protected virtual void ExtraOnViewStartActions() { }
 
         public virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
         public virtual List<string> IncompatibleDllModList { get; } = new List<string>();
