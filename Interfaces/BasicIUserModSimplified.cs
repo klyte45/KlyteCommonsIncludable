@@ -1,5 +1,4 @@
 ﻿using ColossalFramework;
-using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
@@ -15,6 +14,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using static ColossalFramework.UI.UITextureAtlas;
+using static Klyte.Commons.Utils.K45DialogControl;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -94,7 +94,11 @@ namespace Klyte.Commons.Interfaces
             Redirector.UnpatchAll();
             PatchesApply();
         }
-        public virtual void OnReleased() { }
+        public virtual void OnReleased()
+        {
+
+            PluginManager.instance.eventPluginsStateChanged -= SearchIncompatibilitiesModal;
+        }
 
         protected void PatchesApply()
         {
@@ -227,7 +231,8 @@ namespace Klyte.Commons.Interfaces
                 CreateGroup9(helper);
             }
 
-
+            ShowVersionInfoPopup();
+            SearchIncompatibilitiesModal();
             LogUtils.DoLog("End Loading Options");
         }
 
@@ -271,38 +276,23 @@ namespace Klyte.Commons.Interfaces
             {
                 try
                 {
-                    UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
-                    if (uIComponent != null)
+                    string title = $"{SimpleName} v{Version}";
+                    string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
+                    string text = $"{SimpleName} was updated! Release notes:\n\n{notes}\n\n<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Current Version: <color #FFFF00>{FullVersion}</color>";
+
+                    ShowModal(new BindProperties()
                     {
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                        BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                        if (component != null)
-                        {
-                            string title = $"{SimpleName.Replace("&", "and")} v{Version}";
-                            string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
-                            string text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
-                            string img = "IconMessage";
-                            component.SetProperties(TooltipHelper.Format(new string[]
-                            {
-                            "title",
-                            title,
-                            "message",
-                            text,
-                            "img",
-                            img
-                            }));
-                            needShowPopup = false;
-                            CurrentSaveVersion.value = FullVersion;
-                            return true;
-                        }
-                        return false;
-                    }
-                    else
-                    {
-                        LogUtils.DoLog("PANEL NOT FOUND!!!!");
-                        return false;
-                    }
+                        icon = IconName,
+                        showButton1 = true,
+                        textButton1 = "Okay!",
+                        messageAlign = UIHorizontalAlignment.Left,
+                        title = title,
+                        message = text,
+                    }, (x) => { });
+
+                    needShowPopup = false;
+                    CurrentSaveVersion.value = FullVersion;
+                    return true;
                 }
                 catch (Exception e)
                 {
@@ -316,22 +306,25 @@ namespace Klyte.Commons.Interfaces
             try
             {
                 Dictionary<ulong, string> notes = SearchIncompatibilities();
-                ExceptionPanel uIComponent = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
-                if (uIComponent != null && notes != null && notes.Count > 0)
+                if (notes != null && notes.Count > 0)
                 {
-                    Cursor.lockState = CursorLockMode.None;
-                    Cursor.visible = true;
-                    BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                    if (component != null)
+                    string title = $"{SimpleName} - Incompatibility report";
+                    string text;
+                    unchecked
                     {
-                        string title = $"{SimpleName.Replace("&", "and")} - Incompatibility report";
-                        string text;
-                        unchecked
-                        {
-                            text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the \"{SimpleName.Replace("&", "and")}\" work properly.\n\n{string.Join("\n", notes.Select(x => $"{x.Value} (id: {(x.Key == (ulong)-1 ? "<LOCAL>" : x.Key.ToString())})").ToArray())}";
-                        }
-                        uIComponent.SetMessage(title, text, false);
+                        text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the <color>{SimpleName}</color> work properly." +
+                            $"\n\n{string.Join("\n", notes.Select(x => $"\t -{x.Value} (id: {(x.Key == (ulong)-1 ? "<LOCAL>" : x.Key.ToString())})").ToArray())}" +
+                            $"\n\nDisable or unsubscribe them at main menu and try again!";
                     }
+                    ShowModal(new BindProperties()
+                    {
+                        icon = IconName,
+                        showButton1 = true,
+                        textButton1 = "Err... Okay!",
+                        messageAlign = UIHorizontalAlignment.Left,
+                        title = title,
+                        message = text,
+                    }, (x) => { });
                 }
                 else
                 {

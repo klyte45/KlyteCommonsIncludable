@@ -13,13 +13,12 @@ namespace Klyte.Commons.Redirectors
 
         public static void PreInit(UIView view, UIDynamicPanels __instance)
         {
-
-            LogUtils.DoWarnLog("PRE INIT!!!!");
-
-
-            var listDynPanel = __instance.m_DynamicPanels.ToList();
-            listDynPanel.Add(K45DialogControl.CreatePanelInfo(view));
-            __instance.m_DynamicPanels = listDynPanel.ToArray();            
+            if (__instance.m_DynamicPanels.Where(x => x.name == K45DialogControl.PANEL_ID).Count() == 0)
+            {
+                var listDynPanel = __instance.m_DynamicPanels.ToList();
+                listDynPanel.Add(K45DialogControl.CreatePanelInfo(view));
+                __instance.m_DynamicPanels = listDynPanel.ToArray();
+            }
         }
     }
 }
