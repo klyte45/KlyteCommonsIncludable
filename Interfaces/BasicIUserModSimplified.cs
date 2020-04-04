@@ -113,6 +113,7 @@ namespace Klyte.Commons.Interfaces
         protected virtual void OnPatchesApply() { }
 
         public void OnEnabled() => PatchesApply();
+
         public void OnDisabled() => Redirector.UnpatchAll();
 
         public static string MinorVersion => MajorVersion + "." + typeof(U).Assembly.GetName().Version.Build;

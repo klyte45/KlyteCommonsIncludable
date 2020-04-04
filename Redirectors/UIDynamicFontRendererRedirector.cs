@@ -18,20 +18,17 @@ namespace Klyte.Commons.Redirectors
         public const string TAG_LINE = "k45Symbol";
         public readonly string[] LEGACY_TAG_LINE = new string[] { "k45LineSymbol" };
 
-        private static UIDynamicFontRendererRedirector Instance { get; set; }
-
-        public Redirector RedirectorInstance => Instance;
+        public Redirector RedirectorInstance => this;
         #region Awake 
         public void Awake()
         {
-            LogUtils.DoWarnLog("AWAKE DYNAMIC FONT RENDERER!!!");
+            LogUtils.DoLog("AWAKE DYNAMIC FONT RENDERER!!!");
             if (GetList().Contains(TAG_LINE))
             {
                 LogUtils.DoWarnLog("AWAKE FAIL!!!");
                 Destroy(this);
                 return;
             }
-            Instance = this;
 
             GetList().Add(TAG_LINE);
             GetList().AddRange(LEGACY_TAG_LINE);
@@ -41,7 +38,7 @@ namespace Klyte.Commons.Redirectors
             AddRedirect(typeof(DynamicFontRenderer).GetMethod("RenderLine", RedirectorUtils.allFlags), null, null, GetType().GetMethod("RenderLineTranspile", RedirectorUtils.allFlags));
             AddUnpatchAction(() =>
             {
-                LogUtils.DoWarnLog("DESTROYING DYNAMIC FONT RENDERER!!!");
+                LogUtils.DoLog("DESTROYING DYNAMIC FONT RENDERER!!!");
                 GetList().Remove(TAG_LINE);
                 GetList().RemoveAll((x) => LEGACY_TAG_LINE.Contains(x));
             });

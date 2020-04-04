@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
         {
             var container = new GameObject();
             container.transform.parent = parent;
-            uiItem = (T) container.AddComponent(typeof(T));
+            uiItem = (T)container.AddComponent(typeof(T));
             if (name != null)
             {
                 container.name = name;
@@ -117,16 +117,16 @@ namespace Klyte.Commons.Utils
 
             component.textColor = new Color32(255, 255, 255, 255);
         }
-        public static void InitButtonFull<T>(T component, bool isCheck, string baseSprite) where T : UIInteractiveComponent
+        public static void InitButtonFull<T>(T component, bool isCheck, string baseSprite, bool noCaps = false) where T : UIInteractiveComponent
         {
             string sprite = baseSprite;
             component.normalBgSprite = sprite;
-            component.disabledBgSprite = sprite + "Disabled";
-            component.hoveredBgSprite = baseSprite + "Focused";
-            component.focusedBgSprite = baseSprite + "Hovered";
+            component.disabledBgSprite = sprite + (noCaps ? "disabled" : "Disabled");
+            component.hoveredBgSprite = baseSprite + (noCaps ? "focused" : "Focused");
+            component.focusedBgSprite = baseSprite + (noCaps ? "hovered" : "Hovered");
             if (component is UIButton button)
             {
-                button.pressedBgSprite = isCheck ? sprite + "Pressed" : button.focusedBgSprite;
+                button.pressedBgSprite = isCheck ? sprite + (noCaps ? "pressed" : "Pressed") : button.focusedBgSprite;
             }
             component.textColor = new Color32(255, 255, 255, 255);
         }
@@ -170,7 +170,7 @@ namespace Klyte.Commons.Utils
 
         public UISlider GenerateSliderField(UIHelperExtension uiHelper, OnValueChanged action, out UILabel label, out UIPanel container)
         {
-            var budgetMultiplier = (UISlider) uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
+            var budgetMultiplier = (UISlider)uiHelper.AddSlider("", 0f, 5, 0.05f, 1, action);
             label = budgetMultiplier.transform.parent.GetComponentInChildren<UILabel>();
             label.autoSize = true;
             label.wordWrap = false;
@@ -279,7 +279,7 @@ namespace Klyte.Commons.Utils
             scrollablePanel.verticalScrollbar = scrollbar;
             scrollablePanel.eventMouseWheel += delegate (UIComponent component, UIMouseEventParameter param)
             {
-                ((UIScrollablePanel) component).scrollPosition += new Vector2(0f, Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel) component).verticalScrollbar.incrementAmount);
+                ((UIScrollablePanel)component).scrollPosition += new Vector2(0f, Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).verticalScrollbar.incrementAmount);
             };
 
             return new UIHelperExtension(scrollablePanel);
@@ -336,7 +336,7 @@ namespace Klyte.Commons.Utils
             scrollablePanel.horizontalScrollbar = scrollbar;
             scrollablePanel.eventMouseWheel += delegate (UIComponent component, UIMouseEventParameter param)
             {
-                ((UIScrollablePanel) component).scrollPosition += new Vector2(Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel) component).horizontalScrollbar.incrementAmount, 0);
+                ((UIScrollablePanel)component).scrollPosition += new Vector2(Mathf.Sign(param.wheelDelta) * -1f * ((UIScrollablePanel)component).horizontalScrollbar.incrementAmount, 0);
             };
 
             return new UIHelperExtension(scrollablePanel);
@@ -381,20 +381,20 @@ namespace Klyte.Commons.Utils
                 {
                     try
                     {
-                        Color32 targetColor = ColorExtensions.FromRGB(((UITextField) x).text);
+                        Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
                         dropdown.selectedColor = targetColor;
                         popup.color = targetColor;
-                        ((UITextField) x).textColor = Color.white;
-                        ((UITextField) x).text = targetColor.ToRGB();
+                        ((UITextField)x).textColor = Color.white;
+                        ((UITextField)x).text = targetColor.ToRGB();
                     }
                     catch
                     {
-                        ((UITextField) x).textColor = Color.red;
+                        ((UITextField)x).textColor = Color.red;
                     }
                 }
             };
-            popup.eventColorUpdated += (x) => textField.text = ((Color32) x).ToRGB();
-            textField.text = ((Color32) popup.color).ToRGB();
+            popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();
+            textField.text = ((Color32)popup.color).ToRGB();
         }
 
         #endregion
