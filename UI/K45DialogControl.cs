@@ -20,7 +20,7 @@ namespace Klyte.Commons.Utils
 
             KlyteMonoUtils.CreateUIElement(out UIPanel mainPanel, null, PANEL_ID);
             mainPanel.enabled = false;
-            mainPanel.maximumSize = new Vector2(0, view.fixedHeight - 300);
+            mainPanel.maximumSize = new Vector2(0, view.fixedHeight);
             mainPanel.minimumSize = new Vector2(800, 70);
             mainPanel.backgroundSprite = "MenuPanel2";
             mainPanel.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
