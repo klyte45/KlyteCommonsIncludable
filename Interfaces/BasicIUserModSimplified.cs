@@ -280,7 +280,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 catch (Exception e)
                 {
-                    DoErrorLog("showVersionInfoPopup ERROR {0} {1}", e.GetType(), e.Message);
+                    DoErrorLog("showVersionInfoPopup ERROR {0} {1}\n{2}", e.GetType(), e.Message,e.StackTrace);
                 }
             }
             return false;
@@ -317,7 +317,7 @@ namespace Klyte.Commons.Interfaces
             }
             catch (Exception e)
             {
-                DoErrorLog("showVersionInfoPopup ERROR {0} {1}", e.GetType(), e.Message);
+                DoErrorLog("SearchIncompatibilitiesModal ERROR {0} {1}\n{2}", e.GetType(), e.Message, e.StackTrace);
             }
         }
 
