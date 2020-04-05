@@ -1,8 +1,10 @@
 ﻿using ColossalFramework.DataBinding;
+using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensors;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -10,6 +12,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
+        public const string VERSION = "20200405";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -17,7 +20,7 @@ namespace Klyte.Commons.Utils
 
             KlyteMonoUtils.CreateUIElement(out UIPanel mainPanel, null, PANEL_ID);
             mainPanel.enabled = false;
-            mainPanel.maximumSize = new Vector2(800, view.fixedHeight - 300);
+            mainPanel.maximumSize = new Vector2(0, view.fixedHeight - 300);
             mainPanel.minimumSize = new Vector2(800, 70);
             mainPanel.backgroundSprite = "MenuPanel2";
             mainPanel.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
@@ -29,7 +32,7 @@ namespace Klyte.Commons.Utils
 
             #region Title
             KlyteMonoUtils.CreateUIElement(out UIPanel titleContainer, mainPanel.transform, "TitleContainer");
-            titleContainer.size = new Vector2(800, 40);
+            titleContainer.size = new Vector2(mainPanel.width, 40);
 
 
             KlyteMonoUtils.CreateUIElement(out UILabel title, titleContainer.transform, "Title");
@@ -42,10 +45,10 @@ namespace Klyte.Commons.Utils
 
 
             KlyteMonoUtils.CreateUIElement(out UISprite modIcon, titleContainer.transform, "ModIcon", new Vector4(5, 5, 32, 32));
+            modIcon.tooltip = $"v{VERSION}{CommonProperties.Acronym}";
 
             KlyteMonoUtils.CreateUIElement(out UIButton closeButton, titleContainer.transform, "CloseButton");
-            closeButton.pivot = UIPivotPoint.TopRight;
-            closeButton.area = new Vector4(mainPanel.width - 5, 3, 32, 32);
+            closeButton.area = new Vector4(mainPanel.width - 37, 3, 32, 32);
             closeButton.normalBgSprite = "buttonclose";
             closeButton.hoveredBgSprite = "buttonclosehover";
             closeButton.pressedBgSprite = "buttonclosepressed";
@@ -157,6 +160,7 @@ namespace Klyte.Commons.Utils
             m_modIcon = m_titleContainer.Find<UISprite>("ModIcon");
             m_closeButton = m_titleContainer.Find<UIButton>("CloseButton");
             m_boxText = m_mainPanel.Find<UILabel>("BoxText");
+            m_buttonSupContainer = m_mainPanel.Find<UIPanel>("ButtonSupContainer");
 
             m_button1 = m_mainPanel.Find<UIButton>("ButtonAction1");
             m_button2 = m_mainPanel.Find<UIButton>("ButtonAction2");
@@ -179,13 +183,12 @@ namespace Klyte.Commons.Utils
             boxContainerTitle.relativePosition = new Vector3(0, 2);
 
             //This action allow centralize all calls to single object, coming from any mod
-            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Action<int>>((Dictionary<string, object> properties, Action<int> callback) => Enqueue(BindProperties.FromDictionary(properties), callback));
+            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => Enqueue(BindProperties.FromDictionary(properties), callback));
 
             m_closeButton.eventClicked += (x, y) => Close(0);
 
             m_mainPanel.enabled = true;
             #endregion
-
         }
 
         private void OnButton1() => Close(1);
@@ -196,7 +199,7 @@ namespace Klyte.Commons.Utils
 
         private void OnButton4() => Close(4);
 
-        private void Enqueue(BindProperties properties, Action<int> callback)
+        private void Enqueue(BindProperties properties, Func<int, bool> callback)
         {
             if (m_currentCallback == null)
             {
@@ -212,15 +215,17 @@ namespace Klyte.Commons.Utils
 
         private void Close(int result)
         {
-            m_currentCallback?.Invoke(result);
-            m_currentCallback = null;
-            UIView.library.Hide(PANEL_ID);
-            if (m_modalStack.Count > 0)
+            if (m_currentCallback?.Invoke(result) ?? true)
             {
-                Tuple<BindProperties, Action<int>> next = m_modalStack.Dequeue();
-                UIView.library.ShowModal(PANEL_ID);
-                m_currentCallback = next.Second;
-                SetProperties(next.First);
+                m_currentCallback = null;
+                UIView.library.Hide(PANEL_ID);
+                if (m_modalStack.Count > 0)
+                {
+                    Tuple<BindProperties, Func<int, bool>> next = m_modalStack.Dequeue();
+                    UIView.library.ShowModal(PANEL_ID);
+                    m_currentCallback = next.Second;
+                    SetProperties(next.First);
+                }
             }
         }
 
@@ -239,11 +244,26 @@ namespace Klyte.Commons.Utils
             m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2;
             m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3;
             m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4;
+
+            float width;
+            if (propertiesToSet.useFullWindowWidth)
+            {
+                width = UIView.GetAView().fixedWidth - 100;
+            }
+            else
+            {
+                width = 800;
+            }
+            m_mainPanel.width = width;
+            m_closeButton.area = new Vector4(width - 37, 3, 32, 32);
+            m_titleContainer.width = width;
+            m_boxText.width = width;
+            m_buttonSupContainer.width = width;
         }
 
-        private static Action<int> m_currentCallback;
+        private static Func<int, bool> m_currentCallback;
         //queue to store the modal order
-        private static readonly Queue<Tuple<BindProperties, Action<int>>> m_modalStack = new Queue<Tuple<BindProperties, Action<int>>>();
+        private static readonly Queue<Tuple<BindProperties, Func<int, bool>>> m_modalStack = new Queue<Tuple<BindProperties, Func<int, bool>>>();
 
         private UIPanel m_mainPanel;
         private UIPanel m_titleContainer;
@@ -251,20 +271,32 @@ namespace Klyte.Commons.Utils
         private UISprite m_modIcon;
         private UIButton m_closeButton;
         private UILabel m_boxText;
+        private UIPanel m_buttonSupContainer;
         private UIButton m_button1;
         private UIButton m_button2;
         private UIButton m_button3;
         private UIButton m_button4;
-        private BindPropertyByKey m_properties;
+        private BindPropertyByKey m_properties;        
 
-        public static void ShowModal(BindProperties properties, Action<int> action)
+        public static void ShowModal(BindProperties properties, Func<int, bool> action)
+        {
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, action));
+            }
+            else
+            {
+                ShowModalInternal(properties, action);
+            }
+        }
+
+        private static void ShowModalInternal(BindProperties properties, Func<int, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent.objectUserData is Action<Dictionary<string, object>, Action<int>> addAction)
+            if (uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 addAction(properties.ToDictionary(), action);
             }
-
         }
 
         internal struct BindProperties
@@ -282,6 +314,7 @@ namespace Klyte.Commons.Utils
             public string textButton2;
             public string textButton3;
             public string textButton4;
+            public bool useFullWindowWidth;
 
             public static BindProperties FromDictionary(Dictionary<string, object> dict)
             {
@@ -303,6 +336,7 @@ namespace Klyte.Commons.Utils
                         case "textButton2": result.textButton2 = (string)kv.Value; break;
                         case "textButton3": result.textButton3 = (string)kv.Value; break;
                         case "textButton4": result.textButton4 = (string)kv.Value; break;
+                        case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
                     }
                 }
                 return result;
@@ -324,7 +358,8 @@ namespace Klyte.Commons.Utils
                     ["textButton1"] = textButton1,
                     ["textButton2"] = textButton2,
                     ["textButton3"] = textButton3,
-                    ["textButton4"] = textButton4
+                    ["textButton4"] = textButton4,
+                    ["useFullWindowWidth"] = useFullWindowWidth,
                 };
             }
 

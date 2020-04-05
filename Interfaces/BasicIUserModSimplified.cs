@@ -272,7 +272,7 @@ namespace Klyte.Commons.Interfaces
                         messageAlign = UIHorizontalAlignment.Left,
                         title = title,
                         message = text,
-                    }, (x) => { });
+                    }, (x) => true);
 
                     needShowPopup = false;
                     CurrentSaveVersion.value = FullVersion;
@@ -308,7 +308,7 @@ namespace Klyte.Commons.Interfaces
                         messageAlign = UIHorizontalAlignment.Left,
                         title = title,
                         message = text,
-                    }, (x) => { });
+                    }, (x) => true);
                 }
                 else
                 {
