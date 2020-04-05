@@ -102,15 +102,7 @@ namespace Klyte.Commons.Interfaces
 
         protected void PatchesApply()
         {
-            m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
-            Type typeTarg = typeof(IRedirectable);
-            List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
-            LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
-            foreach (Type t in instances)
-            {
-                LogUtils.DoLog($"Redirector: {t}");
-                m_topObj.AddComponent(t);
-            }
+            Redirector.PatchAll();
             OnPatchesApply();
         }
 

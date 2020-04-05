@@ -72,6 +72,18 @@ namespace Klyte.Commons.Extensors
             m_onUnpatchActions.Clear();
             m_patches.Clear();
         }
+        public static void PatchAll()
+        {
+            GameObject m_topObj = GameObject.Find("k45_Redirectors") ?? new GameObject("k45_Redirectors");
+            Type typeTarg = typeof(IRedirectable);
+            List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, typeTarg);
+            LogUtils.DoLog($"Found Redirectors: {instances.Count}");
+            foreach (Type t in instances)
+            {
+                LogUtils.DoLog($"Redirector: {t}");
+                m_topObj.AddComponent(t);
+            }
+        }
 
         public void EnableDebug() => HarmonyInstance.DEBUG = true;
         public void DisableDebug() => HarmonyInstance.DEBUG = false;
