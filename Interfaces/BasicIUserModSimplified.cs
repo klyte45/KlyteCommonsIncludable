@@ -28,7 +28,7 @@ namespace Klyte.Commons.Interfaces
         public virtual bool UseGroup9 => true;
         public virtual void DoLog(string fmt, params object[] args) => LogUtils.DoLog(fmt, args);
         public virtual void DoErrorLog(string fmt, params object[] args) => LogUtils.DoErrorLog(fmt, args);
-        public abstract void TopSettingsUI(UIHelperExtension ext);
+        public virtual void TopSettingsUI(UIHelperExtension ext) { }
 
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
@@ -116,7 +116,15 @@ namespace Klyte.Commons.Interfaces
 
         protected virtual void OnPatchesApply() { }
 
-        public void OnEnabled() => PatchesApply();
+        public void OnEnabled()
+        {
+            if (CurrentSaveVersion.value != FullVersion)
+            {
+                needShowPopup = true;
+            }
+            FileUtils.EnsureFolderCreation(CommonProperties.ModRootFolder);
+            PatchesApply();
+        }
 
         public void OnDisabled() => Redirector.UnpatchAll();
 
@@ -149,14 +157,6 @@ namespace Klyte.Commons.Interfaces
 
         public static U m_instance = new U();
         public static U Instance => m_instance;
-
-        protected void Construct()
-        {
-            if (CurrentSaveVersion.value != FullVersion)
-            {
-                needShowPopup = true;
-            }
-        }
 
         private UIComponent m_onSettingsUiComponent;
         private bool m_showLangDropDown = false;

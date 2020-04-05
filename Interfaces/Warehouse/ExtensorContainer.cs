@@ -32,6 +32,7 @@ namespace Klyte.Commons.Interfaces
                 {
                     LogUtils.DoLog($"NO DATA TYPE {type}");
                     instance.Instances[type] = basicInstance;
+                    basicInstance.LoadDefaults();
                     continue;
                 }
                 using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId));

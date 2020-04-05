@@ -8,6 +8,8 @@ namespace Klyte.Commons.Interfaces
     public interface IDataExtensor
     {
         string SaveId { get; }
+
+        void LoadDefaults();
         IDataExtensor Deserialize(Type type, byte[] data);
         byte[] Serialize();
         void OnReleased();
@@ -33,5 +35,7 @@ namespace Klyte.Commons.Interfaces
         public IDataExtensor Deserialize(Type type, byte[] data) => XmlUtils.DefaultXmlDeserialize<U>(Encoding.UTF8.GetString(data));
         public byte[] Serialize() => Encoding.UTF8.GetBytes(XmlUtils.DefaultXmlSerialize((U)this, false));
         public virtual void OnReleased() { }
+
+        public virtual void LoadDefaults() { }
     }
 }
