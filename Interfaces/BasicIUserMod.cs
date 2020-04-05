@@ -14,9 +14,9 @@ namespace Klyte.Commons.Interfaces
     {
         protected virtual float? TabWidth => null;
 
-        private UIButton m_modPanelButton;
-        private UITabstrip m_modsTabstrip;
-        private UIPanel m_modsPanel;
+        private static UIButton m_modPanelButton;
+        private static UITabstrip m_modsTabstrip;
+        private static UIPanel m_modsPanel;
 
         protected sealed override void OnLevelLoadedInherit(LoadMode mode)
         {

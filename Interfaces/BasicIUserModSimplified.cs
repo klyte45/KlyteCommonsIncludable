@@ -26,7 +26,6 @@ namespace Klyte.Commons.Interfaces
         public abstract string SimpleName { get; }
         public abstract string IconName { get; }
         public virtual bool UseGroup9 => true;
-        public abstract void LoadSettings();
         public virtual void DoLog(string fmt, params object[] args) => LogUtils.DoLog(fmt, args);
         public virtual void DoErrorLog(string fmt, params object[] args) => LogUtils.DoErrorLog(fmt, args);
         public abstract void TopSettingsUI(UIHelperExtension ext);
@@ -36,7 +35,7 @@ namespace Klyte.Commons.Interfaces
 
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
-        public C Controller { get; private set; }
+        public static C Controller { get; private set; }
 
         public virtual void OnCreated(ILoading loading)
         {
@@ -148,19 +147,11 @@ namespace Klyte.Commons.Interfaces
         private SavedString CurrentSaveVersion { get; } = new SavedString(CommonProperties.Acronym + "SaveVersion", Settings.gameSettingsFile, "null", true);
         public static bool IsCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
 
-        public static U Instance { get; set; }
+        public static U m_instance = new U();
+        public static U Instance => m_instance;
 
         protected void Construct()
         {
-            Instance = this as U;
-            Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " LOADING ");
-            LoadSettings();
-            Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " SETTING FILES");
-            if (DebugMode.value)
-            {
-                Debug.LogWarningFormat("currentSaveVersion.value = {0}, fullVersion = {1}", CurrentSaveVersion.value, FullVersion);
-            }
-
             if (CurrentSaveVersion.value != FullVersion)
             {
                 needShowPopup = true;
