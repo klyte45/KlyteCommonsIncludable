@@ -17,8 +17,8 @@ namespace Klyte.Commons.Redirectors
             System.Collections.Generic.List<Type> impls = ReflectionUtils.GetInterfaceImplementations(typeof(IViewStartActions), typeof(UIViewRedirector));
             foreach (Type impl in impls)
             {
-                var inst = (IViewStartActions)impl.GetConstructor(new Type[0])?.Invoke(new object[0]);
-                inst?.OnViewStart(); 
+                var inst =impl.GetConstructor(new Type[0])?.Invoke(new object[0]) as IViewStartActions;
+                inst?.OnViewStart();
             }
         }
     }
