@@ -25,7 +25,7 @@ namespace Klyte.Commons.Redirectors
             LogUtils.DoLog("AWAKE DYNAMIC FONT RENDERER!!!");
             if (GetList().Contains(TAG_LINE))
             {
-                LogUtils.DoWarnLog("AWAKE FAIL!!!");
+                LogUtils.DoLog("ALREADY AWAKEN!!!");
                 Destroy(this);
                 return;
             }

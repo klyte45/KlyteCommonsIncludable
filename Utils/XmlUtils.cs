@@ -29,7 +29,7 @@ namespace Klyte.Commons.Utils
                 using var reader = XmlReader.Create(tr);
                 if (xmlser.CanDeserialize(reader))
                 {
-                    var val = (T) xmlser.Deserialize(reader);
+                    var val = (T)xmlser.Deserialize(reader);
                     return val;
                 }
                 else

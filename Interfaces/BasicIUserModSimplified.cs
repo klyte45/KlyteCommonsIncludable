@@ -27,8 +27,8 @@ namespace Klyte.Commons.Interfaces
         public abstract string IconName { get; }
         public virtual bool UseGroup9 => true;
         public abstract void LoadSettings();
-        public abstract void DoLog(string fmt, params object[] args);
-        public abstract void DoErrorLog(string fmt, params object[] args);
+        public virtual void DoLog(string fmt, params object[] args) => LogUtils.DoLog(fmt, args);
+        public virtual void DoErrorLog(string fmt, params object[] args) => LogUtils.DoErrorLog(fmt, args);
         public abstract void TopSettingsUI(UIHelperExtension ext);
 
         private GameObject m_topObj;
