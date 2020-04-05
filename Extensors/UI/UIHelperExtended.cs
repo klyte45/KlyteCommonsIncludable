@@ -71,7 +71,7 @@ namespace Klyte.Commons.Extensors
                 uICheckBox.isChecked = defaultValue;
                 uICheckBox.eventCheckChanged += delegate (UIComponent c, bool isChecked)
                 {
-                    eventCallback(isChecked);
+                    eventCallback?.Invoke(isChecked);
                 };
                 return uICheckBox;
             }

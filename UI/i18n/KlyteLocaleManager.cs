@@ -169,7 +169,7 @@ namespace Klyte.Commons.i18n
 
 
 
-                m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[k] = value.Replace("\\n", "\n");
+                m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[k] = value.Replace("\\n", "\n").Replace("\\t", "\t");
             }
         }
 
