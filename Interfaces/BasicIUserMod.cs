@@ -35,7 +35,7 @@ namespace Klyte.Commons.Interfaces
                 doneButton.normalBgSprite = "GenericPanel";
                 doneButton.width = 100f;
                 doneButton.height = 50f;
-                doneButton.relativePosition = new Vector2(-40f, 40f);
+                doneButton.relativePosition = new Vector2(0f, -52);
                 doneButton.text = "Done";
                 doneButton.hoveredTextColor = new Color32(0, byte.MaxValue, byte.MaxValue, 1);
                 doneButton.Hide();
@@ -65,7 +65,7 @@ namespace Klyte.Commons.Interfaces
                 m_modPanelButton = bg.AddUIComponent<UIButton>();
                 m_modPanelButton.disabledTextColor = new Color32(128, 128, 128, byte.MaxValue);
                 KlyteMonoUtils.InitButton(m_modPanelButton, false, KlyteResourceLoader.GetDefaultSpriteNameFor(CommonsSpriteNames.K45_K45Button), false);
-                m_modPanelButton.relativePosition = new Vector3(5f, 0f);
+                m_modPanelButton.relativePosition = new Vector3(10, 4f);
                 m_modPanelButton.size = new Vector2(32, 32);
                 m_modPanelButton.name = "K45_ModsButton";
                 m_modPanelButton.zOrder = 11;
