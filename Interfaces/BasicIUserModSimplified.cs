@@ -332,7 +332,7 @@ namespace Klyte.Commons.Interfaces
                 return VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
             }
         }
-        private static Dictionary<ulong, string> VerifyModsEnabled(List<ulong> modIds, List<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+        public static Dictionary<ulong, string> VerifyModsEnabled(List<ulong> modIds, List<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
             && pi.isEnabled
             && (modIds.Contains(pi.publishedFileID.AsUInt64) || pi.GetAssemblies().Where(x => modsDlls.Contains(x.GetName().Name)).Count() > 0)
