@@ -1,4 +1,5 @@
 ﻿using ColossalFramework;
+using ColossalFramework.Threading;
 using ICities;
 using Klyte.Commons.Utils;
 using System;
@@ -10,6 +11,8 @@ namespace Klyte.Commons.Interfaces
 {
     public sealed class ExtensorContainer : Singleton<ExtensorContainer>, ISerializableDataExtension
     {
+        public static event Action OnDataLoaded;
+
         public Dictionary<Type, IDataExtensor> Instances { get; private set; }
 
         #region Serialization
@@ -53,6 +56,12 @@ namespace Klyte.Commons.Interfaces
                     instance.Instances[type] = null;
                 }
             }
+
+            ThreadHelper.dispatcher.Dispatch(() =>
+            {
+                OnDataLoaded?.Invoke();
+                OnDataLoaded = null;
+            });
         }
 
         // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220
