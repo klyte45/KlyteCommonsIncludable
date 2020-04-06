@@ -1,6 +1,5 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.UI;
-using Klyte.Commons.Utils;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -34,7 +33,7 @@ namespace Klyte.Commons.Utils
 
             KlyteMonoUtils.CreateUIElement(out UIPanel contentContainer, null);
             contentContainer.name = "Container";
-            contentContainer.area = new Vector4(15, 0, stripMain.tabContainer.width, stripMain.tabContainer.height);
+            contentContainer.size = new Vector4(stripMain.tabContainer.width, stripMain.tabContainer.height);
             stripMain.AddTab(objectName, tab.gameObject, contentContainer.gameObject);
             GameObject go;
             if (scroll)
@@ -48,7 +47,7 @@ namespace Klyte.Commons.Utils
             }
             if (typeof(T) != typeof(UICustomControl))
             {
-              return go.AddComponent<T>();
+                return go.AddComponent<T>();
             }
             return null;
         }

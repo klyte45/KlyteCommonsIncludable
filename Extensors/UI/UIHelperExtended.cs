@@ -69,10 +69,14 @@ namespace Klyte.Commons.Extensors
                 var uICheckBox = root.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
                 uICheckBox.text = text;
                 uICheckBox.isChecked = defaultValue;
-                uICheckBox.eventCheckChanged += delegate (UIComponent c, bool isChecked)
+                if (eventCallback != null)
                 {
-                    eventCallback(isChecked);
-                };
+                    uICheckBox.eventCheckChanged += delegate (UIComponent c, bool isChecked)
+                    {
+                        eventCallback(isChecked);
+                    };
+                }
+
                 return uICheckBox;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create checkbox with no name");
@@ -172,7 +176,7 @@ namespace Klyte.Commons.Extensors
                 var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 label = uIPanel.Find<UILabel>("Label");
                 if (limitLabelByPanelWidth)
-                { KlyteMonoUtils.LimitWidth(label, (uint) uIPanel.width); }
+                { KlyteMonoUtils.LimitWidth(label, (uint)uIPanel.width); }
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -202,7 +206,7 @@ namespace Klyte.Commons.Extensors
                 label.isLocalized = true;
                 if (limitLabelByPanelWidth)
                 {
-                    KlyteMonoUtils.LimitWidth(label, (uint) container.width);
+                    KlyteMonoUtils.LimitWidth(label, (uint)container.width);
                 }
                 UIDropDown uIDropDown = container.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -292,7 +296,7 @@ namespace Klyte.Commons.Extensors
 
         public UIHelperExtension(UIComponent panel) => m_root = panel;
 
-        public UIHelperExtension(UIHelper panel) => m_root = (UIComponent) panel.self;
+        public UIHelperExtension(UIHelper panel) => m_root = (UIComponent)panel.self;
 
         public UIHelperExtension AddGroupExtended(string text) => AddGroupExtended(text, out _, out _);
 
@@ -449,13 +453,13 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public UITextField AddTextField(string name, OnTextChanged eventCallback, string defaultValue = "", OnTextSubmitted eventSubmit = null) => (UITextField) AddTextfield(name, defaultValue, eventCallback, eventSubmit);
+        public UITextField AddTextField(string name, OnTextChanged eventCallback, string defaultValue = "", OnTextSubmitted eventSubmit = null) => (UITextField)AddTextfield(name, defaultValue, eventCallback, eventSubmit);
 
         public UITextField AddPasswordField(string name, OnTextChanged eventCallback)
         {
             if (eventCallback != null && !string.IsNullOrEmpty(name))
             {
-                var uITextField = (UITextField) AddTextfield(name, "", eventCallback, null);
+                var uITextField = (UITextField)AddTextfield(name, "", eventCallback, null);
                 uITextField.isPasswordField = true;
                 return uITextField;
             }
@@ -705,7 +709,7 @@ namespace Klyte.Commons.Extensors
             toggleLabel.eventClick += new MouseEventHandler(OnGroupClicked);
             toggleLabel.backgroundSprite = "OptionsDropbox";
             toggleLabel.padding = new RectOffset(10, 10, 10, 10);
-            var uipanel = (UIPanel) newGroup.Self;
+            var uipanel = (UIPanel)newGroup.Self;
             uipanel.Hide();
             uipanel.autoFitChildrenVertically = false;
             uipanel.clipChildren = true;

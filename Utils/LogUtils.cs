@@ -17,7 +17,7 @@ namespace Klyte.Commons.Utils
             {
                 if (CommonProperties.DebugMode)
                 {
-                    Console.WriteLine($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
+                    Debug.LogFormat($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
                 }
 
             }
@@ -26,24 +26,35 @@ namespace Klyte.Commons.Utils
                 Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
+        public static void DoWarnLog(string format, params object[] args)
+        {
+            try
+            {
+                Debug.LogWarningFormat($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
+            }
+            catch
+            {
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer warn log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+            }
+        }
         public static void DoErrorLog(string format, params object[] args)
         {
             try
             {
-                Console.WriteLine($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}v" + CommonProperties.Version + " " + format, args);
             }
             catch
             {
-                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer err log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
 
-        public static void PrintMethodIL(List<CodeInstruction> inst)
+        public static void PrintMethodIL(List<CodeInstruction> inst, bool force = false)
         {
-            if (CommonProperties.DebugMode)
+            if (force || CommonProperties.DebugMode)
             {
                 int j = 0;
-                LogUtils.DoLog($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("X8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
             }
         }
 
