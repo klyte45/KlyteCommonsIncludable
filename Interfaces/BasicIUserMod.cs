@@ -1,6 +1,7 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
 using ICities;
+using Klyte.Commons.Extensors;
 using Klyte.Commons.UI.SpriteNames;
 using Klyte.Commons.Utils;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace Klyte.Commons.Interfaces
         private static UIButton m_modPanelButton;
         private static UITabstrip m_modsTabstrip;
         private static UIPanel m_modsPanel;
+        private static UIPanel m_bg;
 
         protected sealed override void OnLevelLoadedInherit(LoadMode mode)
         {
@@ -25,13 +27,13 @@ namespace Klyte.Commons.Interfaces
             if (m_modsPanel == null)
             {
                 UIComponent uicomponent = UIView.Find("TSBar");
-                UIPanel bg = uicomponent.AddUIComponent<UIPanel>();
-                bg.name = "K45_MB";
-                bg.absolutePosition = new Vector2(ButtonPosX.value, ButtonPosY.value);
-                bg.width = 40f;
-                bg.height = 40f;
-                bg.zOrder = 1;
-                UIButton doneButton = bg.AddUIComponent<UIButton>();
+                m_bg = uicomponent.AddUIComponent<UIPanel>();
+                m_bg.name = "K45_MB";
+                m_bg.absolutePosition = new Vector2(ButtonPosX.value, ButtonPosY.value);
+                m_bg.width = 40f;
+                m_bg.height = 40f;
+                m_bg.zOrder = 1;
+                UIButton doneButton = m_bg.AddUIComponent<UIButton>();
                 doneButton.normalBgSprite = "GenericPanel";
                 doneButton.width = 100f;
                 doneButton.height = 50f;
@@ -40,29 +42,29 @@ namespace Klyte.Commons.Interfaces
                 doneButton.hoveredTextColor = new Color32(0, byte.MaxValue, byte.MaxValue, 1);
                 doneButton.Hide();
                 doneButton.zOrder = 99;
-                UIDragHandle handle = bg.AddUIComponent<UIDragHandle>();
+                UIDragHandle handle = m_bg.AddUIComponent<UIDragHandle>();
                 handle.name = "K45_DragHandle";
                 handle.relativePosition = Vector2.zero;
-                handle.width = bg.width - 5f;
-                handle.height = bg.height - 5f;
+                handle.width = m_bg.width - 5f;
+                handle.height = m_bg.height - 5f;
                 handle.zOrder = 0;
-                handle.target = bg;
+                handle.target = m_bg;
                 handle.Start();
                 handle.enabled = false;
-                bg.zOrder = 9;
+                m_bg.zOrder = 9;
 
-                bg.isInteractive = false;
+                m_bg.isInteractive = false;
                 handle.zOrder = 10;
                 doneButton.eventClick += (component, ms) =>
                 {
                     doneButton.Hide();
                     handle.zOrder = 10000;
                     handle.enabled = false;
-                    ButtonPosX.value = (int)bg.absolutePosition.x;
-                    ButtonPosY.value = (int)bg.absolutePosition.y;
+                    ButtonPosX.value = (int)m_bg.absolutePosition.x;
+                    ButtonPosY.value = (int)m_bg.absolutePosition.y;
                 };
-                bg.color = new Color32(96, 96, 96, byte.MaxValue);
-                m_modPanelButton = bg.AddUIComponent<UIButton>();
+                m_bg.color = new Color32(96, 96, 96, byte.MaxValue);
+                m_modPanelButton = m_bg.AddUIComponent<UIButton>();
                 m_modPanelButton.disabledTextColor = new Color32(128, 128, 128, byte.MaxValue);
                 KlyteMonoUtils.InitButton(m_modPanelButton, false, KlyteResourceLoader.GetDefaultSpriteNameFor(CommonsSpriteNames.K45_K45Button), false);
                 m_modPanelButton.relativePosition = new Vector3(10, 4f);
@@ -80,7 +82,7 @@ namespace Klyte.Commons.Interfaces
                     handle.enabled = true;
                 };
 
-                m_modsPanel = bg.AddUIComponent<UIPanel>();
+                m_modsPanel = m_bg.AddUIComponent<UIPanel>();
                 m_modsPanel.name = "K45_ModsPanel";
                 m_modsPanel.size = new Vector2(875, 550);
                 m_modsPanel.relativePosition = new Vector3(0f, 7f);
@@ -100,7 +102,19 @@ namespace Klyte.Commons.Interfaces
             AddTab();
         }
 
-
+        public override void Group9SettingsUI(UIHelperExtension group9)
+        {
+            base.Group9SettingsUI(group9);
+            group9.AddButton("Reset <K> Button position", () =>
+            {
+                ButtonPosX.value = 5;
+                ButtonPosY.value = 60;
+                if (m_bg)
+                {
+                    m_bg.absolutePosition = new Vector3(5, 60);
+                }
+            });
+        }
 
         internal void AddTab()
         {
