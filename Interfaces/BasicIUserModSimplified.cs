@@ -116,15 +116,6 @@ namespace Klyte.Commons.Interfaces
             }
             FileUtils.EnsureFolderCreation(CommonProperties.ModRootFolder);
             PatchesApply();
-            if ((UIView.GetAView() is UIView uiView) && uiView != null && uiView.panelsLibrary != null)
-            {
-                uiView.enabled = false;
-                UIView.PopAllModal();
-                uiView.panelsLibrary.Release();
-                uiView.panelsLibrary.Init(uiView);
-
-                uiView.enabled = true;
-            }
         }
 
         public void OnDisabled() => Redirector.UnpatchAll();
@@ -278,7 +269,8 @@ namespace Klyte.Commons.Interfaces
                     }
                     ShowModal(new BindProperties()
                     {
-                        icon = IconName,                        
+                        icon = IconName,
+                        showClose = true,
                         showButton1 = true,
                         textButton1 = "Okay!",
                         showButton2 = true,
@@ -306,7 +298,7 @@ namespace Klyte.Commons.Interfaces
 
                         }
                         return x <= 1;
-                    });
+                    }) ;
 
                     needShowPopup = false;
                     CurrentSaveVersion.value = FullVersion;

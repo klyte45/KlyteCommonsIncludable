@@ -293,9 +293,38 @@ namespace Klyte.Commons.Utils
         private static void ShowModalInternal(BindProperties properties, Func<int, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 addAction(properties.ToDictionary(), action);
+            }
+            else
+            {
+                uIComponent = UIView.library.ShowModal("ExceptionPanel");
+                if (uIComponent != null)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
+                    if (component != null)
+                    {
+                        string title = $"Mod not loaded";
+                        string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&","and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                        string img = "IconMessage";
+                        component.SetProperties(TooltipHelper.Format(new string[]
+                        {
+                            "title",
+                            title,
+                            "message",
+                            text,
+                            "img",
+                            img
+                        }));
+                    }
+                }
+                else
+                {
+                    LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
+                }
             }
         }
 
