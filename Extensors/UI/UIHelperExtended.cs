@@ -240,18 +240,22 @@ namespace Klyte.Commons.Extensors
         }
 
         public object AddSlider(string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback) => AddSlider(m_root, text, min, max, step, defaultValue, eventCallback);
-        public static UISlider AddSlider(UIComponent parent, string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback)
+        public UISlider AddSlider(string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback, out UILabel label) => AddSlider(m_root, text, min, max, step, defaultValue, eventCallback, out label);
+        public static UISlider AddSlider(UIComponent parent, string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback) => AddSlider(parent, text, min, max, step, defaultValue, eventCallback, out _);
+        public static UISlider AddSlider(UIComponent parent, string text, float min, float max, float step, float defaultValue, OnValueChanged eventCallback, out UILabel label)
         {
             if (eventCallback != null)
             {
                 var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kSliderTemplate)) as UIPanel;
                 if (string.IsNullOrEmpty(text))
                 {
+                    label = null;
                     GameObject.Destroy(uIPanel.Find<UILabel>("Label"));
                 }
                 else
                 {
-                    uIPanel.Find<UILabel>("Label").text = text;
+                    label = uIPanel.Find<UILabel>("Label");
+                    label.text = text;
                 }
                 UISlider uISlider = uIPanel.Find<UISlider>("Slider");
                 uISlider.minValue = min;
@@ -265,6 +269,7 @@ namespace Klyte.Commons.Extensors
                 return uISlider;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create slider with no name or no event");
+            label = null;
             return null;
         }
 

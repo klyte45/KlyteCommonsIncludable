@@ -11,7 +11,7 @@ namespace Klyte.Commons.Interfaces
     public abstract class BasicIUserMod<U, C, T> : BasicIUserModSimplified<U, C>
         where U : BasicIUserMod<U, C, T>, new()
         where C : BaseController<U, C>
-        where T : UICustomControl
+        where T : BasicKPanel<U, C, T>
     {
         protected virtual float? TabWidth => null;
 
