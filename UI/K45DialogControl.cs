@@ -4,7 +4,6 @@ using ColossalFramework.UI;
 using Klyte.Commons.Extensors;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -12,7 +11,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200405";
+        public const string VERSION = "20200407";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -191,6 +190,14 @@ namespace Klyte.Commons.Utils
             #endregion
         }
 
+        public void Update()
+        {
+            if (UIView.GetModalComponent()?.GetComponent<K45DialogControl>() != null)
+            {
+                m_mainPanel.zOrder = 9999;
+            }
+        }
+
         private void OnButton1() => Close(1);
 
         private void OnButton2() => Close(2);
@@ -276,7 +283,7 @@ namespace Klyte.Commons.Utils
         private UIButton m_button2;
         private UIButton m_button3;
         private UIButton m_button4;
-        private BindPropertyByKey m_properties;        
+        private BindPropertyByKey m_properties;
 
         public static void ShowModal(BindProperties properties, Func<int, bool> action)
         {
@@ -293,9 +300,38 @@ namespace Klyte.Commons.Utils
         private static void ShowModalInternal(BindProperties properties, Func<int, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 addAction(properties.ToDictionary(), action);
+            }
+            else
+            {
+                uIComponent = UIView.library.ShowModal("ExceptionPanel");
+                if (uIComponent != null)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
+                    if (component != null)
+                    {
+                        string title = $"Mod not loaded";
+                        string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                        string img = "IconMessage";
+                        component.SetProperties(TooltipHelper.Format(new string[]
+                        {
+                            "title",
+                            title,
+                            "message",
+                            text,
+                            "img",
+                            img
+                        }));
+                    }
+                }
+                else
+                {
+                    LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
+                }
             }
         }
 

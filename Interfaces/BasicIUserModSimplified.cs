@@ -263,16 +263,42 @@ namespace Klyte.Commons.Interfaces
                     string title = $"{SimpleName} v{Version}";
                     string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
                     string text = $"{SimpleName} was updated! Release notes:\n\n{notes}\n\n<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Current Version: <color #FFFF00>{FullVersion}</color>";
-
+                    if (!force)
+                    {
+                        text += "\n\n<Color #FF0000>REMEMBER!</Color> If you just activated the mod in the mod list, restart the game before playing by the first time!\nIf you just reading this on the main menu when opened the game, just go ahead and enjoy the game. =V";
+                    }
                     ShowModal(new BindProperties()
                     {
                         icon = IconName,
+                        showClose = true,
                         showButton1 = true,
                         textButton1 = "Okay!",
+                        showButton2 = true,
+                        textButton2 = "Follow Klyte45 on Twitter!",
+                        showButton3 = true,
+                        textButton3 = "Follow Klyte45 on Facebook!",
+                        showButton4 = true,
+                        textButton4 = "Subscribe to Klyte45 channel on YouTube!",
                         messageAlign = UIHorizontalAlignment.Left,
                         title = title,
                         message = text,
-                    }, (x) => true);
+                    }, (x) =>
+                    {
+                        switch (x)
+                        {
+                            case 2:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
+                                break;
+                            case 3:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
+                                break;
+                            case 4:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
+                                break;
+
+                        }
+                        return x <= 1;
+                    }) ;
 
                     needShowPopup = false;
                     CurrentSaveVersion.value = FullVersion;
@@ -280,7 +306,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 catch (Exception e)
                 {
-                    DoErrorLog("showVersionInfoPopup ERROR {0} {1}\n{2}", e.GetType(), e.Message,e.StackTrace);
+                    DoErrorLog("showVersionInfoPopup ERROR {0} {1}\n{2}", e.GetType(), e.Message, e.StackTrace);
                 }
             }
             return false;
