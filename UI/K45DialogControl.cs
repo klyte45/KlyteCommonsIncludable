@@ -11,7 +11,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200407";
+        public const string VERSION = "20200409";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -183,6 +183,8 @@ namespace Klyte.Commons.Utils
 
             //This action allow centralize all calls to single object, coming from any mod
             m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => Enqueue(BindProperties.FromDictionary(properties), callback));
+            m_mainPanel.stringUserData = VERSION;
+
 
             m_closeButton.eventClicked += (x, y) => Close(0);
 
@@ -268,11 +270,11 @@ namespace Klyte.Commons.Utils
             m_buttonSupContainer.width = width;
         }
 
-        private static Func<int, bool> m_currentCallback;
+        private Func<int, bool> m_currentCallback;
         //queue to store the modal order
-        private static readonly Queue<Tuple<BindProperties, Func<int, bool>>> m_modalStack = new Queue<Tuple<BindProperties, Func<int, bool>>>();
+        private readonly Queue<Tuple<BindProperties, Func<int, bool>>> m_modalStack = new Queue<Tuple<BindProperties, Func<int, bool>>>();
 
-        private UIPanel m_mainPanel;
+        private UIPanel m_mainPanel; 
         private UIPanel m_titleContainer;
         private UILabel m_title;
         private UISprite m_modIcon;

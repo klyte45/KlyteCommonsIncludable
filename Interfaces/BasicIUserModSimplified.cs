@@ -29,7 +29,7 @@ namespace Klyte.Commons.Interfaces
         public virtual void DoLog(string fmt, params object[] args) => LogUtils.DoLog(fmt, args);
         public virtual void DoErrorLog(string fmt, params object[] args) => LogUtils.DoErrorLog(fmt, args);
         public virtual void TopSettingsUI(UIHelperExtension ext) { }
-
+        
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
 
@@ -303,7 +303,7 @@ namespace Klyte.Commons.Interfaces
 
                         }
                         return x <= 1;
-                    }) ;
+                    });
 
                     return true;
                 }
@@ -338,10 +338,6 @@ namespace Klyte.Commons.Interfaces
                         title = title,
                         message = text,
                     }, (x) => true);
-                }
-                else
-                {
-                    LogUtils.DoLog("PANEL NOT FOUND!!!!");
                 }
             }
             catch (Exception e)

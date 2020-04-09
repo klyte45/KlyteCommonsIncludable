@@ -326,9 +326,17 @@ namespace Klyte.Commons.Extensors
         {
             panel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
             label = panel.Find<UILabel>("Label");
-            label.text = text;
+            if (text != null)
+            {
+                label.text = text;
+            }
+            else
+            {
+                GameObject.Destroy(label.gameObject);
+            }
+
             UITextField uITextField = panel.Find<UITextField>("Text Field");
-            uITextField.text = defaultContent;
+            uITextField.text = defaultContent ?? "";
             return uITextField;
         }
 
