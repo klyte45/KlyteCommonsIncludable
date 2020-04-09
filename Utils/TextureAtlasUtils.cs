@@ -11,6 +11,7 @@ namespace Klyte.Commons.Utils
     public static class TextureAtlasUtils
     {
         public static string BORDER_FILENAME = "bordersDescriptor.txt";
+        public static UITextureAtlas DefaultTextureAtlas => UIView.GetAView().defaultAtlas;
 
         public static void LoadPathTexturesIntoInGameTextureAtlas(string path, ref List<SpriteInfo> newFiles)
         {
