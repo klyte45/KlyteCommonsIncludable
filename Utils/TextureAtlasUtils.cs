@@ -13,10 +13,10 @@ namespace Klyte.Commons.Utils
         public static string BORDER_FILENAME = "bordersDescriptor.txt";
         public static UITextureAtlas DefaultTextureAtlas => UIView.GetAView().defaultAtlas;
 
-        public static void LoadPathTexturesIntoInGameTextureAtlas(string path, ref List<SpriteInfo> newFiles)
+        public static void LoadPathTexturesIntoInGameTextureAtlas(string path, ref List<SpriteInfo> newFiles) => LoadPathTexturesIntoTextureAtlas(UIView.GetAView().defaultAtlas, path, ref newFiles);
+        public static void LoadPathTexturesIntoTextureAtlas(UITextureAtlas textureAtlas, string path, ref List<SpriteInfo> newFiles)
         {
-            UITextureAtlas defaultTextureAtlas = UIView.GetAView().defaultAtlas;
-            if (defaultTextureAtlas == null)
+            if (textureAtlas == null)
             {
                 return;
             }
@@ -84,7 +84,7 @@ namespace Klyte.Commons.Utils
 
         public static readonly string NoBorderSuffix = "_NOBORDER";
 
-        public static void LoadIamgesFromResources(string path, ref List<SpriteInfo> newSprites)
+        public static void LoadImagesFromResources(string path, ref List<SpriteInfo> newSprites)
         {
             string[] imagesFiles = FileUtils.GetAllFilesEmbeddedAtFolder(path, ".png");
             TextureAtlasUtils.ParseBorderDescriptors(KlyteResourceLoader.LoadResourceStringLines($"{path}.{BORDER_FILENAME}"), out Dictionary<string, Tuple<RectOffset, bool>> borderDescriptor);
@@ -120,20 +120,20 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static void RegenerateDefaultTextureAtlas(List<SpriteInfo> newFiles)
+        public static void RegenerateDefaultTextureAtlas(List<SpriteInfo> newFiles) => RegenerateTextureAtlas(UIView.GetAView().defaultAtlas, newFiles);
+        public static void RegenerateTextureAtlas(UITextureAtlas textureAtlas, List<SpriteInfo> newFiles)
         {
-            UITextureAtlas defaultTextureAtlas = UIView.GetAView().defaultAtlas;
             IEnumerable<string> newSpritesNames = newFiles.Select(x => x.name);
-            newFiles.AddRange(defaultTextureAtlas.sprites.Where(x => !newSpritesNames.Contains(x.name)));
-            defaultTextureAtlas.sprites.Clear();
-            defaultTextureAtlas.AddSprites(newFiles.ToArray());
-            Rect[] array = defaultTextureAtlas.texture.PackTextures(defaultTextureAtlas.sprites.Select(x => x.texture).ToArray(), defaultTextureAtlas.padding, 4096 * 4);
-            for (int i = 0; i < defaultTextureAtlas.count; i++)
+            newFiles.AddRange(textureAtlas.sprites.Where(x => !newSpritesNames.Contains(x.name)));
+            textureAtlas.sprites.Clear();
+            textureAtlas.AddSprites(newFiles.ToArray());
+            Rect[] array = textureAtlas.texture.PackTextures(textureAtlas.sprites.Select(x => x.texture).ToArray(), textureAtlas.padding, 4096 * 4);
+            for (int i = 0; i < textureAtlas.count; i++)
             {
-                defaultTextureAtlas.sprites[i].region = array[i];
+                textureAtlas.sprites[i].region = array[i];
             }
-            defaultTextureAtlas.sprites.Sort();
-            defaultTextureAtlas.RebuildIndexes();
+            textureAtlas.sprites.Sort();
+            textureAtlas.RebuildIndexes();
             UIView.RefreshAll(false);
         }
         public static void ParseImageIntoDefaultTextureAtlas(Type enumType, string resourceName, int width, int height, ref List<SpriteInfo> sprites)

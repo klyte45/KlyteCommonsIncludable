@@ -24,6 +24,7 @@ namespace Klyte.Commons.Interfaces
             m_controlContainer = GetComponent<UIPanel>();
             m_controlContainer.area = new Vector4(0, 0, 0, 0);
             m_controlContainer.isVisible = false;
+            m_controlContainer.isInteractive = false;
             m_controlContainer.name = $"{CommonProperties.Acronym}PanelParent";
 
             KlyteMonoUtils.CreateUIElement(out UIPanel _mainPanel, m_controlContainer.transform, $"{CommonProperties.Acronym}Panel", new Vector4(0, 0, PanelWidth, PanelHeight));

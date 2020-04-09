@@ -194,8 +194,8 @@ namespace Klyte.Commons.Interfaces
             }
 
             var newSprites = new List<SpriteInfo>();
-            TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
-            TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("commons.UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("UI.Images", ref newSprites);
             LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
@@ -286,6 +286,11 @@ namespace Klyte.Commons.Interfaces
                     {
                         switch (x)
                         {
+                            case 0:
+                            case 1:
+                                needShowPopup = false;
+                                CurrentSaveVersion.value = FullVersion;
+                                break;
                             case 2:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
                                 break;
@@ -300,8 +305,6 @@ namespace Klyte.Commons.Interfaces
                         return x <= 1;
                     }) ;
 
-                    needShowPopup = false;
-                    CurrentSaveVersion.value = FullVersion;
                     return true;
                 }
                 catch (Exception e)
