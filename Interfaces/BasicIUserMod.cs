@@ -11,7 +11,7 @@ namespace Klyte.Commons.Interfaces
     public abstract class BasicIUserMod<U, C, T> : BasicIUserModSimplified<U, C>
         where U : BasicIUserMod<U, C, T>, new()
         where C : BaseController<U, C>
-        where T : UICustomControl
+        where T : BasicKPanel<U, C, T>
     {
         protected virtual float? TabWidth => null;
 
@@ -95,12 +95,16 @@ namespace Klyte.Commons.Interfaces
 
                     m_modPanelButton.eventClicked += TogglePanel;
 
-                    KlyteMonoUtils.CreateTabsComponent(out m_modsTabstrip, out _, m_modsPanel.transform, "K45", new Vector4(52, -8, m_modsPanel.width - 52, 40), new Vector4(0, 32, m_modsPanel.width, m_modsPanel.height));
+                    KlyteMonoUtils.CreateTabsComponent(out m_modsTabstrip, out UITabContainer container, m_modsPanel.transform, "K45", new Vector4(52, -8, m_modsPanel.width - 52, 40), new Vector4(0, 32, m_modsPanel.width, m_modsPanel.height));
+                    m_modsTabstrip.isInteractive = false;
+                    container.isInteractive = false;
                 }
                 else
                 {
                     m_modPanelButton = UIView.Find<UIButton>("K45_ModsButton");
                     m_modsTabstrip = UIView.Find<UITabstrip>("K45_Tabstrip");
+                    m_modsTabstrip.isInteractive = false;
+                    m_modsTabstrip.tabContainer.isInteractive = false;
                 }
 
                 AddTab();

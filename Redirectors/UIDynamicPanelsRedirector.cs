@@ -2,7 +2,6 @@
 using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
 using System.Linq;
-using UnityEngine;
 
 namespace Klyte.Commons.Redirectors
 {
@@ -23,7 +22,7 @@ namespace Klyte.Commons.Redirectors
             {
                 try
                 {
-                    return x?.name == K45DialogControl.PANEL_ID && x.panelRoot?.gameObject != null;
+                    return x?.name == K45DialogControl.PANEL_ID && x.panelRoot?.gameObject != null && string.Compare(x.panelRoot?.stringUserData, K45DialogControl.VERSION) >= 0; 
                 }
                 catch
                 {

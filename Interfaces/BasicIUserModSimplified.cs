@@ -24,12 +24,12 @@ namespace Klyte.Commons.Interfaces
         where C : BaseController<U, C>
     {
         public abstract string SimpleName { get; }
-        public abstract string IconName { get; }
+        public virtual string IconName { get; } = $"K45_{CommonProperties.Acronym}_Icon";
         public virtual bool UseGroup9 => true;
         public virtual void DoLog(string fmt, params object[] args) => LogUtils.DoLog(fmt, args);
         public virtual void DoErrorLog(string fmt, params object[] args) => LogUtils.DoErrorLog(fmt, args);
         public virtual void TopSettingsUI(UIHelperExtension ext) { }
-
+        
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
 
@@ -194,8 +194,8 @@ namespace Klyte.Commons.Interfaces
             }
 
             var newSprites = new List<SpriteInfo>();
-            TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
-            TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("commons.UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("UI.Images", ref newSprites);
             LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
@@ -286,6 +286,11 @@ namespace Klyte.Commons.Interfaces
                     {
                         switch (x)
                         {
+                            case 0:
+                            case 1:
+                                needShowPopup = false;
+                                CurrentSaveVersion.value = FullVersion;
+                                break;
                             case 2:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
                                 break;
@@ -298,10 +303,8 @@ namespace Klyte.Commons.Interfaces
 
                         }
                         return x <= 1;
-                    }) ;
+                    });
 
-                    needShowPopup = false;
-                    CurrentSaveVersion.value = FullVersion;
                     return true;
                 }
                 catch (Exception e)
@@ -335,10 +338,6 @@ namespace Klyte.Commons.Interfaces
                         title = title,
                         message = text,
                     }, (x) => true);
-                }
-                else
-                {
-                    LogUtils.DoLog("PANEL NOT FOUND!!!!");
                 }
             }
             catch (Exception e)
