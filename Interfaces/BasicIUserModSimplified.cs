@@ -33,6 +33,23 @@ namespace Klyte.Commons.Interfaces
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
 
+        private static ulong m_modId;
+
+        public static ulong ModId
+        {
+            get {
+                if (m_modId == 0)
+                {
+                    m_modId = Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+                 pi.assemblyCount > 0
+                 && pi.isEnabled
+                 && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
+             ).FirstOrDefault()?.publishedFileID.AsUInt64 ?? 0;
+                }
+                return m_modId;
+            }
+        }
+
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
         public static C Controller { get; private set; }
@@ -194,8 +211,8 @@ namespace Klyte.Commons.Interfaces
             }
 
             var newSprites = new List<SpriteInfo>();
-            TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
-            TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("commons.UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("UI.Images", ref newSprites);
             LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
@@ -234,6 +251,32 @@ namespace Klyte.Commons.Interfaces
             {
                 ShowVersionInfoPopup(true);
             });
+            group9.AddButton("Report-a-bug helper", () => K45DialogControl.ShowModal(new K45DialogControl.BindProperties()
+            {
+                icon = IconName,
+                title = "Report-a-bug helper",
+                message = "If you find any problem with this mod, please send me the output_log.txt (or player.log on Mac/Linux) in the mod Workshop page. If applies, a printscreen can help too to make a better guess about what is happening wrong here...\n\n" +
+                         "There's a link for a Workshop guide by <color #008800>aubergine18</color> explaining how to find your log file, depending of OS you're using.\nFeel free to create a topic at Workshop or just leave a comment linking your files.",
+                showButton1 = true,
+                textButton1 = "Okay...",
+                showButton2 = true,
+                textButton2 = "Go to the guide",
+                showButton3 = true,
+                textButton3 = "Go to mod page"
+            }, (x) =>
+            {
+                if (x == 2)
+                {
+                    ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=463645931");
+                    return false;
+                }
+                if (x == 3)
+                {
+                    ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
+                    return false;
+                }
+                return true;
+            }));
 
             if (m_showLangDropDown)
             {
@@ -286,6 +329,11 @@ namespace Klyte.Commons.Interfaces
                     {
                         switch (x)
                         {
+                            case 0:
+                            case 1:
+                                needShowPopup = false;
+                                CurrentSaveVersion.value = FullVersion;
+                                break;
                             case 2:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
                                 break;
@@ -298,10 +346,8 @@ namespace Klyte.Commons.Interfaces
 
                         }
                         return x <= 1;
-                    }) ;
+                    });
 
-                    needShowPopup = false;
-                    CurrentSaveVersion.value = FullVersion;
                     return true;
                 }
                 catch (Exception e)
@@ -335,10 +381,6 @@ namespace Klyte.Commons.Interfaces
                         title = title,
                         message = text,
                     }, (x) => true);
-                }
-                else
-                {
-                    LogUtils.DoLog("PANEL NOT FOUND!!!!");
                 }
             }
             catch (Exception e)
