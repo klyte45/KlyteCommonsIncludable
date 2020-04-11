@@ -13,7 +13,7 @@ namespace Klyte.Commons.Interfaces
     {
         public static event Action OnDataLoaded;
 
-        public Dictionary<Type, IDataExtensor> Instances { get; private set; }
+        public Dictionary<Type, IDataExtensor> Instances { get; private set; } = new Dictionary<Type, IDataExtensor>();
 
         #region Serialization
         public IManagers Managers => SerializableDataManager?.managers;
