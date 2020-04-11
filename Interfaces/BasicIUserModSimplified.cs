@@ -44,7 +44,7 @@ namespace Klyte.Commons.Interfaces
                  pi.assemblyCount > 0
                  && pi.isEnabled
                  && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
-             ).FirstOrDefault()?.publishedFileID.AsUInt64 ?? 0;
+             ).Select(x => x?.publishedFileID.AsUInt64 ?? ulong.MaxValue).Min();
                 }
                 return m_modId;
             }
