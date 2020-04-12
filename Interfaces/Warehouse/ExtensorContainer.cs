@@ -26,7 +26,7 @@ namespace Klyte.Commons.Interfaces
             LogUtils.DoLog($"LOADING DATA {GetType()}");
             instance.Instances = new Dictionary<Type, IDataExtensor>();
             List<Type> instancesExt = ReflectionUtils.GetInterfaceImplementations(typeof(IDataExtensor), GetType());
-            var instancesLegacies = ReflectionUtils.GetSubtypesRecursive(typeof(DataExtensorLegacyBase<>), GetType()).ToDictionary(x => x.GetGenericArguments()[0], x => x);
+            var instancesLegacies = ReflectionUtils.GetSubtypesRecursive(typeof(DataExtensorLegacyBase<>), GetType()).ToDictionary(x => x.BaseType.GetGenericArguments()[0], x => x);
             LogUtils.DoLog($"SUBTYPE COUNT: {instancesExt.Count}; LEGACY COUNT: {instancesLegacies.Count}");
             foreach (Type type in instancesExt)
             {
@@ -37,7 +37,7 @@ namespace Klyte.Commons.Interfaces
                     LogUtils.DoLog($"SEARCHING FOR LEGACY {type}");
                     if (instancesLegacies.ContainsKey(type))
                     {
-                        var basicInstanceLegacy = (IDataExtensorLegacy)type.GetConstructor(new Type[0]).Invoke(new Type[0]);
+                        var basicInstanceLegacy = (IDataExtensorLegacy)instancesLegacies[type].GetConstructor(new Type[0]).Invoke(new Type[0]);
                         if (!SerializableDataManager.EnumerateData().Contains(basicInstanceLegacy.SaveId))
                         {
                             byte[] storage2 = MemoryStreamToArray(basicInstanceLegacy.SaveId);
