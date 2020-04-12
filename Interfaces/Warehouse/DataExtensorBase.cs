@@ -5,15 +5,6 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public interface IDataExtensor
-    {
-        string SaveId { get; }
-
-        void LoadDefaults();
-        IDataExtensor Deserialize(Type type, byte[] data);
-        byte[] Serialize();
-        void OnReleased();
-    }
 
     [XmlRoot("DataExtensor")]
     public abstract class DataExtensorBase<U> : IDataExtensor where U : DataExtensorBase<U>, new()
