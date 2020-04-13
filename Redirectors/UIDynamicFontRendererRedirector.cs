@@ -77,7 +77,7 @@ namespace Klyte.Commons.Redirectors
 
 
 
-        public static IEnumerable<CodeInstruction> RenderLineTranspile(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> RenderLineTranspile(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             var inst = new List<CodeInstruction>(instructions);
 
@@ -86,7 +86,7 @@ namespace Klyte.Commons.Redirectors
             {
                 if (inst[i].opcode == OpCodes.Ldstr && inst[i].operand is string str && str == "color")
                 {
-                    var newRef = new Label();
+                    var newRef = il.DefineLabel();
                     object oldRef = inst[i + 2].operand;
                     inst[i + 2].opcode = OpCodes.Brtrue;
                     inst[i + 2].operand = newRef;
