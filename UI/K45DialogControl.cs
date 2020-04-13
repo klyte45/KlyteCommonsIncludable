@@ -11,7 +11,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200409";
+        public const string VERSION = "20200413";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -241,8 +241,8 @@ namespace Klyte.Commons.Utils
         private void SetProperties(BindProperties propertiesToSet)
         {
             m_properties.FindBinding("title").property.value = propertiesToSet.title;
-            m_properties.FindBinding("icon").property.value = propertiesToSet.icon;
-            m_properties.FindBinding("showClose").property.value = propertiesToSet.showClose;
+            m_properties.FindBinding("icon").property.value = propertiesToSet.icon ?? CommonProperties.ModIcon;
+            m_properties.FindBinding("showClose").property.value = propertiesToSet.showClose || !(propertiesToSet.showButton1 || propertiesToSet.showButton2 || propertiesToSet.showButton3 || propertiesToSet.showButton4);
             m_properties.FindBinding("message").property.value = propertiesToSet.message;
             m_properties.FindBinding("messageAlign").property.value = propertiesToSet.messageAlign;
             m_properties.FindBinding("showButton1").property.value = propertiesToSet.showButton1;
@@ -274,7 +274,7 @@ namespace Klyte.Commons.Utils
         //queue to store the modal order
         private readonly Queue<Tuple<BindProperties, Func<int, bool>>> m_modalStack = new Queue<Tuple<BindProperties, Func<int, bool>>>();
 
-        private UIPanel m_mainPanel; 
+        private UIPanel m_mainPanel;
         private UIPanel m_titleContainer;
         private UILabel m_title;
         private UISprite m_modIcon;
