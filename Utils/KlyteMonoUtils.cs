@@ -55,6 +55,16 @@ namespace Klyte.Commons.Utils
             uiItem.builtinKeyNavigation = true;
             uiItem.submitOnFocusLost = true;
         }
+        public static void UiTextFieldDefaultsForm(UITextField uiItem)
+        {
+            uiItem.selectionSprite = "EmptySprite";
+            uiItem.useOutline = true;
+            uiItem.hoveredBgSprite = "OptionsDropboxListboxHovered";
+            uiItem.focusedBgSprite = "OptionsDropboxListboxFocused";
+            uiItem.normalBgSprite = "OptionsDropboxListbox";
+            uiItem.builtinKeyNavigation = true;
+            uiItem.submitOnFocusLost = true;
+        }
         public static Color ContrastColor(Color color)
         {
             if (color == default)

@@ -11,7 +11,8 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200413";
+        public const string VERSION = "20200414";
+        private const string TEXT_INPUT_ID = "TextInput";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -27,6 +28,7 @@ namespace Klyte.Commons.Utils
             mainPanel.autoFitChildrenVertically = true;
             mainPanel.autoLayoutDirection = LayoutDirection.Vertical;
             mainPanel.autoLayoutStart = LayoutStart.TopLeft;
+            mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
 
             #region Title
@@ -65,6 +67,17 @@ namespace Klyte.Commons.Utils
             boxText.padding = new RectOffset(10, 10, 5, 5);
             boxText.textAlignment = UIHorizontalAlignment.Center;
             boxText.verticalAlignment = UIVerticalAlignment.Middle;
+            #endregion
+
+            #region Inputs
+            KlyteMonoUtils.CreateUIElement(out UITextField textField, mainPanel.transform, "TextInput");
+            textField.minimumSize = new Vector2(boxText.minimumSize.x - 10, 25);
+            textField.autoSize = false;
+            textField.processMarkup = true;
+            textField.padding = new RectOffset(10, 10, 5, 5);
+            textField.verticalAlignment = UIVerticalAlignment.Middle;
+            textField.horizontalAlignment = UIHorizontalAlignment.Left;
+            KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
             #endregion
 
             #region Action Buttons
@@ -166,6 +179,8 @@ namespace Klyte.Commons.Utils
             m_button3 = m_mainPanel.Find<UIButton>("ButtonAction3");
             m_button4 = m_mainPanel.Find<UIButton>("ButtonAction4");
 
+            m_textField = m_mainPanel.Find<UITextField>(TEXT_INPUT_ID);
+
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
 
             #region Events bindings
@@ -254,6 +269,9 @@ namespace Klyte.Commons.Utils
             m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3;
             m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4;
 
+            m_textField.isVisible = propertiesToSet.showTextField;
+            m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
+
             float width;
             if (propertiesToSet.useFullWindowWidth)
             {
@@ -285,10 +303,12 @@ namespace Klyte.Commons.Utils
         private UIButton m_button2;
         private UIButton m_button3;
         private UIButton m_button4;
+        private UITextField m_textField;
         private BindPropertyByKey m_properties;
 
         public static void ShowModal(BindProperties properties, Func<int, bool> action)
         {
+            properties.showTextField = false;
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
                 ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, action));
@@ -308,32 +328,82 @@ namespace Klyte.Commons.Utils
             }
             else
             {
-                uIComponent = UIView.library.ShowModal("ExceptionPanel");
-                if (uIComponent != null)
+                ShowErrorPanelNotFound();
+            }
+        }
+
+        public static void UpdateCurrentMessage(string newText)
+        {
+            UIComponent uIComponent = UIView.library.Get(PANEL_ID);
+            if (uIComponent != null && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
+            {
+                properties.FindBinding("message").property.value = newText;
+            }
+            else
+            {
+                ShowErrorPanelNotFound();
+            }
+        }
+
+        private static void ShowErrorPanelNotFound()
+        {
+            UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
+            if (uIComponent != null)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
+                if (component != null)
                 {
-                    Cursor.lockState = CursorLockMode.None;
-                    Cursor.visible = true;
-                    BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                    if (component != null)
+                    string title = $"Mod not loaded";
+                    string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                    string img = "IconMessage";
+                    component.SetProperties(TooltipHelper.Format(new string[]
                     {
-                        string title = $"Mod not loaded";
-                        string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
-                        string img = "IconMessage";
-                        component.SetProperties(TooltipHelper.Format(new string[]
-                        {
                             "title",
                             title,
                             "message",
                             text,
                             "img",
                             img
-                        }));
-                    }
+                    }));
                 }
-                else
+            }
+            else
+            {
+                LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
+            }
+        }
+
+        public static void ShowModalPromptText(BindProperties properties, Func<int, string, bool> action)
+        {
+            properties.showTextField = true;
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalPromptTextInternal(properties, action));
+            }
+            else
+            {
+                ShowModalPromptTextInternal(properties, action);
+            }
+        }
+
+        private static void ShowModalPromptTextInternal(BindProperties properties, Func<int, string, bool> action)
+        {
+            UIComponent uIComponent = UIView.library.Get(PANEL_ID);
+            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            {
+                bool targetAction(int x)
                 {
-                    LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
+                    string result = uIComponent.Find<UITextField>(TEXT_INPUT_ID)?.text;
+                    return action(x, result);
                 }
+
+                addAction(properties.ToDictionary(), targetAction);
+            }
+            else
+            {
+                ShowErrorPanelNotFound();
             }
         }
 
@@ -353,6 +423,8 @@ namespace Klyte.Commons.Utils
             public string textButton3;
             public string textButton4;
             public bool useFullWindowWidth;
+            public bool showTextField;
+            public string defaultTextFieldContent;
 
             public static BindProperties FromDictionary(Dictionary<string, object> dict)
             {
@@ -375,6 +447,8 @@ namespace Klyte.Commons.Utils
                         case "textButton3": result.textButton3 = (string)kv.Value; break;
                         case "textButton4": result.textButton4 = (string)kv.Value; break;
                         case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
+                        case "showTextField": result.showTextField = (bool)kv.Value; break;
+                        case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
                     }
                 }
                 return result;
@@ -398,6 +472,8 @@ namespace Klyte.Commons.Utils
                     ["textButton3"] = textButton3,
                     ["textButton4"] = textButton4,
                     ["useFullWindowWidth"] = useFullWindowWidth,
+                    ["showTextField"] = showTextField,
+                    ["defaultTextFieldContent"] = defaultTextFieldContent,
                 };
             }
 
