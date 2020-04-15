@@ -22,6 +22,8 @@
         K45_RelativeMode,
         K45_MenuPanel_color,
         K45_New,
-        K45_Delete
+        K45_Delete,
+        K45_Lock,
+        K45_Unlock
     }
 }

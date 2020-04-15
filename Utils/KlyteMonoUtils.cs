@@ -127,6 +127,8 @@ namespace Klyte.Commons.Utils
 
             component.textColor = new Color32(255, 255, 255, 255);
         }
+
+
         public static void InitButtonFull<T>(T component, bool isCheck, string baseSprite, bool noCaps = false) where T : UIInteractiveComponent
         {
             string sprite = baseSprite;
@@ -239,7 +241,7 @@ namespace Klyte.Commons.Utils
             callback(null, default);
             return callback;
         }
-        public static UIHelperExtension CreateScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition)
+        public static UIHelperExtension CreateScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition = default)
         {
             CreateUIElement(out scrollablePanel, parent?.transform);
             scrollablePanel.width = width;
@@ -408,11 +410,12 @@ namespace Klyte.Commons.Utils
         }
 
         #endregion
-        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parent, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer)
+        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parent, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer) => CreateTabsComponent(out tabstrip, out tabContainer, parent, parent, namePrefix, areaTabstrip, areaContainer);
+        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parentStrip, Transform parentContainer, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer)
         {
-            KlyteMonoUtils.CreateUIElement(out tabstrip, parent, $"{namePrefix}_Tabstrip", areaTabstrip);
+            KlyteMonoUtils.CreateUIElement(out tabstrip, parentStrip, $"{namePrefix}_Tabstrip", areaTabstrip);
 
-            KlyteMonoUtils.CreateUIElement(out tabContainer, parent, $"{namePrefix}_TabContainer", areaContainer);
+            KlyteMonoUtils.CreateUIElement(out tabContainer, parentContainer, $"{namePrefix}_TabContainer", areaContainer);
             tabstrip.tabPages = tabContainer;
             tabstrip.selectedIndex = 0;
             tabstrip.selectedIndex = -1;
