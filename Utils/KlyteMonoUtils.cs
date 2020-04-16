@@ -64,6 +64,9 @@ namespace Klyte.Commons.Utils
             uiItem.normalBgSprite = "OptionsDropboxListbox";
             uiItem.builtinKeyNavigation = true;
             uiItem.submitOnFocusLost = true;
+            uiItem.horizontalAlignment = UIHorizontalAlignment.Left;
+            uiItem.height = 28;
+            uiItem.padding = new RectOffset(5, 5, 5, 5);
         }
         public static Color ContrastColor(Color color)
         {

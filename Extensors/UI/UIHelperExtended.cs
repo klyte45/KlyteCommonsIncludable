@@ -342,17 +342,24 @@ namespace Klyte.Commons.Extensors
 
         public object AddTextfield(string text, string defaultContent, OnTextChanged eventChangedCallback, OnTextSubmitted eventSubmittedCallback)
         {
-            if ((eventChangedCallback != null || eventSubmittedCallback != null) && !string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
                 UITextField uITextField = AddTextfield(m_root, text, defaultContent, out _, out _);
-                uITextField.eventTextChanged += delegate (UIComponent c, string sel)
+                if (eventChangedCallback != null)
+                {
+                    uITextField.eventTextChanged += delegate (UIComponent c, string sel)
                 {
                     eventChangedCallback?.Invoke(sel);
                 };
-                uITextField.eventTextSubmitted += delegate (UIComponent c, string sel)
+                }
+                if (eventSubmittedCallback != null)
+                {
+                    uITextField.eventTextSubmitted += delegate (UIComponent c, string sel)
                 {
                     eventSubmittedCallback?.Invoke(sel);
                 };
+                }
+
                 return uITextField;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
