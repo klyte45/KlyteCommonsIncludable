@@ -1,6 +1,8 @@
-﻿using ColossalFramework.UI;
+﻿using ColossalFramework.Globalization;
+using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
+using Klyte.Commons.UI.SpriteNames;
 using System;
 using UnityEngine;
 
@@ -166,6 +168,36 @@ namespace Klyte.Commons.Utils
             button.pressedFgSprite = isCheck ? sprite + "Pressed" : spriteHov;
             button.textColor = new Color32(255, 255, 255, 255);
         }
+        public static void InitCircledButton(UIComponent parent, out UIButton button, CommonsSpriteNames sprite, MouseEventHandler onClicked, string tooltipLocale, float size = 40) => InitCircledButton(parent, out button, KlyteResourceLoader.GetDefaultSpriteNameFor(sprite), onClicked, tooltipLocale == null ? null : Locale.Get(tooltipLocale), size);
+
+        public static void InitCircledButton(UIComponent parent, out UIButton button, string sprite, MouseEventHandler onClicked, string name, float size = 40)
+        {
+            KlyteMonoUtils.CreateUIElement(out button, parent.transform, name, new UnityEngine.Vector4(0, 0, size, size));
+            KlyteMonoUtils.InitButtonFull(button, false, "OptionBase");
+            button.focusedBgSprite = "";
+            button.normalFgSprite = sprite;
+            button.scaleFactor = 0.6f;
+            button.eventClicked += onClicked;
+            button.tooltip = name;
+        }
+
+        public static UIButton AddHelpButton(UIComponent label, UIComponent field, Action onClicked, bool resizeToCreateSpace = true)
+        {
+            if (label.parent != field.parent)
+            {
+                LogUtils.DoWarnLog("Invalid request to add help button - different parents!");
+                return null;
+            }
+            if (resizeToCreateSpace)
+            {
+                label.width -= 15;
+                field.width -= 15;
+            }
+            InitCircledButton(label.parent, out UIButton result, CommonsSpriteNames.K45_QuestionMark, (x, y) => onClicked(), "K45_CMNS_HELP", 30);
+            result.scaleFactor = 1;
+            return result;
+        }
+
         public static void CopySpritesEvents(UIButton source, UIButton target)
         {
             target.disabledBgSprite = source.disabledBgSprite;

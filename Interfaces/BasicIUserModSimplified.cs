@@ -44,12 +44,28 @@ namespace Klyte.Commons.Interfaces
                  pi.assemblyCount > 0
                  && pi.isEnabled
                  && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
-             ).FirstOrDefault()?.publishedFileID.AsUInt64 ?? 0;
+             ).FirstOrDefault()?.publishedFileID.AsUInt64 ?? 0xFFFFFFFFFFFFFFFE;
                 }
                 return m_modId;
             }
         }
 
+        private static string m_rootFolder;
+
+        public static string RootFolder
+        {
+            get {
+                if (m_rootFolder == null)
+                {
+                    m_rootFolder = Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+                 pi.assemblyCount > 0
+                 && pi.isEnabled
+                 && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
+             ).FirstOrDefault()?.modPath ?? "????";
+                }
+                return m_rootFolder;
+            }
+        }
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
         public static C Controller { get; private set; }
@@ -175,14 +191,18 @@ namespace Klyte.Commons.Interfaces
 
             m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
 
-            if (Locale.Get("K45_TEST_UP") != "OK")
+            if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK" || Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
             {
-                KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
-                if (Locale.Get("K45_TEST_UP") != "OK")
+                if (Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) != CommonProperties.ModName)
                 {
-                    LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
+                    KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
+                    if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK")
+                    {
+                        LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
+                    }
+                    LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
                 }
-                LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
+
                 m_showLangDropDown = true;
             }
             foreach (string lang in KlyteLocaleManager.locales)
@@ -195,7 +215,7 @@ namespace Klyte.Commons.Interfaces
                 content = KlyteResourceLoader.LoadResourceString($"commons.UI.i18n.{lang}.properties");
                 if (content != null)
                 {
-                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_common.txt", content);
+                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_common_{K45DialogControl.VERSION}.txt", content);
                 }
 
             }

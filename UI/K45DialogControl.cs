@@ -1,9 +1,16 @@
-﻿using ColossalFramework.DataBinding;
+﻿using ColossalFramework;
+using ColossalFramework.DataBinding;
+using ColossalFramework.Globalization;
 using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensors;
+using Klyte.Commons.i18n;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -11,8 +18,9 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200414";
+        public const string VERSION = "20200417";
         private const string TEXT_INPUT_ID = "TextInput";
+        private const string TUTORIAL_FOLDER_NAME = "Tutorial";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -55,6 +63,23 @@ namespace Klyte.Commons.Utils
             closeButton.pressedBgSprite = "buttonclosepressed";
 
 
+            #endregion
+
+            #region Texture area
+            KlyteMonoUtils.CreateUIElement(out UIPanel textureContainer, mainPanel.transform, "TextureSupContainer");
+            textureContainer.size = new Vector2(800, 0);
+            textureContainer.autoFitChildrenVertically = true;
+
+            KlyteMonoUtils.CreateUIElement(out UIPanel textureSubContainer, textureContainer.transform, "TextureContainer");
+            textureSubContainer.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
+            textureSubContainer.pivot = UIPivotPoint.TopCenter;
+            textureSubContainer.autoFitChildrenVertically = true;
+            textureSubContainer.autoFitChildrenHorizontally = true;
+            textureSubContainer.autoLayout = true;
+            textureSubContainer.relativePosition = new Vector3(0, 0);
+
+            KlyteMonoUtils.CreateUIElement(out UITextureSprite textureSprite, textureSubContainer.transform, "TextureSprite");
+            textureSprite.size = default;
             #endregion
 
             #region Text area
@@ -167,6 +192,7 @@ namespace Klyte.Commons.Utils
         public void Awake()
         {
             m_mainPanel = GetComponent<UIPanel>();
+
             m_titleContainer = m_mainPanel.Find<UIPanel>("TitleContainer");
             m_title = m_titleContainer.Find<UILabel>("Title");
             m_modIcon = m_titleContainer.Find<UISprite>("ModIcon");
@@ -180,6 +206,9 @@ namespace Klyte.Commons.Utils
             m_button4 = m_mainPanel.Find<UIButton>("ButtonAction4");
 
             m_textField = m_mainPanel.Find<UITextField>(TEXT_INPUT_ID);
+
+            m_textureSupContainer = m_mainPanel.Find<UIPanel>("TextureSupContainer");
+            m_textureSprite = m_mainPanel.Find<UITextureSprite>("TextureSprite");
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
 
@@ -197,7 +226,7 @@ namespace Klyte.Commons.Utils
             boxContainerTitle.relativePosition = new Vector3(0, 2);
 
             //This action allow centralize all calls to single object, coming from any mod
-            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => Enqueue(BindProperties.FromDictionary(properties), callback));
+            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => StartCoroutine(Enqueue(BindProperties.FromDictionary(properties), callback)));
             m_mainPanel.stringUserData = VERSION;
 
 
@@ -223,17 +252,24 @@ namespace Klyte.Commons.Utils
 
         private void OnButton4() => Close(4);
 
-        private void Enqueue(BindProperties properties, Func<int, bool> callback)
+        private IEnumerator Enqueue(BindProperties properties, Func<int, bool> callback)
         {
-            if (m_currentCallback == null)
+            yield return 0;
+            lock (this)
             {
-                UIView.library.ShowModal(PANEL_ID);
-                m_currentCallback = callback;
-                SetProperties(properties);
-            }
-            else
-            {
-                m_modalStack.Enqueue(Tuple.NewRef(ref properties, ref callback));
+                if (m_currentCallback == null)
+                {
+                    UIView.library.ShowModal(PANEL_ID);
+                    SetProperties(properties, callback);
+                }
+                else
+                {
+                    string str = properties.ToString();
+                    if (m_modalQueue.Where(x => x.First == str).Count() == 0)
+                    {
+                        m_modalQueue.Enqueue(Tuple.NewRef(ref str, ref properties, ref callback));
+                    }
+                }
             }
         }
 
@@ -243,18 +279,82 @@ namespace Klyte.Commons.Utils
             {
                 m_currentCallback = null;
                 UIView.library.Hide(PANEL_ID);
-                if (m_modalStack.Count > 0)
+                if (m_modalQueue.Count > 0)
                 {
-                    Tuple<BindProperties, Func<int, bool>> next = m_modalStack.Dequeue();
+                    Tuple<string, BindProperties, Func<int, bool>> next = m_modalQueue.Dequeue();
                     UIView.library.ShowModal(PANEL_ID);
-                    m_currentCallback = next.Second;
-                    SetProperties(next.First);
+                    SetProperties(next.Second, next.Third);
                 }
             }
         }
 
-        private void SetProperties(BindProperties propertiesToSet)
+        private void SetProperties(BindProperties propertiesToSet, Func<int, bool> callback)
         {
+            if (propertiesToSet.help_isArticle)
+            {
+
+                if (!Directory.Exists(propertiesToSet.help_fullPathName))
+                {
+                    LogUtils.DoErrorLog($"Invalid tutorial path! {propertiesToSet.help_fullPathName}");
+                    Close(-1);
+                    return;
+                }
+
+                string fullText;
+                if (File.Exists($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts_{KlyteLocaleManager.CurrentLanguageId}.txt"))
+                {
+                    fullText = File.ReadAllText($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts_{KlyteLocaleManager.CurrentLanguageId}.txt");
+                }
+                else if (File.Exists($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts.txt"))
+                {
+                    fullText = File.ReadAllText($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts.txt");
+                }
+                else
+                {
+                    LogUtils.DoErrorLog($"Corrupted tutorial path! File \"texts.txt\" not found at folder {propertiesToSet.help_fullPathName}.");
+                    Close(-1);
+                    return;
+                }
+                string[] tutorialEntries = Regex.Split(fullText, "<BR>", RegexOptions.Multiline | RegexOptions.ECMAScript);
+
+                int lastPage = tutorialEntries.Length - 1;
+                int currentPage = Math.Max(0, Math.Min(lastPage, propertiesToSet.help_currentPage));
+                string targetImg = $"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}{currentPage.ToString("D3")}.jpg";
+                string textureImagePath = File.Exists(targetImg) ? targetImg : null;
+                string path = propertiesToSet.help_fullPathName;
+                string feature = propertiesToSet.help_featureName;
+                LogUtils.DoLog($"IMG: {targetImg}");
+                propertiesToSet = new BindProperties
+                {
+                    title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
+                    message = tutorialEntries[currentPage],
+                    imageTexturePath = textureImagePath,
+
+                    showClose = true,
+                    showButton1 = currentPage != 0,
+                    textButton1 = "<<<\n" + Locale.Get("K45_CMNS_PREV"),
+                    showButton2 = true,
+                    textButton2 = Locale.Get("K45_CMNS_OK"),
+                    showButton3 = currentPage != lastPage,
+                    textButton3 = ">>>\n" + Locale.Get("K45_CMNS_NEXT"),
+                };
+                callback = (x) =>
+                {
+                    if (x == 1)
+                    {
+                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1);
+                    }
+                    if (x == 3)
+                    {
+                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1);
+                    }
+                    return true;
+                };
+
+            }
+
+            m_currentCallback = callback;
+
             m_properties.FindBinding("title").property.value = propertiesToSet.title;
             m_properties.FindBinding("icon").property.value = propertiesToSet.icon ?? CommonProperties.ModIcon;
             m_properties.FindBinding("showClose").property.value = propertiesToSet.showClose || !(propertiesToSet.showButton1 || propertiesToSet.showButton2 || propertiesToSet.showButton3 || propertiesToSet.showButton4);
@@ -272,10 +372,49 @@ namespace Klyte.Commons.Utils
             m_textField.isVisible = propertiesToSet.showTextField;
             m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
 
+            m_textureSprite.size = default;
+            if (!propertiesToSet.imageTexturePath.IsNullOrWhiteSpace())
+            {
+                if (File.Exists(propertiesToSet.imageTexturePath))
+                {
+                    byte[] fileData = File.ReadAllBytes(propertiesToSet.imageTexturePath);
+                    var tex = new Texture2D(2, 2);
+                    if (tex.LoadImage(fileData))
+                    {
+                        m_textureSupContainer.isVisible = true;
+                        m_textureSprite.texture = tex;
+                        m_textureSprite.size = new Vector2(tex.width, tex.height);
+                        if (m_textureSprite.height > 400)
+                        {
+                            float proportion = m_textureSprite.width / m_textureSprite.height;
+                            m_textureSprite.height = 400;
+                            m_textureSprite.width = proportion * 400;
+                        }
+                        m_textureSupContainer.height = m_textureSprite.size.y;
+                    }
+                    else
+                    {
+                        LogUtils.DoWarnLog($"Failed loading image: {propertiesToSet.imageTexturePath}");
+                        m_textureSupContainer.isVisible = false;
+                    }
+                }
+            }
+            else
+            {
+                m_textureSprite.texture = null;
+                m_textureSupContainer.isVisible = false;
+            }
+
             float width;
-            if (propertiesToSet.useFullWindowWidth)
+            if (propertiesToSet.useFullWindowWidth || m_textureSprite.width > 800)
             {
                 width = UIView.GetAView().fixedWidth - 100;
+                if (width < m_textureSprite.width)
+                {
+                    float proportion = m_textureSprite.width / m_textureSprite.height;
+                    m_textureSprite.width = width;
+                    m_textureSprite.height = width / proportion;
+                }
             }
             else
             {
@@ -283,14 +422,18 @@ namespace Klyte.Commons.Utils
             }
             m_mainPanel.width = width;
             m_closeButton.area = new Vector4(width - 37, 3, 32, 32);
+            width -= m_mainPanel.padding.horizontal;
             m_titleContainer.width = width;
             m_boxText.width = width;
             m_buttonSupContainer.width = width;
+            m_textureSupContainer.width = width;
+
         }
 
+        #region Field Declaration
         private Func<int, bool> m_currentCallback;
         //queue to store the modal order
-        private readonly Queue<Tuple<BindProperties, Func<int, bool>>> m_modalStack = new Queue<Tuple<BindProperties, Func<int, bool>>>();
+        private readonly Queue<Tuple<string, BindProperties, Func<int, bool>>> m_modalQueue = new Queue<Tuple<string, BindProperties, Func<int, bool>>>();
 
         private UIPanel m_mainPanel;
         private UIPanel m_titleContainer;
@@ -304,8 +447,13 @@ namespace Klyte.Commons.Utils
         private UIButton m_button3;
         private UIButton m_button4;
         private UITextField m_textField;
-        private BindPropertyByKey m_properties;
+        private UITextureSprite m_textureSprite;
+        private UIPanel m_textureSupContainer;
 
+        private BindPropertyByKey m_properties;
+        #endregion
+
+        #region Modal calls
         public static void ShowModal(BindProperties properties, Func<int, bool> action)
         {
             properties.showTextField = false;
@@ -407,6 +555,48 @@ namespace Klyte.Commons.Utils
             }
         }
 
+        public static void ShowModalHelp(string pathName, string featureName, int startPage = 0)
+        {
+            string fullPathName = $"{CommonProperties.ModDllRootFolder}{Path.DirectorySeparatorChar}{TUTORIAL_FOLDER_NAME}{Path.DirectorySeparatorChar}{pathName}";
+
+            var properties = new BindProperties
+            {
+                help_isArticle = true,
+                help_currentPage = startPage,
+                help_fullPathName = fullPathName,
+                help_featureName = featureName,
+            };
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, null));
+            }
+            else
+            {
+                ShowModalInternal(properties, null);
+            }
+        }
+        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage)
+        {
+
+            var properties = new BindProperties
+            {
+                help_isArticle = true,
+                help_currentPage = startPage,
+                help_fullPathName = fullPathName,
+                help_featureName = featureName,
+            };
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, null));
+            }
+            else
+            {
+                ShowModalInternal(properties, null);
+            }
+        }
+        #endregion
+
+        #region Extra Classes
         internal struct BindProperties
         {
             public string title;
@@ -425,6 +615,14 @@ namespace Klyte.Commons.Utils
             public bool useFullWindowWidth;
             public bool showTextField;
             public string defaultTextFieldContent;
+            public string imageTexturePath;
+
+            public bool help_isArticle;
+            public string help_fullPathName;
+            public int help_currentPage;
+            public string help_featureName;
+
+
 
             public static BindProperties FromDictionary(Dictionary<string, object> dict)
             {
@@ -449,6 +647,12 @@ namespace Klyte.Commons.Utils
                         case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
                         case "showTextField": result.showTextField = (bool)kv.Value; break;
                         case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
+                        case "imageTexturePath": result.imageTexturePath = (string)kv.Value; break;
+
+                        case "help_isArticle": result.help_isArticle = (bool)kv.Value; break;
+                        case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
+                        case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
+                        case "help_featureName": result.help_featureName = (string)kv.Value; break;
                     }
                 }
                 return result;
@@ -474,11 +678,20 @@ namespace Klyte.Commons.Utils
                     ["useFullWindowWidth"] = useFullWindowWidth,
                     ["showTextField"] = showTextField,
                     ["defaultTextFieldContent"] = defaultTextFieldContent,
+                    ["imageTexturePath"] = imageTexturePath,
+
+
+                    ["help_isArticle"] = help_isArticle,
+                    ["help_fullPathName"] = help_fullPathName,
+                    ["help_currentPage"] = help_currentPage,
+                    ["help_featureName"] = help_featureName,
                 };
             }
 
-
-
+            public override string ToString() => string.Join(",", ToDictionary().ToList().Select(x => $"{x.Key}≠{x.Value}").ToArray());
         }
+
+
+        #endregion
     }
 }

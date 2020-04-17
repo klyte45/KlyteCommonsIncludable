@@ -30,10 +30,20 @@ namespace Klyte.Commons.Utils
             return tabTemplate;
         }
 
-        public static void CreateTabLocalized(this UITabstrip stripMain, string sprite, string localeKey, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) => CreateTabInternal<UICustomControl>(stripMain, sprite, Locale.Get(localeKey), objectName, scroll, textureAtlas, nullableSize, true);
+        public static UIPanel CreateTabLocalized(this UITabstrip stripMain, string sprite, string localeKey, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) => CreateTabInternal(stripMain, sprite, Locale.Get(localeKey), objectName, scroll, textureAtlas, nullableSize, true).GetComponent<UIPanel>();
         public static T CreateTabLocalized<T>(this UITabstrip stripMain, string sprite, string localeKey, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) where T : UICustomControl => CreateTabInternal<T>(stripMain, sprite, Locale.Get(localeKey), objectName, scroll, textureAtlas, nullableSize, true);
 
-        public static T CreateTabInternal<T>(this UITabstrip stripMain, string sprite, string text, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null, bool isHorizontal = true) where T : UICustomControl
+        private static T CreateTabInternal<T>(this UITabstrip stripMain, string sprite, string text, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null, bool isHorizontal = true) where T : UICustomControl
+        {
+            GameObject go = CreateTabInternal(stripMain, sprite, text, objectName, scroll, textureAtlas, nullableSize, isHorizontal);
+            if (typeof(T) != typeof(UICustomControl))
+            {
+                return go.AddComponent<T>();
+            }
+            return null;
+        }
+
+        private static GameObject CreateTabInternal(UITabstrip stripMain, string sprite, string text, string objectName, bool scroll, UITextureAtlas textureAtlas, Vector2? nullableSize, bool isHorizontal)
         {
             Vector2 size = nullableSize ?? (isHorizontal ? new Vector2(sprite.IsNullOrWhiteSpace() ? 100 : stripMain.height, stripMain.height) : new Vector2(stripMain.width, 40));
             UIButton tab = CreateTabTemplate(out UISprite logo, size, textureAtlas);
@@ -61,11 +71,8 @@ namespace Klyte.Commons.Utils
             {
                 go = contentContainer.gameObject;
             }
-            if (typeof(T) != typeof(UICustomControl))
-            {
-                return go.AddComponent<T>();
-            }
-            return null;
+
+            return go;
         }
     }
 
