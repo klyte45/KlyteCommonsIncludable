@@ -30,7 +30,8 @@ namespace Klyte.Commons.Utils
             return tabTemplate;
         }
 
-        public static UIPanel CreateTabLocalized(this UITabstrip stripMain, string sprite, string localeKey, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) => CreateTabInternal(stripMain, sprite, Locale.Get(localeKey), objectName, scroll, textureAtlas, nullableSize, true).GetComponent<UIPanel>();
+        public static UIScrollablePanel CreateScrollableTabLocalized(this UITabstrip stripMain, string sprite, string localeKey, string objectName, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) => CreateTabInternal(stripMain, sprite, Locale.Get(localeKey), objectName, true, textureAtlas, nullableSize, true).GetComponent<UIScrollablePanel>();
+        public static UIPanel CreateNonScrollableTabLocalized(this UITabstrip stripMain, string sprite, string localeKey, string objectName, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) => CreateTabInternal(stripMain, sprite, Locale.Get(localeKey), objectName, false, textureAtlas, nullableSize, true).GetComponent<UIPanel>();
         public static T CreateTabLocalized<T>(this UITabstrip stripMain, string sprite, string localeKey, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null) where T : UICustomControl => CreateTabInternal<T>(stripMain, sprite, Locale.Get(localeKey), objectName, scroll, textureAtlas, nullableSize, true);
 
         private static T CreateTabInternal<T>(this UITabstrip stripMain, string sprite, string text, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null, bool isHorizontal = true) where T : UICustomControl

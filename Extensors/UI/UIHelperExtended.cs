@@ -300,12 +300,38 @@ namespace Klyte.Commons.Extensors
         }
 
         public UIHelperExtension(UIComponent panel) => m_root = panel;
+        public UIHelperExtension(UIComponent panel, LayoutDirection layoutDirection) : this(panel)
+        {
+            if (layoutDirection == LayoutDirection.Vertical)
+            {
+                ApplyVerticalLayoutSettings();
+            }
+        }
 
         public UIHelperExtension(UIHelper panel) => m_root = (UIComponent)panel.self;
 
         public UIHelperExtension AddGroupExtended(string text) => AddGroupExtended(text, out _, out _);
 
         public UIHelperBase AddGroup(string text) => AddGroupExtended(text, out _, out _);
+
+        public void ApplyVerticalLayoutSettings()
+        {
+            if (m_root is UIPanel panel)
+            {
+                panel.autoLayout = true;
+                panel.autoLayoutDirection = LayoutDirection.Vertical;
+                panel.autoLayoutPadding = new RectOffset(0, 0, 5, 5);
+                panel.padding = new RectOffset(5, 5, 5, 5);
+                panel.autoFitChildrenVertically = true;
+                panel.autoFitChildrenHorizontally = true;
+            }
+            else if (m_root is UIScrollablePanel scrollPanel)
+            {
+                scrollPanel.autoLayout = true;
+                scrollPanel.autoLayoutDirection = LayoutDirection.Vertical;
+                scrollPanel.autoLayoutPadding = new RectOffset(0, 0, 5, 5);
+            }
+        }
 
         public UIHelperExtension AddGroupExtended(string text, out UILabel label, out UIPanel parentPanel)
         {
@@ -379,7 +405,7 @@ namespace Klyte.Commons.Extensors
                 uIPanel.autoFitChildrenVertically = true;
                 result[0] = uIPanel.Find<UITextField>("Text Field");
                 result[0].numericalOnly = true;
-                result[0].width = 60;
+                result[0].width = 90;
                 result[0].allowNegative = true;
                 result[0].allowFloats = true;
                 result[1] = GameObject.Instantiate(result[0]);

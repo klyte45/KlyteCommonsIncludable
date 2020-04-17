@@ -25,6 +25,7 @@
         K45_Delete,
         K45_Lock,
         K45_Unlock,
-        K45_QuestionMark
+        K45_QuestionMark,
+        K45_MoveCross
     }
 }
