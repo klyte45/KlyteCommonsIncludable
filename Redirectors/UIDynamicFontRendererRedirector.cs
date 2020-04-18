@@ -72,7 +72,7 @@ namespace Klyte.Commons.Redirectors
 
 
 
-        public static IEnumerable<CodeInstruction> RenderLineTranspile(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> RenderLineTranspile(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             var inst = new List<CodeInstruction>(instructions);
 
@@ -81,7 +81,7 @@ namespace Klyte.Commons.Redirectors
             {
                 if (inst[i].opcode == OpCodes.Ldstr && inst[i].operand is string str && str == "color")
                 {
-                    var newRef = new Label();
+                    Label newRef = il.DefineLabel();
                     object oldRef = inst[i + 2].operand;
                     inst[i + 2].opcode = OpCodes.Brtrue;
                     inst[i + 2].operand = newRef;
@@ -132,7 +132,7 @@ namespace Klyte.Commons.Redirectors
             {
                 float num = 0f;
                 Texture2D texture = renderer.spriteAtlas.texture;
-                float num3 = ((UIDynamicFont) renderer.font).baseline * renderer.textScale * 2.5f;
+                float num3 = ((UIDynamicFont)renderer.font).baseline * renderer.textScale * 2.5f;
                 string value = token.GetAttribute(0).m_Value.value.Split(',')[0];
                 UITextureAtlas.SpriteInfo spriteInfo = renderer.spriteAtlas[value];
                 if (spriteInfo != null)
@@ -145,7 +145,7 @@ namespace Klyte.Commons.Redirectors
             }
         }
 
-        private static List<string> GetList() => (List<string>) typeof(UIMarkupTokenizer).GetField("kValidTags", RedirectorUtils.allFlags).GetValue(null);
+        private static List<string> GetList() => (List<string>)typeof(UIMarkupTokenizer).GetField("kValidTags", RedirectorUtils.allFlags).GetValue(null);
 
         public static void RenderSpriteLine(DynamicFontRenderer renderer, UIMarkupToken token, Vector3 position, UIRenderData destination)
         {
@@ -163,10 +163,10 @@ namespace Klyte.Commons.Redirectors
             }
             else
             {
-                var midLine = new Vector3(position.x, position.y - (((UIDynamicFont) renderer.font).baseline * renderer.textScale / 2));
+                var midLine = new Vector3(position.x, position.y - (((UIDynamicFont)renderer.font).baseline * renderer.textScale / 2));
 
                 Texture2D texture = renderer.spriteAtlas.texture;
-                float calcHeight = ((UIDynamicFont) renderer.font).baseline * renderer.textScale * 2f;
+                float calcHeight = ((UIDynamicFont)renderer.font).baseline * renderer.textScale * 2f;
                 float calcProportion = spriteInfo.region.width * texture.width / (spriteInfo.region.height * texture.height);
                 float calcWidth = Mathf.CeilToInt(calcHeight * calcProportion);
 
@@ -195,7 +195,7 @@ namespace Klyte.Commons.Redirectors
                     multipler = 1;
                     textDimensions = MeasureTextWidth(renderer, args[2], textScale, out yBounds);
                 }
-                float midLineOffset = (((UIDynamicFont) renderer.font).baseline / 2 * renderer.textScale);
+                float midLineOffset = (((UIDynamicFont)renderer.font).baseline / 2 * renderer.textScale);
 
                 Color contrastColor = KlyteMonoUtils.ContrastColor(bgColor);
 
@@ -222,7 +222,7 @@ namespace Klyte.Commons.Redirectors
                     size = size - new Vector3(borderWidth, borderWidth),
                     spriteInfo = spriteInfo
                 });
-                midLineOffset = ((UIDynamicFont) renderer.font).baseline * textScale;
+                midLineOffset = ((UIDynamicFont)renderer.font).baseline * textScale;
                 Vector3 targetTextPos = midLine + VectorUtils.XY_(textAreaSize) + (new Vector3(textAreaSize.z - (textDimensions.x * multipler), -textDimensions.y) / 2);
                 RenderText(renderer, args[2], targetTextPos, multipler, destination, textScale, contrastColor, bgColor);
 
@@ -233,14 +233,14 @@ namespace Klyte.Commons.Redirectors
         {
             float width = 1f;
             float height = 0;
-            int size = Mathf.CeilToInt(((UIDynamicFont) renderer.font).baseline * textScale) * 2;
-            ((UIDynamicFont) renderer.font).RequestCharacters(text, size, FontStyle.Normal);
+            int size = Mathf.CeilToInt(((UIDynamicFont)renderer.font).baseline * textScale) * 2;
+            ((UIDynamicFont)renderer.font).RequestCharacters(text, size, FontStyle.Normal);
             yBounds = new Vector2(float.MaxValue, float.MinValue);
             CharacterInfo characterInfo = default;
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
-                ((UIDynamicFont) renderer.font).baseFont.GetCharacterInfo(c, out characterInfo, size, FontStyle.Normal);
+                ((UIDynamicFont)renderer.font).baseFont.GetCharacterInfo(c, out characterInfo, size, FontStyle.Normal);
                 if (c == '\t')
                 {
                     width += renderer.tabSize;
@@ -262,8 +262,8 @@ namespace Klyte.Commons.Redirectors
 
         private static void RenderText(DynamicFontRenderer renderer, string text, Vector3 position, float rescale, UIRenderData renderData, float textScale, Color textColor, Color outlineColor)
         {
-            var uidynamicFont = (UIDynamicFont) renderer.font;
-            float size = ((UIDynamicFont) renderer.font).baseline * textScale;
+            var uidynamicFont = (UIDynamicFont)renderer.font;
+            float size = ((UIDynamicFont)renderer.font).baseline * textScale;
             FontStyle style = FontStyle.Normal;
             int descent = uidynamicFont.Descent * 2;
             int ascent = renderer.font.baseFont.ascent * 2;
@@ -367,7 +367,7 @@ namespace Klyte.Commons.Redirectors
         }
         private static Color32 ApplyOpacity(UIFontRenderer renderer, Color32 color)
         {
-            color.a = (byte) (renderer.opacity * 255f);
+            color.a = (byte)(renderer.opacity * 255f);
             return color;
         }
 
