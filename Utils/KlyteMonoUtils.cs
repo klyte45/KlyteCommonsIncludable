@@ -413,7 +413,7 @@ namespace Klyte.Commons.Utils
             component.size = new Vector2(28, 28);
             return component;
         }
-        private static void DefaultColorPickerHandler(UIColorField dropdown, UIColorPicker popup, ref bool overridden)
+        private static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
         {
             UIPanel panel = popup.GetComponent<UIPanel>();
             overridden = true;
@@ -429,8 +429,7 @@ namespace Klyte.Commons.Utils
                     try
                     {
                         Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
-                        dropdown.selectedColor = targetColor;
-                        popup.color = targetColor;
+                        colorField.selectedColor = targetColor;
                         ((UITextField)x).textColor = Color.white;
                         ((UITextField)x).text = targetColor.ToRGB();
                     }
@@ -439,9 +438,21 @@ namespace Klyte.Commons.Utils
                         ((UITextField)x).textColor = Color.red;
                     }
                 }
+                else if (textField.text.Length == 0)
+                {
+                    colorField.selectedColor = Color.clear;
+                    ((UITextField)x).text = "";
+                }
             };
             popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();
             textField.text = ((Color32)popup.color).ToRGB();
+            InitCircledButton(panel, out UIButton clearButton, "Niet", (x, y) =>
+            {
+                colorField.selectedColor = Color.clear;
+                textField.text = "";
+            }, null, 20);
+            clearButton.relativePosition = new Vector3(220, 225);
+            clearButton.color = Color.red;
         }
 
         #endregion
