@@ -26,6 +26,7 @@
         K45_Lock,
         K45_Unlock,
         K45_QuestionMark,
-        K45_MoveCross
+        K45_MoveCross,
+        K45_Settings,
     }
 }
