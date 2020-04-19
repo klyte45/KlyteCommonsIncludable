@@ -273,11 +273,12 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public object AddSpace(int height)
+        public object AddSpace(int height) => AddSpace(m_root, height);
+        public static UIPanel AddSpace(UIComponent parent, int height)
         {
             if (height > 0)
             {
-                UIPanel uIPanel = m_root.AddUIComponent<UIPanel>();
+                UIPanel uIPanel = parent.AddUIComponent<UIPanel>();
                 uIPanel.name = "Space";
                 uIPanel.isInteractive = false;
                 uIPanel.height = height;

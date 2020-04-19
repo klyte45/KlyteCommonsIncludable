@@ -180,6 +180,15 @@ namespace Klyte.Commons.Utils
             button.eventClicked += onClicked;
             button.tooltip = name;
         }
+        public static void InitCircledButtonText(UIComponent parent, out UIButton button, string text, MouseEventHandler onClicked, string tooltip, float size = 40)
+        {
+            KlyteMonoUtils.CreateUIElement(out button, parent.transform, tooltip, new UnityEngine.Vector4(0, 0, size, size));
+            KlyteMonoUtils.InitButtonFull(button, false, "OptionBase");
+            button.focusedBgSprite = "";
+            button.text = text;
+            button.eventClicked += onClicked;
+            button.tooltip = tooltip;
+        }
 
         public static UIButton AddHelpButton(UIComponent label, UIComponent field, Action onClicked, bool resizeToCreateSpace = true)
         {
