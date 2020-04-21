@@ -28,5 +28,12 @@
         K45_QuestionMark,
         K45_MoveCross,
         K45_Settings,
+        K45_Plus,
+        K45_Minus,
+        K45_X,
+        K45_Up,
+        K45_Down,
+        K45_Left,
+        K45_Right,
     }
 }
