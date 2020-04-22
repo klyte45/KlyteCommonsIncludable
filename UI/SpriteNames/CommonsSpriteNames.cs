@@ -35,5 +35,6 @@
         K45_Down,
         K45_Left,
         K45_Right,
+        K45_Layers
     }
 }
