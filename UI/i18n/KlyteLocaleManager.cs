@@ -96,9 +96,10 @@ namespace Klyte.Commons.i18n
             m_language = CurrentLanguageId.value;
             m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
             ReadLanguage("en");
-            if (m_language != "en" && locales.Contains(m_language))
+            string targetLanguage = m_language == "" ? LocaleManager.instance.language.Substring(0, 2) : m_language;
+            if (m_language != "en" && locales.Contains(targetLanguage))
             {
-                ReadLanguage(m_language == "" ? LocaleManager.instance.language.Substring(0, 2) : m_language);
+                ReadLanguage(targetLanguage);
             }
 
             if (!skipUI)
