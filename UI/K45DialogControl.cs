@@ -18,8 +18,9 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200417";
+        public const string VERSION = "20200426";
         private const string TEXT_INPUT_ID = "TextInput";
+        private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
 
         #region Panel composition
@@ -95,14 +96,7 @@ namespace Klyte.Commons.Utils
             #endregion
 
             #region Inputs
-            KlyteMonoUtils.CreateUIElement(out UITextField textField, mainPanel.transform, "TextInput");
-            textField.minimumSize = new Vector2(boxText.minimumSize.x - 10, 25);
-            textField.autoSize = false;
-            textField.processMarkup = true;
-            textField.padding = new RectOffset(10, 10, 5, 5);
-            textField.verticalAlignment = UIVerticalAlignment.Middle;
-            textField.horizontalAlignment = UIHorizontalAlignment.Left;
-            KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
+            CreateInputs(mainPanel, boxText);
             #endregion
 
             #region Action Buttons
@@ -173,6 +167,18 @@ namespace Klyte.Commons.Utils
             #endregion
 
             return panelTestInfo;
+        }
+
+        private static void CreateInputs(UIPanel mainPanel, UILabel boxText)
+        {
+            KlyteMonoUtils.CreateUIElement(out UITextField textField, mainPanel.transform, TEXT_INPUT_ID);
+            textField.minimumSize = new Vector2(boxText.minimumSize.x - 10, 25);
+            textField.autoSize = false;
+            textField.processMarkup = true;
+            textField.padding = new RectOffset(10, 10, 5, 5);
+            textField.verticalAlignment = UIVerticalAlignment.Middle;
+            textField.horizontalAlignment = UIHorizontalAlignment.Left;
+            KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
         }
 
         private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property)
@@ -290,6 +296,7 @@ namespace Klyte.Commons.Utils
 
         private void SetProperties(BindProperties propertiesToSet, Func<int, bool> callback)
         {
+            m_mainPanel.autoLayout = true;
             if (propertiesToSet.help_isArticle)
             {
 
@@ -364,13 +371,34 @@ namespace Klyte.Commons.Utils
             m_properties.FindBinding("showButton2").property.value = propertiesToSet.showButton2;
             m_properties.FindBinding("showButton3").property.value = propertiesToSet.showButton3;
             m_properties.FindBinding("showButton4").property.value = propertiesToSet.showButton4;
-            m_properties.FindBinding("textButton1").property.value = propertiesToSet.textButton1;
-            m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2;
-            m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3;
-            m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4;
+            m_properties.FindBinding("textButton1").property.value = propertiesToSet.textButton1 ?? "";
+            m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2 ?? "";
+            m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3 ?? "";
+            m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4 ?? "";
 
             m_textField.isVisible = propertiesToSet.showTextField;
             m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
+
+            if (m_dropDown == null)
+            {
+                KlyteMonoUtils.CreateUIElement(out UIPanel DDpanel, m_mainPanel.transform);
+                DDpanel.maximumSize = new Vector2(m_boxText.minimumSize.x - 10, 40);
+                DDpanel.anchor = UIAnchorStyle.CenterHorizontal;
+                DDpanel.zOrder = m_textField.zOrder + 1;
+                DDpanel.autoLayout = true;
+                m_dropDown = UIHelperExtension.CloneBasicDropDownNoLabel(new string[0], (x) => { }, DDpanel);
+                m_dropDown.name = DD_INPUT_ID;
+                m_dropDown.minimumSize = new Vector2(m_boxText.minimumSize.x - 10, 25);
+                m_dropDown.size = new Vector2(m_boxText.minimumSize.x - 10, 40);
+                m_dropDown.autoSize = false;
+                m_dropDown.processMarkup = true;
+                m_dropDown.verticalAlignment = UIVerticalAlignment.Middle;
+                m_dropDown.horizontalAlignment = UIHorizontalAlignment.Left;
+            }
+            m_dropDown.parent.isVisible = propertiesToSet.showDropDown;
+            m_dropDown.items = propertiesToSet.dropDownOptions?.Split(BindProperties.DD_OPTIONS_SEPARATOR.ToCharArray()) ?? new string[0];
+            m_dropDown.selectedIndex = propertiesToSet.dropDownCurrentSelection;
+
 
             m_textureSprite.size = default;
             if (!propertiesToSet.imageTexturePath.IsNullOrWhiteSpace())
@@ -427,7 +455,7 @@ namespace Klyte.Commons.Utils
             m_boxText.width = width;
             m_buttonSupContainer.width = width;
             m_textureSupContainer.width = width;
-
+            m_mainPanel.autoLayout = !propertiesToSet.showDropDown;
         }
 
         #region Field Declaration
@@ -447,6 +475,7 @@ namespace Klyte.Commons.Utils
         private UIButton m_button3;
         private UIButton m_button4;
         private UITextField m_textField;
+        private UIDropDown m_dropDown;
         private UITextureSprite m_textureSprite;
         private UIPanel m_textureSupContainer;
 
@@ -594,11 +623,55 @@ namespace Klyte.Commons.Utils
                 ShowModalInternal(properties, null);
             }
         }
+
+
+
+        public static void ShowModalPromptDropDown(BindProperties properties, string[] options, int selIdx, Func<int, int, string, bool> action)
+        {
+            if (options == null || options.Length == 0)
+            {
+                LogUtils.DoErrorLog("ShowModalPromptDropDown: INVALID OPTIONS LIST!!!");
+                return;
+            }
+            properties.showDropDown = true;
+            properties.dropDownOptions = string.Join(BindProperties.DD_OPTIONS_SEPARATOR, options);
+            properties.dropDownCurrentSelection = selIdx;
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalPromptDropDownInternal(properties, action));
+            }
+            else
+            {
+                ShowModalPromptDropDownInternal(properties, action);
+            }
+        }
+
+        private static void ShowModalPromptDropDownInternal(BindProperties properties, Func<int, int, string, bool> action)
+        {
+            UIComponent uIComponent = UIView.library.Get(PANEL_ID);
+            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            {
+                bool targetAction(int x)
+                {
+                    UIDropDown dd = uIComponent.Find<UIDropDown>(DD_INPUT_ID);
+                    string result = dd?.selectedValue;
+                    int selIdx = dd?.selectedIndex ?? -2;
+                    return action(x, selIdx, result);
+                }
+                addAction(properties.ToDictionary(), targetAction);
+            }
+            else
+            {
+                ShowErrorPanelNotFound();
+            }
+        }
         #endregion
 
         #region Extra Classes
         internal struct BindProperties
         {
+            public const string DD_OPTIONS_SEPARATOR = "∫";
+
             public string title;
             public string icon;
             public bool showClose;
@@ -614,6 +687,9 @@ namespace Klyte.Commons.Utils
             public string textButton4;
             public bool useFullWindowWidth;
             public bool showTextField;
+            public bool showDropDown;
+            public string dropDownOptions;
+            public int dropDownCurrentSelection;
             public string defaultTextFieldContent;
             public string imageTexturePath;
 
@@ -646,6 +722,9 @@ namespace Klyte.Commons.Utils
                         case "textButton4": result.textButton4 = (string)kv.Value; break;
                         case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
                         case "showTextField": result.showTextField = (bool)kv.Value; break;
+                        case "showDropDown": result.showDropDown = (bool)kv.Value; break;
+                        case "dropDownOptions": result.dropDownOptions = (string)kv.Value; break;
+                        case "dropDownCurrentSelection": result.dropDownCurrentSelection = (int)kv.Value; break;
                         case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
                         case "imageTexturePath": result.imageTexturePath = (string)kv.Value; break;
 
@@ -677,6 +756,9 @@ namespace Klyte.Commons.Utils
                     ["textButton4"] = textButton4,
                     ["useFullWindowWidth"] = useFullWindowWidth,
                     ["showTextField"] = showTextField,
+                    ["showDropDown"] = showDropDown,
+                    ["dropDownOptions"] = dropDownOptions,
+                    ["dropDownCurrentSelection"] = dropDownCurrentSelection,
                     ["defaultTextFieldContent"] = defaultTextFieldContent,
                     ["imageTexturePath"] = imageTexturePath,
 
