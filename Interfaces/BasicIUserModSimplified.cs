@@ -124,6 +124,7 @@ namespace Klyte.Commons.Interfaces
 
         public void OnLevelUnloading()
         {
+            Controller = null;
             Redirector.UnpatchAll();
             PatchesApply();
         }
