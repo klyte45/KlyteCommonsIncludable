@@ -287,7 +287,7 @@ namespace Klyte.Commons.Utils
                 UIView.library.Hide(PANEL_ID);
                 if (m_modalQueue.Count > 0)
                 {
-                    Tuple<string, BindProperties, Func<int, bool>> next = m_modalQueue.Dequeue();
+                    TupleRef<string, BindProperties, Func<int, bool>> next = m_modalQueue.Dequeue();
                     UIView.library.ShowModal(PANEL_ID);
                     SetProperties(next.Second, next.Third);
                 }
@@ -461,7 +461,7 @@ namespace Klyte.Commons.Utils
         #region Field Declaration
         private Func<int, bool> m_currentCallback;
         //queue to store the modal order
-        private readonly Queue<Tuple<string, BindProperties, Func<int, bool>>> m_modalQueue = new Queue<Tuple<string, BindProperties, Func<int, bool>>>();
+        private readonly Queue<TupleRef<string, BindProperties, Func<int, bool>>> m_modalQueue = new Queue<TupleRef<string, BindProperties, Func<int, bool>>>();
 
         private UIPanel m_mainPanel;
         private UIPanel m_titleContainer;
