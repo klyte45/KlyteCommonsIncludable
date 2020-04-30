@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Klyte.Commons.Utils
 {
-    public class CoroutineWithData<T> where T : class
+    public class CoroutineWithData<T>
     {
         public Coroutine Coroutine { get; private set; }
         public T result;
@@ -29,6 +29,6 @@ namespace Klyte.Commons.Utils
 
     public static class CoroutineWithData
     {
-        public static CoroutineWithData<U> From<U>(MonoBehaviour owner, IEnumerator<U> target) where U : class => new CoroutineWithData<U>(owner, target);
+        public static CoroutineWithData<U> From<U>(MonoBehaviour owner, IEnumerator<U> target) => new CoroutineWithData<U>(owner, target);
     }
 }
