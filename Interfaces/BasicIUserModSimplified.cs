@@ -44,7 +44,7 @@ namespace Klyte.Commons.Interfaces
                  pi.assemblyCount > 0
                  && pi.isEnabled
                  && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
-             ).FirstOrDefault()?.publishedFileID.AsUInt64 ?? 0xFFFFFFFFFFFFFFFE;
+             ).Select(x => x?.publishedFileID.AsUInt64 ?? ulong.MaxValue).Min();
                 }
                 return m_modId;
             }
@@ -418,13 +418,17 @@ namespace Klyte.Commons.Interfaces
             }
             else
             {
-                return VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
+                return VerifyModsEnabled(IncompatibleModListAll, IncompatibleDllModListAll);
             }
         }
-        public static Dictionary<ulong, string> VerifyModsEnabled(List<ulong> modIds, List<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+        public static Dictionary<ulong, string> VerifyModsEnabled(IEnumerable<ulong> modIds, IEnumerable<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
             && pi.isEnabled
-            && (modIds.Contains(pi.publishedFileID.AsUInt64) || pi.GetAssemblies().Where(x => modsDlls.Contains(x.GetName().Name)).Count() > 0)
+            && (
+                 modIds.Contains(pi.publishedFileID.AsUInt64)
+                || pi.GetAssemblies().Where(x =>
+                    modsDlls.Contains(x.GetName().Name)                    
+                ).Count() > 0)
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
         public void OnViewStart()
         {
@@ -435,8 +439,15 @@ namespace Klyte.Commons.Interfaces
 
         protected virtual void ExtraOnViewStartActions() { }
 
-        public virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
-        public virtual List<string> IncompatibleDllModList { get; } = new List<string>();
+        protected virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
+        protected virtual List<string> IncompatibleDllModList { get; } = new List<string>();
+
+        private List<ulong> IncompatibleModListCommons { get; } = new List<ulong>();
+        private List<string> IncompatibleDllModListCommons { get; } = new List<string>();
+
+
+        public IEnumerable<ulong> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);
+        public IEnumerable<string> IncompatibleDllModListAll => IncompatibleDllModListCommons.Union(IncompatibleDllModList);
 
     }
 
