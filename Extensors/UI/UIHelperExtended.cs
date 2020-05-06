@@ -273,11 +273,12 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public object AddSpace(int height)
+        public object AddSpace(int height) => AddSpace(m_root, height);
+        public static UIPanel AddSpace(UIComponent parent, int height)
         {
             if (height > 0)
             {
-                UIPanel uIPanel = m_root.AddUIComponent<UIPanel>();
+                UIPanel uIPanel = parent.AddUIComponent<UIPanel>();
                 uIPanel.name = "Space";
                 uIPanel.isInteractive = false;
                 uIPanel.height = height;
@@ -300,12 +301,37 @@ namespace Klyte.Commons.Extensors
         }
 
         public UIHelperExtension(UIComponent panel) => m_root = panel;
+        public UIHelperExtension(UIComponent panel, LayoutDirection layoutDirection) : this(panel)
+        {
+            if (layoutDirection == LayoutDirection.Vertical)
+            {
+                ApplyVerticalLayoutSettings();
+            }
+        }
 
         public UIHelperExtension(UIHelper panel) => m_root = (UIComponent)panel.self;
 
         public UIHelperExtension AddGroupExtended(string text) => AddGroupExtended(text, out _, out _);
 
         public UIHelperBase AddGroup(string text) => AddGroupExtended(text, out _, out _);
+
+        public void ApplyVerticalLayoutSettings()
+        {
+            if (m_root is UIPanel panel)
+            {
+                panel.autoLayout = true;
+                panel.autoLayoutDirection = LayoutDirection.Vertical;
+                panel.autoLayoutPadding = new RectOffset(0, 0, 5, 5);
+                panel.padding = new RectOffset(5, 5, 5, 5);
+                panel.autoFitChildrenVertically = true;
+            }
+            else if (m_root is UIScrollablePanel scrollPanel)
+            {
+                scrollPanel.autoLayout = true;
+                scrollPanel.autoLayoutDirection = LayoutDirection.Vertical;
+                scrollPanel.autoLayoutPadding = new RectOffset(0, 0, 5, 5);
+            }
+        }
 
         public UIHelperExtension AddGroupExtended(string text, out UILabel label, out UIPanel parentPanel)
         {
@@ -342,17 +368,24 @@ namespace Klyte.Commons.Extensors
 
         public object AddTextfield(string text, string defaultContent, OnTextChanged eventChangedCallback, OnTextSubmitted eventSubmittedCallback)
         {
-            if ((eventChangedCallback != null || eventSubmittedCallback != null) && !string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
                 UITextField uITextField = AddTextfield(m_root, text, defaultContent, out _, out _);
-                uITextField.eventTextChanged += delegate (UIComponent c, string sel)
+                if (eventChangedCallback != null)
+                {
+                    uITextField.eventTextChanged += delegate (UIComponent c, string sel)
                 {
                     eventChangedCallback?.Invoke(sel);
                 };
-                uITextField.eventTextSubmitted += delegate (UIComponent c, string sel)
+                }
+                if (eventSubmittedCallback != null)
+                {
+                    uITextField.eventTextSubmitted += delegate (UIComponent c, string sel)
                 {
                     eventSubmittedCallback?.Invoke(sel);
                 };
+                }
+
                 return uITextField;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
@@ -372,7 +405,7 @@ namespace Klyte.Commons.Extensors
                 uIPanel.autoFitChildrenVertically = true;
                 result[0] = uIPanel.Find<UITextField>("Text Field");
                 result[0].numericalOnly = true;
-                result[0].width = 60;
+                result[0].width = 90;
                 result[0].allowNegative = true;
                 result[0].allowFloats = true;
                 result[1] = GameObject.Instantiate(result[0]);
@@ -399,6 +432,45 @@ namespace Klyte.Commons.Extensors
                 result[0].zOrder = 1;
                 result[1].zOrder = 2;
                 result[2].zOrder = 3;
+                return result;
+            }
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            return null;
+        }
+        public UITextField[] AddVector2Field(string name, Vector2 defaultValue, Action<Vector2> eventSubmittedCallback)
+        {
+            if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
+            {
+                var result = new UITextField[2];
+                var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.Find<UILabel>("Label").text = name;
+                uIPanel.autoLayout = true;
+                uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
+                uIPanel.wrapLayout = false;
+                uIPanel.autoFitChildrenVertically = true;
+                result[0] = uIPanel.Find<UITextField>("Text Field");
+                result[0].numericalOnly = true;
+                result[0].width = 90;
+                result[0].allowNegative = true;
+                result[0].allowFloats = true;
+                result[1] = GameObject.Instantiate(result[0]);
+                result[1].transform.SetParent(result[0].transform.parent);
+
+                void textSubmitAction(UIComponent c, string sel)
+                {
+                    (c as UITextField).text = sel.Replace(LocaleManager.cultureInfo.NumberFormat.NumberDecimalSeparator, ".");
+                    var resultV3 = new Vector2();
+                    float.TryParse(result[0].text, out resultV3.x);
+                    float.TryParse(result[1].text, out resultV3.y);
+                    eventSubmittedCallback?.Invoke(resultV3);
+                }
+                result[0].eventTextSubmitted += textSubmitAction;
+                result[1].eventTextSubmitted += textSubmitAction;
+                result[0].text = defaultValue.x.ToString();
+                result[1].text = defaultValue.y.ToString();
+                result[1].text = defaultValue.y.ToString();
+                result[0].zOrder = 1;
+                result[1].zOrder = 2;
                 return result;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
