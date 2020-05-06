@@ -132,7 +132,7 @@ namespace Klyte.Commons.Utils
         {
             foreach (Package pack in PackageManager.allPackages)
             {
-                IEnumerable<Asset> assets = pack.FilterAssets((AssetType) 103);
+                IEnumerable<Asset> assets = pack.FilterAssets((AssetType)103);
                 if (assets.Count() == 0)
                 {
                     continue;

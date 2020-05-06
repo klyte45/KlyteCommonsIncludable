@@ -26,17 +26,43 @@ namespace Klyte.Commons.Interfaces
             LogUtils.DoLog($"LOADING DATA {GetType()}");
             instance.Instances = new Dictionary<Type, IDataExtensor>();
             List<Type> instancesExt = ReflectionUtils.GetInterfaceImplementations(typeof(IDataExtensor), GetType());
-            LogUtils.DoLog($"SUBTYPE COUNT: {instancesExt.Count}");
+            var instancesLegacies = ReflectionUtils.GetSubtypesRecursive(typeof(DataExtensorLegacyBase<>), GetType()).ToDictionary(x => x.BaseType.GetGenericArguments()[0], x => x);
+            LogUtils.DoLog($"SUBTYPE COUNT: {instancesExt.Count}; LEGACY COUNT: {instancesLegacies.Count}");
             foreach (Type type in instancesExt)
             {
                 LogUtils.DoLog($"LOADING DATA TYPE {type}");
                 var basicInstance = (IDataExtensor)type.GetConstructor(new Type[0]).Invoke(new Type[0]);
                 if (!SerializableDataManager.EnumerateData().Contains(basicInstance.SaveId))
                 {
-                    LogUtils.DoLog($"NO DATA TYPE {type}");
+                    LogUtils.DoLog($"SEARCHING FOR LEGACY {type}");
+                    if (instancesLegacies.ContainsKey(type))
+                    {
+                        var basicInstanceLegacy = (IDataExtensorLegacy)instancesLegacies[type].GetConstructor(new Type[0]).Invoke(new Type[0]);
+                        if (!SerializableDataManager.EnumerateData().Contains(basicInstanceLegacy.SaveId))
+                        {
+                            byte[] storage2 = MemoryStreamToArray(basicInstanceLegacy.SaveId);
+                            try
+                            {
+                                instance.Instances[type] = basicInstanceLegacy.Deserialize(storage2) ?? basicInstance;
+                                if (CommonProperties.DebugMode)
+                                {
+                                    string content = System.Text.Encoding.UTF8.GetString(storage2);
+                                    LogUtils.DoLog($"{type} DATA LEGACY {storage2.Length}b => {content}");
+                                }
+                                continue;
+                            }
+                            catch (Exception e)
+                            {
+                                string content = System.Text.Encoding.UTF8.GetString(storage2);
+                                LogUtils.DoLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage2.Length}b:\n{content}");
+                            }
+                        }
+                    }
+                    LogUtils.DoLog($"NO DATA TYPE {type} & NO LEGACY");
                     instance.Instances[type] = basicInstance;
                     basicInstance.LoadDefaults();
                     continue;
+
                 }
                 using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId));
                 byte[] storage = memoryStream.ToArray();
@@ -62,6 +88,13 @@ namespace Klyte.Commons.Interfaces
                 OnDataLoaded?.Invoke();
                 OnDataLoaded = null;
             });
+        }
+
+        private byte[] MemoryStreamToArray(string saveId)
+        {
+            using var memoryStream2 = new MemoryStream(SerializableDataManager.LoadData(saveId));
+            byte[] storage2 = memoryStream2.ToArray();
+            return storage2;
         }
 
         // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220
