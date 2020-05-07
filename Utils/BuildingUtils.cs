@@ -99,8 +99,8 @@ namespace Klyte.Commons.Utils
         }
 
 
-        public static ushort GetBuildingDistrict(uint bId) => GetBuildingDistrict(Singleton<BuildingManager>.instance.m_buildings.m_buffer[bId]);
-        public static ushort GetBuildingDistrict(Building b) => DistrictManager.instance.GetDistrict(b.m_position);
+        public static ushort GetBuildingDistrict(uint bId) => GetBuildingDistrict(ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[bId]);
+        public static ushort GetBuildingDistrict(ref Building b) => DistrictManager.instance.GetDistrict(b.m_position);
 
 
 

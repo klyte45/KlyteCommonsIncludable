@@ -1,47 +1,85 @@
 ﻿using ColossalFramework;
-using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
+using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.i18n;
 using Klyte.Commons.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using static ColossalFramework.UI.UITextureAtlas;
+using static Klyte.Commons.Utils.K45DialogControl;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class BasicIUserModSimplified<U, C> : IUserMod, ILoadingExtension
-        where U : BasicIUserModSimplified<U, C>, new()
-        where C : MonoBehaviour
-    {
 
+    public abstract class BasicIUserModSimplified<U, C> : IUserMod, ILoadingExtension, IViewStartActions
+        where U : BasicIUserModSimplified<U, C>, new()
+        where C : BaseController<U, C>
+    {
         public abstract string SimpleName { get; }
+        public virtual string IconName { get; } = $"K45_{CommonProperties.Acronym}_Icon";
         public virtual bool UseGroup9 => true;
-        public abstract void LoadSettings();
-        public abstract void DoLog(string fmt, params object[] args);
-        public abstract void DoErrorLog(string fmt, params object[] args);
-        public abstract void TopSettingsUI(UIHelperExtension ext);
+        public virtual void DoLog(string fmt, params object[] args) => LogUtils.DoLog(fmt, args);
+        public virtual void DoErrorLog(string fmt, params object[] args) => LogUtils.DoErrorLog(fmt, args);
+        public virtual void TopSettingsUI(UIHelperExtension ext) { }
 
         private GameObject m_topObj;
         public Transform RefTransform => m_topObj?.transform;
 
+        private static ulong m_modId;
+
+        public static ulong ModId
+        {
+            get {
+                if (m_modId == 0)
+                {
+                    m_modId = Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+                 pi.assemblyCount > 0
+                 && pi.isEnabled
+                 && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
+             ).Select(x => x?.publishedFileID.AsUInt64 ?? ulong.MaxValue).Min();
+                }
+                return m_modId;
+            }
+        }
+
+        private static string m_rootFolder;
+
+        public static string RootFolder
+        {
+            get {
+                if (m_rootFolder == null)
+                {
+                    m_rootFolder = Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+                 pi.assemblyCount > 0
+                 && pi.isEnabled
+                 && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
+             ).FirstOrDefault()?.modPath ?? "????";
+                }
+                return m_rootFolder;
+            }
+        }
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
-        public C Controller { get; private set; }
+        public static C Controller { get; private set; }
 
-        public void OnCreated(ILoading loading)
+        public virtual void OnCreated(ILoading loading)
         {
-
+            if (loading == null || (!loading.loadingComplete && !IsValidLoadMode(loading)))
+            {
+                Redirector.UnpatchAll();
+            }
         }
+
         public void OnLevelLoaded(LoadMode mode)
         {
-
             OnLevelLoadedInherit(mode);
             OnLevelLoadingInternal();
         }
@@ -50,47 +88,71 @@ namespace Klyte.Commons.Interfaces
         {
             if (IsValidLoadMode(mode))
             {
+                if (!typeof(C).IsGenericType)
+                {
                 m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
-                Type typeTarg = typeof(IRedirectable);
-                List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, GetType());
-                LogUtils.DoLog($"{SimpleName} Redirectors: {instances.Count()}");
-                foreach (Type t in instances)
-                {
-                    LogUtils.DoLog($"Redirector: {t}");
-                    m_topObj.AddComponent(t);
-                }
-                if (typeof(C) != typeof(MonoBehaviour))
-                {
                     Controller = m_topObj.AddComponent<C>();
                 }
+                SimulationManager.instance.StartCoroutine(LevelUnloadBinds());
+            }
+        }
 
+        private IEnumerator LevelUnloadBinds()
+        {
+            yield return 0;
                 UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
                 if (toMainMenuButton != null)
                 {
-                    toMainMenuButton.isEnabled = false;
-                    toMainMenuButton.tooltipLocaleID = "K45_TO_MAIN_MENU_DISABLE_WARNING";
-                    toMainMenuButton.isTooltipLocalized = true;
+                toMainMenuButton.eventClick += (x, y) =>
+                {
+                    GameObject.FindObjectOfType<ToolsModifierControl>().CloseEverything();
+                    ExtraUnloadBinds();
+                };
                 }
             }
-        }
+
+        protected virtual void ExtraUnloadBinds() { }
 
         protected virtual void OnLevelLoadingInternal()
         {
 
         }
 
-        private static bool IsValidLoadMode(LoadMode mode) => mode == LoadMode.LoadGame || mode == LoadMode.LoadScenario || mode == LoadMode.NewGame || mode == LoadMode.NewGameFromScenario;
-
+        protected virtual bool IsValidLoadMode(ILoading loading) => loading?.currentMode == AppMode.Game;
+        protected virtual bool IsValidLoadMode(LoadMode mode) => mode == LoadMode.LoadGame || mode == LoadMode.LoadScenario || mode == LoadMode.NewGame || mode == LoadMode.NewGameFromScenario;
         public string GeneralName => $"{SimpleName} (v{Version})";
 
         public void OnLevelUnloading()
         {
-            if (typeof(U).Assembly.GetName().Version.Revision != 9999)
-            {
-                Application.Quit();
-            }
+            Controller = null;
+            Redirector.UnpatchAll();
+            PatchesApply();
         }
-        public virtual void OnReleased() => OnLevelUnloading();
+        public virtual void OnReleased()
+            {
+
+            PluginManager.instance.eventPluginsStateChanged -= SearchIncompatibilitiesModal;
+            }
+
+        protected void PatchesApply()
+        {
+            Redirector.PatchAll();
+            OnPatchesApply();
+        }
+
+        protected virtual void OnPatchesApply() { }
+
+        public void OnEnabled()
+        {
+            if (CurrentSaveVersion.value != FullVersion)
+            {
+                needShowPopup = true;
+            }
+            FileUtils.EnsureFolderCreation(CommonProperties.ModRootFolder);
+            PatchesApply();
+        }
+
+        public void OnDisabled() => Redirector.UnpatchAll();
 
         public static string MinorVersion => MajorVersion + "." + typeof(U).Assembly.GetName().Version.Build;
         public static string MajorVersion => typeof(U).Assembly.GetName().Version.Major + "." + typeof(U).Assembly.GetName().Version.Minor;
@@ -119,24 +181,8 @@ namespace Klyte.Commons.Interfaces
         private SavedString CurrentSaveVersion { get; } = new SavedString(CommonProperties.Acronym + "SaveVersion", Settings.gameSettingsFile, "null", true);
         public static bool IsCityLoaded => Singleton<SimulationManager>.instance.m_metaData != null;
 
-        public static U Instance { get; set; }
-
-        protected void Construct()
-        {
-            Instance = this as U;
-            Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " LOADING ");
-            LoadSettings();
-            Debug.LogWarningFormat(CommonProperties.Acronym + "v" + MajorVersion + " SETTING FILES");
-            if (DebugMode.value)
-            {
-                Debug.LogWarningFormat("currentSaveVersion.value = {0}, fullVersion = {1}", CurrentSaveVersion.value, FullVersion);
-            }
-
-            if (CurrentSaveVersion.value != FullVersion)
-            {
-                needShowPopup = true;
-            }
-        }
+        public static U m_instance = new U();
+        public static U Instance => m_instance;
 
         private UIComponent m_onSettingsUiComponent;
         private bool m_showLangDropDown = false;
@@ -146,14 +192,18 @@ namespace Klyte.Commons.Interfaces
 
             m_onSettingsUiComponent = new UIHelperExtension((UIHelper) helperDefault).Self ?? m_onSettingsUiComponent;
 
-            if (Locale.Get("K45_TEST_UP") != "OK")
+            if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK" || Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
             {
+                if (Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) != CommonProperties.ModName)
+                {
                 KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
-                if (Locale.Get("K45_TEST_UP") != "OK")
+                    if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK")
                 {
                     LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
                 }
                 LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
+                }
+
                 m_showLangDropDown = true;
             }
             foreach (string lang in KlyteLocaleManager.locales)
@@ -166,7 +216,7 @@ namespace Klyte.Commons.Interfaces
                 content = KlyteResourceLoader.LoadResourceString($"commons.UI.i18n.{lang}.properties");
                 if (content != null)
                 {
-                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_common.txt", content);
+                    File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}0_common_{K45DialogControl.VERSION}.txt", content);
                 }
 
             }
@@ -182,9 +232,9 @@ namespace Klyte.Commons.Interfaces
             }
 
             var newSprites = new List<SpriteInfo>();
-            TextureAtlasUtils.LoadIamgesFromResources("commons.UI.Images", ref newSprites);
-            TextureAtlasUtils.LoadIamgesFromResources("UI.Images", ref newSprites);
-            LogUtils.DoErrorLog($"ADDING {newSprites.Count} sprites!");
+            TextureAtlasUtils.LoadImagesFromResources("commons.UI.Images", ref newSprites);
+            TextureAtlasUtils.LoadImagesFromResources("UI.Images", ref newSprites);
+            LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
 
@@ -203,7 +253,8 @@ namespace Klyte.Commons.Interfaces
                 CreateGroup9(helper);
             }
 
-
+            ShowVersionInfoPopup();
+            SearchIncompatibilitiesModal();
             LogUtils.DoLog("End Loading Options");
         }
 
@@ -221,6 +272,32 @@ namespace Klyte.Commons.Interfaces
             {
                 ShowVersionInfoPopup(true);
             });
+            group9.AddButton("Report-a-bug helper", () => K45DialogControl.ShowModal(new K45DialogControl.BindProperties()
+            {
+                icon = IconName,
+                title = "Report-a-bug helper",
+                message = "If you find any problem with this mod, please send me the output_log.txt (or player.log on Mac/Linux) in the mod Workshop page. If applies, a printscreen can help too to make a better guess about what is happening wrong here...\n\n" +
+                         "There's a link for a Workshop guide by <color #008800>aubergine18</color> explaining how to find your log file, depending of OS you're using.\nFeel free to create a topic at Workshop or just leave a comment linking your files.",
+                showButton1 = true,
+                textButton1 = "Okay...",
+                showButton2 = true,
+                textButton2 = "Go to the guide",
+                showButton3 = true,
+                textButton3 = "Go to mod page"
+            }, (x) =>
+            {
+                if (x == 2)
+                {
+                    ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=463645931");
+                    return false;
+                }
+                if (x == 3)
+                {
+                    ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
+                    return false;
+                }
+                return true;
+            }));
 
             if (m_showLangDropDown)
             {
@@ -247,46 +324,130 @@ namespace Klyte.Commons.Interfaces
             {
                 try
                 {
-                    UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
-                    if (uIComponent != null)
+                    string title = $"{SimpleName} v{Version}";
+                    string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
+                    string text = $"{SimpleName} was updated! Release notes:\n\n{notes}\n\n<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Current Version: <color #FFFF00>{FullVersion}</color>";
+                    if (!force)
                     {
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                        BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                        if (component != null)
+                        text += "\n\n<Color #FF0000>REMEMBER!</Color> If you just activated the mod in the mod list, restart the game before playing by the first time!\nIf you just reading this on the main menu when opened the game, just go ahead and enjoy the game. =V";
+                    }
+                    ShowModal(new BindProperties()
                         {
-                            string title = $"{SimpleName.Replace("&", "and")} v{Version}";
-                            string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
-                            string text = $"{SimpleName.Replace("&", "and")} was updated! Release notes:\r\n\r\n" + notes;
-                            string img = "IconMessage";
-                            component.SetProperties(TooltipHelper.Format(new string[]
+                        icon = IconName,
+                        showClose = true,
+                        showButton1 = true,
+                        textButton1 = "Okay!",
+                        showButton2 = true,
+                        textButton2 = "Follow Klyte45 on Twitter!",
+                        showButton3 = true,
+                        textButton3 = "Follow Klyte45 on Facebook!",
+                        showButton4 = true,
+                        textButton4 = "Subscribe to Klyte45 channel on YouTube!",
+                        messageAlign = UIHorizontalAlignment.Left,
+                        title = title,
+                        message = text,
+                    }, (x) =>
                             {
-                            "title",
-                            title,
-                            "message",
-                            text,
-                            "img",
-                            img
-                            }));
+                        switch (x)
+                        {
+                            case 0:
+                            case 1:
                             needShowPopup = false;
                             CurrentSaveVersion.value = FullVersion;
+                                break;
+                            case 2:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
+                                break;
+                            case 3:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
+                                break;
+                            case 4:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
+                                break;
+
+                        }
+                        return x <= 1;
+                    });
+
                             return true;
                         }
-                        return false;
-                    }
-                    else
-                    {
-                        LogUtils.DoLog("PANEL NOT FOUND!!!!");
-                        return false;
-                    }
-                }
                 catch (Exception e)
                 {
-                    DoErrorLog("showVersionInfoPopup ERROR {0} {1}", e.GetType(), e.Message);
+                    DoErrorLog("showVersionInfoPopup ERROR {0} {1}\n{2}", e.GetType(), e.Message, e.StackTrace);
                 }
             }
-            return false;
+                        return false;
+                    }
+        public void SearchIncompatibilitiesModal()
+                    {
+            try
+            {
+                Dictionary<ulong, string> notes = SearchIncompatibilities();
+                if (notes != null && notes.Count > 0)
+                {
+                    string title = $"{SimpleName} - Incompatibility report";
+                    string text;
+                    unchecked
+                    {
+                        text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the <color>{SimpleName}</color> work properly." +
+                            $"\n\n{string.Join("\n", notes.Select(x => $"\t -{x.Value} (id: {(x.Key == (ulong)-1 ? "<LOCAL>" : x.Key.ToString())})").ToArray())}" +
+                            $"\n\nDisable or unsubscribe them at main menu and try again!";
+                    }
+                    ShowModal(new BindProperties()
+                    {
+                        icon = IconName,
+                        showButton1 = true,
+                        textButton1 = "Err... Okay!",
+                        messageAlign = UIHorizontalAlignment.Left,
+                        title = title,
+                        message = text,
+                    }, (x) => true);
+                }
+            }
+                catch (Exception e)
+                {
+                DoErrorLog("SearchIncompatibilitiesModal ERROR {0} {1}\n{2}", e.GetType(), e.Message, e.StackTrace);
+                }
+            }
+
+        public Dictionary<ulong, string> SearchIncompatibilities()
+        {
+            if (IncompatibleModList.Count == 0)
+            {
+                return null;
         }
+            else
+            {
+                return VerifyModsEnabled(IncompatibleModListAll, IncompatibleDllModListAll);
+            }
+        }
+        public static Dictionary<ulong, string> VerifyModsEnabled(IEnumerable<ulong> modIds, IEnumerable<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+            pi.assemblyCount > 0
+            && pi.isEnabled
+            && (
+                 modIds.Contains(pi.publishedFileID.AsUInt64)
+                || pi.GetAssemblies().Where(x =>
+                    modsDlls.Contains(x.GetName().Name)                    
+                ).Count() > 0)
+        ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
+        public void OnViewStart()
+        {
+            ShowVersionInfoPopup();
+            SearchIncompatibilitiesModal();
+            ExtraOnViewStartActions();
+        }
+
+        protected virtual void ExtraOnViewStartActions() { }
+
+        protected virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
+        protected virtual List<string> IncompatibleDllModList { get; } = new List<string>();
+
+        private List<ulong> IncompatibleModListCommons { get; } = new List<ulong>();
+        private List<string> IncompatibleDllModListCommons { get; } = new List<string>();
+
+
+        public IEnumerable<ulong> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);
+        public IEnumerable<string> IncompatibleDllModListAll => IncompatibleDllModListCommons.Union(IncompatibleDllModList);
 
     }
 

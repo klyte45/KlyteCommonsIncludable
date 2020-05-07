@@ -31,9 +31,10 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        private static List<ushort> CalculatePathNet(ushort segmentID, bool startSegment, bool requireSameDirection, bool requireSameSizeAndType)
+        private static List<ushort> CalculatePathNet(ushort segmentID, bool startSegment, bool requireSameDirection, bool requireSameSizeAndType, out ushort[] nodes)
         {
             var result = new List<ushort>();
+            var resultNodes = new List<ushort>();
             ushort edgeNode;
             if (startSegment)
             {
@@ -43,19 +44,21 @@ namespace Klyte.Commons.Utils
             {
                 edgeNode = NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
             }
-            CalculatePathNet(segmentID, segmentID, edgeNode, startSegment, ref result, requireSameDirection, requireSameSizeAndType);
+            resultNodes.Add(edgeNode);
+            CalculatePathNet(segmentID, segmentID, edgeNode, startSegment, ref result, ref resultNodes, requireSameDirection, requireSameSizeAndType);
+            nodes = resultNodes.ToArray();
             return result;
         }
 
 
-        private static void CalculatePathNet(ushort firstSegmentID, ushort segmentID, ushort nodeCurr, bool insertOnEnd, ref List<ushort> segmentOrder, bool requireSameDirection, bool requireSameSizeAndType)
+        private static void CalculatePathNet(ushort firstSegmentID, ushort segmentID, ushort nodeCurr, bool insertOnEnd, ref List<ushort> segmentOrder, ref List<ushort> nodeOrder, bool requireSameDirection, bool requireSameSizeAndType)
         {
-            var strict = requireSameDirection || requireSameSizeAndType;
+            bool strict = requireSameDirection || requireSameSizeAndType;
             var possibilities = new List<ushort>();
-            var crossingDirectionsCounter = 0;
-            for (var i = 0; i < 8; i++)
+            int crossingDirectionsCounter = 0;
+            for (int i = 0; i < 8; i++)
             {
-                var segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
+                ushort segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
 
                 if (segment != 0 && firstSegmentID != segment && segment != segmentID && !segmentOrder.Contains(segment) && IsSameName(segmentID, segment, false))
                 {
@@ -73,31 +76,33 @@ namespace Klyte.Commons.Utils
             }
             if (possibilities.Count > 0)
             {
-                var segment = possibilities.Min();
-                var otherEdgeNode = NetManager.instance.m_segments.m_buffer[segment].GetOtherNode(nodeCurr);
+                ushort segment = possibilities.Min();
+                ushort otherEdgeNode = NetManager.instance.m_segments.m_buffer[segment].GetOtherNode(nodeCurr);
                 if (insertOnEnd || segmentOrder.Count == 0)
                 {
                     segmentOrder.Add(segment);
+                    nodeOrder.Add(otherEdgeNode);
                 }
                 else
                 {
                     segmentOrder.Insert(0, segment);
+                    nodeOrder.Insert(0, otherEdgeNode);
                 }
-                CalculatePathNet(firstSegmentID, segment, otherEdgeNode, insertOnEnd, ref segmentOrder, requireSameDirection, requireSameSizeAndType);
+                CalculatePathNet(firstSegmentID, segment, otherEdgeNode, insertOnEnd, ref segmentOrder, ref nodeOrder, requireSameDirection, requireSameSizeAndType);
             }
         }
 
         public static List<ushort> GetCrossingPath(ushort relSegId)
         {
-            var nodeCurr = NetManager.instance.m_segments.m_buffer[relSegId].m_startNode;
+            ushort nodeCurr = NetManager.instance.m_segments.m_buffer[relSegId].m_startNode;
             var possibilities = new List<ushort>();
-            for (var i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
-                var segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
+                ushort segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
 
                 if (segment != 0 && relSegId != segment && !IsSameName(relSegId, segment, false))
                 {
-                    foreach (var prevSeg in possibilities)
+                    foreach (ushort prevSeg in possibilities)
                     {
                         if (IsSameName(prevSeg, segment, false))
                         {
@@ -106,17 +111,17 @@ namespace Klyte.Commons.Utils
                     }
                     possibilities.Add(segment);
                 }
-                LoopEnd:
+            LoopEnd:
                 continue;
             }
             nodeCurr = NetManager.instance.m_segments.m_buffer[relSegId].GetOtherNode(nodeCurr);
-            for (var i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
-                var segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
+                ushort segment = NetManager.instance.m_nodes.m_buffer[nodeCurr].GetSegment(i);
 
                 if (segment != 0 && relSegId != segment && !IsSameName(relSegId, segment, false))
                 {
-                    foreach (var prevSeg in possibilities)
+                    foreach (ushort prevSeg in possibilities)
                     {
                         if (IsSameName(prevSeg, segment, false))
                         {
@@ -125,33 +130,34 @@ namespace Klyte.Commons.Utils
                     }
                     possibilities.Add(segment);
                 }
-                LoopEnd2:
+            LoopEnd2:
                 continue;
             }
             return possibilities;
         }
 
-        public static List<ushort> GetSegmentOrderRoad(ushort segmentID, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out bool startRef, out bool endRef)
+        public static List<ushort> GetSegmentOrderRoad(ushort segmentID, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out bool startRef, out bool endRef, out ushort[] nodes)
         {
             NetSegment.Flags flags = NetManager.instance.m_segments.m_buffer[segmentID].m_flags;
+            var nodeList = new List<ushort>();
             if (segmentID != 0 && flags != NetSegment.Flags.None)
             {
-                List<ushort> path = CalculatePathNet(segmentID, false, requireSameDirection, requireSameSizeAndType);
+                List<ushort> path = CalculatePathNet(segmentID, false, requireSameDirection, requireSameSizeAndType, out nodes);
                 path.Add(segmentID);
 
-                var startNode0 = NetManager.instance.m_segments.m_buffer[path[0]].m_startNode;
-                var endNode0 = NetManager.instance.m_segments.m_buffer[path[0]].m_endNode;
-                var startNodeRef = NetManager.instance.m_segments.m_buffer[segmentID].m_startNode;
-                var endNodeRef = NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
+                ushort startNode0 = NetManager.instance.m_segments.m_buffer[path[0]].m_startNode;
+                ushort endNode0 = NetManager.instance.m_segments.m_buffer[path[0]].m_endNode;
+                ushort startNodeRef = NetManager.instance.m_segments.m_buffer[segmentID].m_startNode;
+                ushort endNodeRef = NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
 
-                var circular = (path.Count > 2 && (startNode0 == endNodeRef || startNode0 == startNodeRef || endNode0 == endNodeRef || endNode0 == startNodeRef)) ||
+                bool circular = (path.Count > 2 && (startNode0 == endNodeRef || startNode0 == startNodeRef || endNode0 == endNodeRef || endNode0 == startNodeRef)) ||
                     (path.Count == 2 && (startNode0 == endNodeRef || startNode0 == startNodeRef) && (endNode0 == endNodeRef || endNode0 == startNodeRef));
 
                 if (circular)
                 {
                     LogUtils.DoLog("Circular!");
-                    var refer = path.Min();
-                    var referIdx = path.IndexOf(refer);
+                    ushort refer = path.Min();
+                    int referIdx = path.IndexOf(refer);
                     if (referIdx != 0)
                     {
                         path = path.GetRange(referIdx, path.Count - referIdx).Union(path.Take(referIdx)).ToList();
@@ -159,12 +165,13 @@ namespace Klyte.Commons.Utils
                 }
                 else
                 {
-                    path.AddRange(CalculatePathNet(segmentID, true, requireSameDirection, requireSameSizeAndType));
+                    path.AddRange(CalculatePathNet(segmentID, true, requireSameDirection, requireSameSizeAndType, out _));
                 }
                 //doLog($"[s={strict}]path = [{string.Join(",", path.Select(x => x.ToString()).ToArray())}]");
                 GetEdgeNodes(ref path, out startRef, out endRef, localAdjust);
                 return path;
             }
+            nodes = new ushort[0];
             startRef = false;
             endRef = false;
             return null;
@@ -175,16 +182,16 @@ namespace Klyte.Commons.Utils
             Bezier3 curve = default;
             curve.a = Singleton<NetManager>.instance.m_nodes.m_buffer[s.m_startNode].m_position;
             curve.d = Singleton<NetManager>.instance.m_nodes.m_buffer[s.m_endNode].m_position;
-            var smoothStart = (Singleton<NetManager>.instance.m_nodes.m_buffer[s.m_startNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
-            var smoothEnd = (Singleton<NetManager>.instance.m_nodes.m_buffer[s.m_endNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
+            bool smoothStart = (Singleton<NetManager>.instance.m_nodes.m_buffer[s.m_startNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
+            bool smoothEnd = (Singleton<NetManager>.instance.m_nodes.m_buffer[s.m_endNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
             NetSegment.CalculateMiddlePoints(curve.a, s.m_startDirection, curve.d, s.m_endDirection, smoothStart, smoothEnd, out curve.b, out curve.c);
-            var closestDistance = 1E+11f;
-            var pointPerc = 0f;
+            float closestDistance = 1E+11f;
+            float pointPerc = 0f;
             Vector3 targetA = curve.a;
-            for (var i = 1; i <= 16; i++)
+            for (int i = 1; i <= 16; i++)
             {
                 Vector3 vector = curve.Position(i / 16f);
-                var dist = Segment3.DistanceSqr(targetA, vector, point, out var distSign);
+                float dist = Segment3.DistanceSqr(targetA, vector, point, out float distSign);
                 if (dist < closestDistance)
                 {
                     closestDistance = dist;
@@ -192,14 +199,14 @@ namespace Klyte.Commons.Utils
                 }
                 targetA = vector;
             }
-            var precision = 0.03125f;
-            for (var j = 0; j < 4; j++)
+            float precision = 0.03125f;
+            for (int j = 0; j < 4; j++)
             {
                 Vector3 a2 = curve.Position(Mathf.Max(0f, pointPerc - precision));
                 Vector3 vector2 = curve.Position(pointPerc);
                 Vector3 b = curve.Position(Mathf.Min(1f, pointPerc + precision));
-                var num6 = Segment3.DistanceSqr(a2, vector2, point, out var num7);
-                var num8 = Segment3.DistanceSqr(vector2, b, point, out var num9);
+                float num6 = Segment3.DistanceSqr(a2, vector2, point, out float num7);
+                float num8 = Segment3.DistanceSqr(vector2, b, point, out float num9);
                 if (num6 < num8)
                 {
                     pointPerc = Mathf.Max(0f, pointPerc - (precision * (1f - num7)));
@@ -233,13 +240,16 @@ namespace Klyte.Commons.Utils
             {
                 NetSegment seg1 = nm.m_segments.m_buffer[segment1];
                 NetSegment seg2 = nm.m_segments.m_buffer[segment2];
-                if ((seg1.m_endNode == seg2.m_endNode || seg1.m_startNode == seg2.m_startNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) == (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                if (!(seg1.Info.m_hasBackwardVehicleLanes && seg1.Info.m_hasForwardVehicleLanes) || !(seg2.Info.m_hasBackwardVehicleLanes && seg2.Info.m_hasForwardVehicleLanes))
                 {
-                    return false;
-                }
-                if ((seg1.m_endNode == seg2.m_startNode || seg1.m_startNode == seg2.m_endNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
-                {
-                    return false;
+                    if ((seg1.m_endNode == seg2.m_endNode || seg1.m_startNode == seg2.m_startNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) == (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                    {
+                        return false;
+                    }
+                    if ((seg1.m_endNode == seg2.m_startNode || seg1.m_startNode == seg2.m_endNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -274,8 +284,8 @@ namespace Klyte.Commons.Utils
                     return false;
                 }
             }
-            var customName1 = (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.CustomName) != NetSegment.Flags.None;
-            var customName2 = (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.CustomName) != NetSegment.Flags.None;
+            bool customName1 = (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.CustomName) != NetSegment.Flags.None;
+            bool customName2 = (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.CustomName) != NetSegment.Flags.None;
             if (customName1 != customName2)
             {
                 return false;
@@ -284,13 +294,13 @@ namespace Klyte.Commons.Utils
             {
                 InstanceID id = default;
                 id.NetSegment = segment1;
-                var name = Singleton<InstanceManager>.instance.GetName(id);
+                string name = Singleton<InstanceManager>.instance.GetName(id);
                 id.NetSegment = segment2;
-                var name2 = Singleton<InstanceManager>.instance.GetName(id);
+                string name2 = Singleton<InstanceManager>.instance.GetName(id);
                 return name == name2;
             }
-            var nameSeed = nm.m_segments.m_buffer[segment1].m_nameSeed;
-            var nameSeed2 = nm.m_segments.m_buffer[segment2].m_nameSeed;
+            ushort nameSeed = nm.m_segments.m_buffer[segment1].m_nameSeed;
+            ushort nameSeed2 = nm.m_segments.m_buffer[segment2].m_nameSeed;
             return nameSeed == nameSeed2;
         }
 
@@ -311,19 +321,19 @@ namespace Klyte.Commons.Utils
                     if (nodeStartS == ((NetManager.instance.m_segments.m_buffer[accessSegments[0]].m_flags & NetSegment.Flags.Invert) != 0))
                     {
                         accessSegments.Reverse();
-                        var temp = nodeStartS;
+                        bool temp = nodeStartS;
                         nodeStartS = nodeStartE;
                         nodeStartE = temp;
                     }
                 }
                 else
                 {
-                    var nodeF = nodeStartS ? seg0.m_startNode : seg0.m_endNode;
-                    var nodeL = nodeStartE ? segN1.m_startNode : segN1.m_endNode;
+                    ushort nodeF = nodeStartS ? seg0.m_startNode : seg0.m_endNode;
+                    ushort nodeL = nodeStartE ? segN1.m_startNode : segN1.m_endNode;
                     if (VectorUtils.XZ(NetManager.instance.m_nodes.m_buffer[nodeF].m_position).GetAngleToPoint(VectorUtils.XZ(NetManager.instance.m_nodes.m_buffer[nodeL].m_position)) > 180)
                     {
                         accessSegments.Reverse();
-                        var temp = nodeStartS;
+                        bool temp = nodeStartS;
                         nodeStartS = nodeStartE;
                         nodeStartE = temp;
                     }
@@ -338,9 +348,9 @@ namespace Klyte.Commons.Utils
             return accessSegments;
         }
 
-        public static IEnumerable<Tuple<ushort, float>> GetSegmentRoadEdges(ushort segmentId, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out ComparableRoad startRef, out ComparableRoad endRef)
+        public static IEnumerable<Tuple<ushort, float>> GetSegmentRoadEdges(ushort segmentId, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out ComparableRoad startRef, out ComparableRoad endRef, out ushort[] nodes)
         {
-            List<ushort> accessSegments = GetSegmentOrderRoad(segmentId, requireSameDirection, requireSameSizeAndType, localAdjust, out var nodeStartS, out var nodeStartE);
+            List<ushort> accessSegments = GetSegmentOrderRoad(segmentId, requireSameDirection, requireSameSizeAndType, localAdjust, out bool nodeStartS, out bool nodeStartE, out nodes);
             if (accessSegments == null)
             {
                 startRef = default;
@@ -367,19 +377,19 @@ namespace Klyte.Commons.Utils
                     nodeReference = segment.m_endNode;
                 }
 
-                var entering = startNode != ((NetManager.instance.m_segments.m_buffer[segmentId].m_flags & NetSegment.Flags.Invert) != 0);
+                bool entering = startNode != ((NetManager.instance.m_segments.m_buffer[segmentId].m_flags & NetSegment.Flags.Invert) != 0);
 
                 NetNode node = NetManager.instance.m_nodes.m_buffer[nodeReference];
                 isPassing = false;
                 segmentReference = 0;
-                for (var i = 0; i < 7; i++)
+                for (int i = 0; i < 7; i++)
                 {
-                    var segment1 = node.GetSegment(i);
+                    ushort segment1 = node.GetSegment(i);
                     if (segment1 > 0 && segment1 != segmentId)
                     {
-                        for (var j = i + 1; j < 8; j++)
+                        for (int j = i + 1; j < 8; j++)
                         {
-                            var segment2 = node.GetSegment(j);
+                            ushort segment2 = node.GetSegment(j);
                             if (segment2 > 0 && segment2 != segmentId)
                             {
                                 isPassing = IsSameName(segment1, segment2, true);
@@ -399,21 +409,21 @@ namespace Klyte.Commons.Utils
                 if (!isPassing)
                 {
 
-                    for (var i = 0; i < 7; i++)
+                    for (int i = 0; i < 7; i++)
                     {
-                        var segment1 = node.GetSegment(i);
+                        ushort segment1 = node.GetSegment(i);
                         if (segment1 > 0 && segment1 != segmentId)
                         {
                             NetSegment segment1Obj = NetManager.instance.m_segments.m_buffer[segment1];
-                            var isSegment1StartNode = segment1Obj.m_startNode == nodeReference;
-                            var isSegment1Entering = isSegment1StartNode != ((NetManager.instance.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != 0);
+                            bool isSegment1StartNode = segment1Obj.m_startNode == nodeReference;
+                            bool isSegment1Entering = isSegment1StartNode != ((NetManager.instance.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != 0);
 
                             if (!(segment1Obj.Info.GetAI() is RoadBaseAI seg1Ai))
                             {
                                 continue;
                             }
 
-                            var isSegment1TwoWay = segment1Obj.Info.m_hasBackwardVehicleLanes && segment1Obj.Info.m_hasForwardVehicleLanes;
+                            bool isSegment1TwoWay = segment1Obj.Info.m_hasBackwardVehicleLanes && segment1Obj.Info.m_hasForwardVehicleLanes;
 
                             if (!isSegment1TwoWay && isSegment1Entering == entering)
                             {
@@ -441,8 +451,8 @@ namespace Klyte.Commons.Utils
                                 {
                                     continue;
                                 }
-                                var laneCount1 = (segment1Obj.Info.m_forwardVehicleLaneCount + segment1Obj.Info.m_backwardVehicleLaneCount);
-                                var laneCountRef = (segmentRefObj.Info.m_forwardVehicleLaneCount + segmentRefObj.Info.m_backwardVehicleLaneCount);
+                                int laneCount1 = (segment1Obj.Info.m_forwardVehicleLaneCount + segment1Obj.Info.m_backwardVehicleLaneCount);
+                                int laneCountRef = (segmentRefObj.Info.m_forwardVehicleLaneCount + segmentRefObj.Info.m_backwardVehicleLaneCount);
                                 if (laneCount1 > laneCountRef)
                                 {
                                     segmentReference = segment1;
@@ -486,7 +496,7 @@ namespace Klyte.Commons.Utils
 
             public int CompareTo(ComparableRoad otherRoad)
             {
-                var result = 0;
+                int result = 0;
                 if (otherRoad.isHighway != isHighway)
                 {
                     result = isHighway ? 1 : -1;
@@ -515,7 +525,7 @@ namespace Klyte.Commons.Utils
             NetNode nodeS = NetManager.instance.m_nodes.m_buffer[startRef.nodeReference];
             NetNode nodeE = NetManager.instance.m_nodes.m_buffer[endRef.nodeReference];
 
-            var cardinalDirection = CardinalPoint.GetCardinalPoint(VectorUtils.XZ(nodeS.m_position).GetAngleToPoint(VectorUtils.XZ(nodeE.m_position))).GetCardinalIndex8();
+            byte cardinalDirection = CardinalPoint.GetCardinalPoint(VectorUtils.XZ(nodeS.m_position).GetAngleToPoint(VectorUtils.XZ(nodeE.m_position))).GetCardinalIndex8();
             return cardinalDirection;
         }
 
@@ -525,7 +535,7 @@ namespace Klyte.Commons.Utils
         private static readonly ushort[] m_closestSegsFind = new ushort[16];
         public static bool GetAddressStreetAndNumber(Vector3 sidewalk, Vector3 midPosBuilding, out int number, out string streetName)
         {
-            GetNearestSegment(sidewalk, out Vector3 targetPosition, out var targetLength, out var targetSegmentId);
+            GetNearestSegment(sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId);
             if (targetSegmentId == 0)
             {
                 number = 0;
@@ -533,9 +543,9 @@ namespace Klyte.Commons.Utils
                 return false;
             }
 
-            number = GetNumberAt(targetLength, targetSegmentId, out var startAsEnd);
+            number = GetNumberAt(targetLength, targetSegmentId, out bool startAsEnd);
             streetName = NetManager.instance.GetSegmentName(targetSegmentId)?.ToString();
-            var angleTg = VectorUtils.XZ(targetPosition).GetAngleToPoint(VectorUtils.XZ(midPosBuilding));
+            float angleTg = VectorUtils.XZ(targetPosition).GetAngleToPoint(VectorUtils.XZ(midPosBuilding));
             if (angleTg == 90 || angleTg == 270)
             {
                 angleTg += Math.Sign(targetPosition.z - midPosBuilding.z);
@@ -545,7 +555,7 @@ namespace Klyte.Commons.Utils
             Vector3 startSeg = NetManager.instance.m_nodes.m_buffer[targSeg.m_startNode].m_position;
             Vector3 endSeg = NetManager.instance.m_nodes.m_buffer[targSeg.m_endNode].m_position;
 
-            var angleSeg = Vector2.zero.GetAngleToPoint(VectorUtils.XZ(endSeg - startSeg));
+            float angleSeg = Vector2.zero.GetAngleToPoint(VectorUtils.XZ(endSeg - startSeg));
             if (angleSeg == 180)
             {
                 angleSeg += Math.Sign(targetPosition.z - midPosBuilding.z);
@@ -565,7 +575,7 @@ namespace Klyte.Commons.Utils
         }
         public static void GetNearestSegment(Vector3 sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId)
         {
-            NetManager.instance.GetClosestSegments(sidewalk, m_closestSegsFind, out var found);
+            NetManager.instance.GetClosestSegments(sidewalk, m_closestSegsFind, out int found);
             targetPosition = default;
             targetLength = 0;
             targetSegmentId = 0;
@@ -575,18 +585,18 @@ namespace Klyte.Commons.Utils
             }
             else if (found > 1)
             {
-                var minSqrDist = float.MaxValue;
-                for (var i = 0; i < found; i++)
+                float minSqrDist = float.MaxValue;
+                for (int i = 0; i < found; i++)
                 {
-                    var segId = m_closestSegsFind[i];
+                    ushort segId = m_closestSegsFind[i];
                     NetSegment seg = NetManager.instance.m_segments.m_buffer[segId];
                     if (!(seg.Info.GetAI() is RoadBaseAI))
                     {
                         continue;
                     }
 
-                    GetClosestPositionAndDirectionAndPoint(seg, sidewalk, out Vector3 position, out _, out var length);
-                    var sqrDist = Vector3.SqrMagnitude(sidewalk - position);
+                    GetClosestPositionAndDirectionAndPoint(seg, sidewalk, out Vector3 position, out _, out float length);
+                    float sqrDist = Vector3.SqrMagnitude(sidewalk - position);
                     if (i == 0 || sqrDist < minSqrDist)
                     {
                         minSqrDist = sqrDist;
@@ -606,10 +616,10 @@ namespace Klyte.Commons.Utils
 
         public static int GetNumberAt(ushort targetSegmentId, bool startNode)
         {
-            List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _);
-            var targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
+            List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _, out _);
+            int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
             NetSegment targSeg = NetManager.instance.m_segments.m_buffer[targetSegmentId];
-            var targetNode = startNode ? targSeg.m_startNode : targSeg.m_endNode;
+            ushort targetNode = startNode ? targSeg.m_startNode : targSeg.m_endNode;
             NetSegment preSeg = default;
             if (targetSegmentIdIdx > 0)
             {
@@ -620,20 +630,20 @@ namespace Klyte.Commons.Utils
                 targetSegmentIdIdx++;
             }
             float distanceFromStart = 0;
-            for (var i = 0; i < targetSegmentIdIdx; i++)
+            for (int i = 0; i < targetSegmentIdIdx; i++)
             {
                 distanceFromStart += NetManager.instance.m_segments.m_buffer[roadSegments[i]].m_averageLength;
             }
-            return (int) Math.Round(distanceFromStart);
+            return (int)Math.Round(distanceFromStart);
         }
 
         private static int GetNumberAt(float targetLength, ushort targetSegmentId, out bool startAsEnd)
         {
             //doLog($"targets = S:{targetSegmentId} P:{targetPosition} D:{targetDirection.magnitude} L:{targetLength}");
 
-            List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _);
+            List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _, out _);
             //doLog("roadSegments = [{0}] ", string.Join(",", roadSegments.Select(x => x.ToString()).ToArray()));
-            var targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
+            int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
             //doLog($"targSeg = {targetSegmentIdIdx} ({targetSegmentId})");
             NetSegment targSeg = NetManager.instance.m_segments.m_buffer[targetSegmentId];
             NetSegment preSeg = default;
@@ -661,12 +671,12 @@ namespace Klyte.Commons.Utils
 
             //doLog("distanceFromStart");
             float distanceFromStart = 0;
-            for (var i = 0; i < targetSegmentIdIdx; i++)
+            for (int i = 0; i < targetSegmentIdIdx; i++)
             {
                 distanceFromStart += NetManager.instance.m_segments.m_buffer[roadSegments[i]].m_averageLength;
             }
             distanceFromStart += targetLength * targSeg.m_averageLength;
-            return (int) Math.Round(distanceFromStart);
+            return (int)Math.Round(distanceFromStart);
 
             //doLog($"number = {number} B");
         }
