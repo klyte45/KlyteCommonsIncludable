@@ -13,7 +13,6 @@ namespace Klyte.Commons.Interfaces
         where C : BaseController<U, C>
         where T : BasicKPanel<U, C, T>
     {
-        public abstract string IconName { get; }
         protected virtual float? TabWidth => null;
 
         private static UIButton m_modPanelButton;
