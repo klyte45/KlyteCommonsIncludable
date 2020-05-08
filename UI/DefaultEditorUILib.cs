@@ -145,8 +145,6 @@ namespace Klyte.Commons.UI
             popup.color = refDD.popupColor;
             popup.itemTextColor = refDD.popupTextColor;
             popup.textScale = refDD.textScale;
-            //m_Popup.items = refDD.items;
-            //m_Popup.filteredItems = (int[])m_FilteredItems.GetValue(refDD);
             popup.listPadding = refDD.listPadding;
             popup.normalBgSprite = refDD.listBackground;
             popup.useDropShadow = refDD.useDropShadow;
@@ -233,7 +231,7 @@ namespace Klyte.Commons.UI
 
             }, "LOAD");
 
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_RemoveIcon, (x, t) =>
+            ConfigureActionButton(parent, CommonsSpriteNames.K45_X, (x, t) =>
             {
                 DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(loadDD.selectedValue);
                 if (groupInfo != null)
@@ -260,6 +258,8 @@ namespace Klyte.Commons.UI
                     }
                 }
             }, "SAVE", 30);
+            LibBaseFile<LIB, DESC>.Instance.EnsureFileExists();
+            KlyteMonoUtils.LimitWidthAndBox(parentHelper.AddButton(Locale.Get("K45_CMNS_GOTO_LIBFILE"), () => ColossalFramework.Utils.OpenInFileBrowser(LibBaseFile<LIB, DESC>.Instance.DefaultXmlFileBaseFullPath)) as UIButton, parentHelper.Self.width);
             doWithLibGroup?.Invoke(parentHelper);
             return loadDD;
         }

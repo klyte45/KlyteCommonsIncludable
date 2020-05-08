@@ -330,11 +330,12 @@ namespace Klyte.Commons.Utils
                 string textureImagePath = File.Exists(targetImg) ? targetImg : null;
                 string path = propertiesToSet.help_fullPathName;
                 string feature = propertiesToSet.help_featureName;
+                string[] formatEntries = propertiesToSet.help_formatsEntries;
                 LogUtils.DoLog($"IMG: {targetImg}");
                 propertiesToSet = new BindProperties
                 {
                     title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
-                    message = tutorialEntries[currentPage],
+                    message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
 
                     showClose = true,
@@ -349,11 +350,11 @@ namespace Klyte.Commons.Utils
                 {
                     if (x == 1)
                     {
-                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1);
+                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1, formatEntries);
                     }
                     if (x == 3)
                     {
-                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1);
+                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1, formatEntries);
                     }
                     return true;
                 };
@@ -533,7 +534,7 @@ namespace Klyte.Commons.Utils
                 if (component != null)
                 {
                     string title = $"Mod not loaded";
-                    string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                    string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
                     string img = "IconMessage";
                     component.SetProperties(TooltipHelper.Format(new string[]
                     {
@@ -584,7 +585,7 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static void ShowModalHelp(string pathName, string featureName, int startPage = 0)
+        public static void ShowModalHelp(string pathName, string featureName, int startPage, params string[] formatsEntries)
         {
             string fullPathName = $"{CommonProperties.ModDllRootFolder}{Path.DirectorySeparatorChar}{TUTORIAL_FOLDER_NAME}{Path.DirectorySeparatorChar}{pathName}";
 
@@ -594,6 +595,7 @@ namespace Klyte.Commons.Utils
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
+                help_formatsEntries = new string[] { featureName }.Union(formatsEntries).ToArray(),
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
@@ -604,7 +606,7 @@ namespace Klyte.Commons.Utils
                 ShowModalInternal(properties, null);
             }
         }
-        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage)
+        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage, params string[] formatsEntries)
         {
 
             var properties = new BindProperties
@@ -613,6 +615,7 @@ namespace Klyte.Commons.Utils
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
+                help_formatsEntries = formatsEntries,
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
@@ -697,6 +700,7 @@ namespace Klyte.Commons.Utils
             public string help_fullPathName;
             public int help_currentPage;
             public string help_featureName;
+            public string[] help_formatsEntries;
 
 
 
@@ -732,6 +736,7 @@ namespace Klyte.Commons.Utils
                         case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
                         case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
                         case "help_featureName": result.help_featureName = (string)kv.Value; break;
+                        case "help_formatsEntries": result.help_formatsEntries = (string[])kv.Value; break;
                     }
                 }
                 return result;
@@ -767,6 +772,7 @@ namespace Klyte.Commons.Utils
                     ["help_fullPathName"] = help_fullPathName,
                     ["help_currentPage"] = help_currentPage,
                     ["help_featureName"] = help_featureName,
+                    ["help_formatsEntries"] = help_formatsEntries,
                 };
             }
 

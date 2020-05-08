@@ -23,7 +23,7 @@ namespace Klyte.Commons.Libraries
 
         public static void Reload() => m_instance = null;
         private static string DefaultXmlFileBasePath => CommonProperties.ModRootFolder;
-        public string DefaultXmlFileBaseFullPath => $"{DefaultXmlFileBasePath}{XmlName}.xml";
+        public string DefaultXmlFileBaseFullPath => $"{DefaultXmlFileBasePath}{Path.DirectorySeparatorChar}{XmlName}.xml";
         protected sealed override void Save() => EnsureFileExists();
         public void EnsureFileExists() => File.WriteAllText(DefaultXmlFileBaseFullPath, XmlUtils.DefaultXmlSerialize<LIB>((LIB)this));
         protected static LIB LoadInstance()
