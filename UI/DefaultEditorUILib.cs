@@ -124,9 +124,10 @@ namespace Klyte.Commons.UI
             label = textField.parent.GetComponentInChildren<UILabel>();
             KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10, true);
         }
-        public static UIListBox CreatePopup(UIDropDown refDD, UIPanel rootContainer)
+        public static UIListBox CreatePopup(UIPanel rootContainer)
         {
             UIListBox popup;
+            UIDropDown refDD = UITemplateUtils.GetTemplateDict()[UIHelperExtension.kDropdownTemplate].GetComponentInChildren<UIDropDown>();
             Vector2 size2 = CalculatePopupSize(rootContainer, 6, refDD.itemHeight, refDD.itemPadding.vertical);
             popup = rootContainer.AddUIComponent<UIListBox>();
             popup.builtinKeyNavigation = refDD.builtinKeyNavigation;
@@ -300,6 +301,66 @@ namespace Klyte.Commons.UI
             {
                 tabTemplate.eventClicked += onClicked;
             }
+        }
+
+        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string[]> FilterFunc, Action<int> OnSelectItem, Func<string> GetCurrentSelectionName)
+        {
+            var selectorPanel = textField.parent as UIPanel;
+            selectorPanel.autoLayout = true;
+            selectorPanel.width = selectorPanel.parent.width;
+            selectorPanel.autoFitChildrenHorizontally = false;
+            selectorPanel.autoFitChildrenVertically = true;
+            selectorPanel.width = selectorPanel.parent.width;
+            selectorPanel.wrapLayout = true;
+
+            UIListBox result = CreatePopup(selectorPanel);
+
+            result.isVisible = false;
+            textField.eventGotFocus += (x, t) =>
+            {
+                result.isVisible = true;
+                result.items = FilterFunc();
+                result.selectedIndex = Array.IndexOf(result.items, textField.text);
+                result.EnsureVisible(result.selectedIndex);
+                textField.SelectAll();
+            };
+            textField.eventLostFocus += (x, t) =>
+            {
+                if (result.selectedIndex >= 0)
+                {
+                    textField.text = result.items[result.selectedIndex];
+                    OnSelectItem(result.selectedIndex);
+                }
+                else
+                {
+                    textField.text = GetCurrentSelectionName();
+                }
+                result.isVisible = false;
+            };
+            textField.eventKeyUp += (x, y) =>
+            {
+                if (textField.hasFocus)
+                {
+                    result.items = FilterFunc();
+                    result.Invalidate();
+                }
+            };
+            result.eventSelectedIndexChanged += (x, y) =>
+            {
+                if (!textField.hasFocus)
+                {
+                    if (result.selectedIndex >= 0)
+                    {
+                        textField.text = result.items[result.selectedIndex];
+                        OnSelectItem(result.selectedIndex);
+                    }
+                    else
+                    {
+                        textField.text = "";
+                    }
+                }
+            };
+            return result;
         }
         #endregion
     }

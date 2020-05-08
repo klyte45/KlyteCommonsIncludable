@@ -324,6 +324,7 @@ namespace Klyte.Commons.Extensors
                 panel.autoLayoutPadding = new RectOffset(0, 0, 5, 5);
                 panel.padding = new RectOffset(5, 5, 5, 5);
                 panel.autoFitChildrenVertically = true;
+                panel.wrapLayout = true;
             }
             else if (m_root is UIScrollablePanel scrollPanel)
             {
