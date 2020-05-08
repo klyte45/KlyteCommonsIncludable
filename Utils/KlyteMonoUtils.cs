@@ -257,6 +257,7 @@ namespace Klyte.Commons.Utils
             CreateUIElement(out boxContainer, label.parent.transform, "CompoentContainer", new Vector4(0, 0, maxWidth, label.height));
             boxContainer.autoLayout = true;
             boxContainer.autoSize = true;
+            boxContainer.autoFitChildrenVertically = true;
             boxContainer.zOrder = label.zOrder;
             boxContainer.maximumSize = new Vector2(maxWidth, 0);
             if (alsoMinSize)

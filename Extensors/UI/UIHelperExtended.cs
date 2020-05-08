@@ -555,8 +555,8 @@ namespace Klyte.Commons.Extensors
         public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
         public static UILabel AddLabel(UIComponent parent, string name, float width)
         {
-            KlyteMonoUtils.CreateUIElement<UILabel>(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
-            KlyteMonoUtils.LimitWidthAndBox(label);
+            KlyteMonoUtils.CreateUIElement(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
+            KlyteMonoUtils.LimitWidthAndBox(label, width);
             label.text = name;
             return label;
         }

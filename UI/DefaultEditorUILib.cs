@@ -181,7 +181,7 @@ namespace Klyte.Commons.UI
             Func<string> getContentToSave, Action<UIHelperExtension> doWithLibGroup = null) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
         {
             KlyteMonoUtils.CreateUIElement(out UIPanel cbPanel, parentHelper.Self.transform);
-            UILabel label = UIHelperExtension.AddLabel(cbPanel, Locale.Get("K45_CMNS_CLIPBOARD_TITLE"), parentHelper.Self.width);
+            UILabel label = UIHelperExtension.AddLabel(cbPanel, Locale.Get("K45_CMNS_CLIPBOARD_TITLE"), parentHelper.Self.width / 2);
             cbPanel.autoLayoutDirection = LayoutDirection.Horizontal;
             cbPanel.wrapLayout = false;
             cbPanel.autoLayout = true;
@@ -189,7 +189,6 @@ namespace Klyte.Commons.UI
             cbPanel.autoFitChildrenVertically = true;
             label.verticalAlignment = UIVerticalAlignment.Middle;
             label.minimumSize = new Vector2(parentHelper.Self.width / 2, 40);
-            KlyteMonoUtils.LimitWidthAndBox(label);
 
             if (actionCopy != null)
             {
