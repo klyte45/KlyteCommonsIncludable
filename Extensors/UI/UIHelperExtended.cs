@@ -557,6 +557,7 @@ namespace Klyte.Commons.Extensors
         {
             KlyteMonoUtils.CreateUIElement<UILabel>(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
             KlyteMonoUtils.LimitWidthAndBox(label);
+            label.text = name;
             return label;
         }
 

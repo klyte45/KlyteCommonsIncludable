@@ -447,11 +447,6 @@ namespace Klyte.Commons.Utils
                         ((UITextField)x).textColor = Color.red;
                     }
                 }
-                else if (textField.text.Length == 0)
-                {
-                    colorField.selectedColor = Color.clear;
-                    ((UITextField)x).text = "";
-                }
             };
             popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();
             textField.text = ((Color32)popup.color).ToRGB();

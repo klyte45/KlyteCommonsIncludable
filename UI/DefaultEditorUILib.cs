@@ -182,8 +182,8 @@ namespace Klyte.Commons.UI
             Action actionDelete, Action<string> onLoad,
             Func<string> getContentToSave, Action<UIHelperExtension> doWithLibGroup = null) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
         {
-            UILabel label = parentHelper.AddLabel(Locale.Get("K45_CMNS_CLIPBOARD_TITLE"));
-            var cbPanel = label.parent as UIPanel;
+            KlyteMonoUtils.CreateUIElement(out UIPanel cbPanel, parentHelper.Self.transform);
+            UILabel label = UIHelperExtension.AddLabel(cbPanel, Locale.Get("K45_CMNS_CLIPBOARD_TITLE"), parentHelper.Self.width);
             cbPanel.autoLayoutDirection = LayoutDirection.Horizontal;
             cbPanel.wrapLayout = false;
             cbPanel.autoLayout = true;
