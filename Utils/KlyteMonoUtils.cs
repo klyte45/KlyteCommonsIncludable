@@ -422,7 +422,7 @@ namespace Klyte.Commons.Utils
             component.size = new Vector2(28, 28);
             return component;
         }
-        private static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
+        public static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
         {
             UIPanel panel = popup.GetComponent<UIPanel>();
             overridden = true;
@@ -431,7 +431,7 @@ namespace Klyte.Commons.Utils
             UiTextFieldDefaults(textField);
             textField.normalBgSprite = "TextFieldPanel";
             textField.maxLength = 6;
-            textField.eventKeyUp += (x, y) =>
+            textField.eventTextChanged += (x, y) =>
             {
                 if (popup && textField.text.Length == 6)
                 {
