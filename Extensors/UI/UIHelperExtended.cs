@@ -552,20 +552,12 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public UILabel AddLabel(string name)
+        public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
+        public static UILabel AddLabel(UIComponent parent, string name, float width)
         {
-
-            var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
-            uIPanel.autoFitChildrenVertically = true;
-            UILabel label = uIPanel.Find<UILabel>("Label");
-            label.text = name;
-            label.maximumSize = new Vector2(700, 9999);
-            label.minimumSize = new Vector2(700, 0);
-            label.wordWrap = true;
-            GameObject.Destroy(uIPanel.Find<UIDropDown>("Dropdown").gameObject);
-
+            KlyteMonoUtils.CreateUIElement<UILabel>(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
+            KlyteMonoUtils.LimitWidthAndBox(label);
             return label;
-
         }
 
         public UITextureSprite AddNamedTexture(string name)
