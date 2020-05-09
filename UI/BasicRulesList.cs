@@ -187,7 +187,12 @@ namespace Klyte.Commons.UI
         private void OnImportData(UIComponent component, UIMouseEventParameter eventParam)
         {
             LibBaseFile<L, I>.Reload();
-            string[] optionList = LibBaseFile<L, I>.Instance.List().ToArray();
+            string[] optionList = LibBaseFile<L, I>.Instance?.List()?.ToArray();
+            if (optionList == null)
+            {
+                return;
+            }
+
             if (optionList.Length > 0)
             {
                 K45DialogControl.ShowModalPromptDropDown(new K45DialogControl.BindProperties
@@ -215,7 +220,7 @@ namespace Klyte.Commons.UI
                 K45DialogControl.ShowModal(new K45DialogControl.BindProperties
                 {
                     title = Locale.Get(LocaleImportTitle),
-                    message = Locale.Get(LocaleImportNoEntryFound),
+                    message = string.Format(Locale.Get(LocaleImportNoEntryFound), LibBaseFile<L, I>.Instance.DefaultXmlFileBaseFullPath),
                     showButton1 = true,
                     textButton1 = Locale.Get("EXCEPTION_OK"),
                     showButton2 = true,
