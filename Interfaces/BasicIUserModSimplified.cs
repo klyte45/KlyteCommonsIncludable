@@ -90,7 +90,7 @@ namespace Klyte.Commons.Interfaces
             {
                 if (!typeof(C).IsGenericType)
                 {
-                m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
+                    m_topObj = GameObject.Find(typeof(U).Name) ?? new GameObject(typeof(U).Name);
                     Controller = m_topObj.AddComponent<C>();
                 }
                 SimulationManager.instance.StartCoroutine(LevelUnloadBinds());
@@ -100,16 +100,16 @@ namespace Klyte.Commons.Interfaces
         private IEnumerator LevelUnloadBinds()
         {
             yield return 0;
-                UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
-                if (toMainMenuButton != null)
-                {
+            UIButton toMainMenuButton = GameObject.Find("ToMainMenu")?.GetComponent<UIButton>();
+            if (toMainMenuButton != null)
+            {
                 toMainMenuButton.eventClick += (x, y) =>
                 {
                     GameObject.FindObjectOfType<ToolsModifierControl>().CloseEverything();
                     ExtraUnloadBinds();
                 };
-                }
             }
+        }
 
         protected virtual void ExtraUnloadBinds() { }
 
@@ -129,10 +129,10 @@ namespace Klyte.Commons.Interfaces
             PatchesApply();
         }
         public virtual void OnReleased()
-            {
+        {
 
             PluginManager.instance.eventPluginsStateChanged -= SearchIncompatibilitiesModal;
-            }
+        }
 
         protected void PatchesApply()
         {
@@ -190,18 +190,18 @@ namespace Klyte.Commons.Interfaces
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
 
-            m_onSettingsUiComponent = new UIHelperExtension((UIHelper) helperDefault).Self ?? m_onSettingsUiComponent;
+            m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
 
             if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK" || Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
             {
                 if (Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) != CommonProperties.ModName)
                 {
-                KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
+                    KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
                     if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK")
-                {
-                    LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
-                }
-                LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
+                    {
+                        LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
+                    }
+                    LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
                 }
 
                 m_showLangDropDown = true;
@@ -332,54 +332,59 @@ namespace Klyte.Commons.Interfaces
                         text += "\n\n<Color #FF0000>REMEMBER!</Color> If you just activated the mod in the mod list, restart the game before playing by the first time!\nIf you just reading this on the main menu when opened the game, just go ahead and enjoy the game. =V";
                     }
                     ShowModal(new BindProperties()
-                        {
+                    {
                         icon = IconName,
                         showClose = true,
                         showButton1 = true,
                         textButton1 = "Okay!",
                         showButton2 = true,
-                        textButton2 = "Follow Klyte45 on Twitter!",
+                        textButton2 = "See the news on the mod page at Workshop!",
                         showButton3 = true,
-                        textButton3 = "Follow Klyte45 on Facebook!",
+                        textButton3 = "Follow Klyte45 on Twitter!",
                         showButton4 = true,
-                        textButton4 = "Subscribe to Klyte45 channel on YouTube!",
+                        textButton4 = "Follow Klyte45 on Facebook!",
+                        showButton5 = true,
+                        textButton5 = "Subscribe to Klyte45 channel on YouTube!",
                         messageAlign = UIHorizontalAlignment.Left,
                         title = title,
                         message = text,
                     }, (x) =>
                             {
-                        switch (x)
-                        {
-                            case 0:
-                            case 1:
-                            needShowPopup = false;
-                            CurrentSaveVersion.value = FullVersion;
-                                break;
-                            case 2:
-                                ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
-                                break;
-                            case 3:
-                                ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
-                                break;
-                            case 4:
-                                ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
-                                break;
+                                switch (x)
+                                {
+                                    case 0:
+                                    case 1:
+                                        needShowPopup = false;
+                                        CurrentSaveVersion.value = FullVersion;
+                                        break;
+                                    case 2:
+                                        ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
+                                        break;
+                                    case 3:
+                                        ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
+                                        break;
+                                    case 4:
+                                        ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
+                                        break;
+                                    case 5:
+                                        ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
+                                        break;
 
-                        }
-                        return x <= 1;
-                    });
+                                }
+                                return x <= 1;
+                            });
 
-                            return true;
-                        }
+                    return true;
+                }
                 catch (Exception e)
                 {
                     DoErrorLog("showVersionInfoPopup ERROR {0} {1}\n{2}", e.GetType(), e.Message, e.StackTrace);
                 }
             }
-                        return false;
-                    }
+            return false;
+        }
         public void SearchIncompatibilitiesModal()
-                    {
+        {
             try
             {
                 Dictionary<ulong, string> notes = SearchIncompatibilities();
@@ -404,18 +409,18 @@ namespace Klyte.Commons.Interfaces
                     }, (x) => true);
                 }
             }
-                catch (Exception e)
-                {
+            catch (Exception e)
+            {
                 DoErrorLog("SearchIncompatibilitiesModal ERROR {0} {1}\n{2}", e.GetType(), e.Message, e.StackTrace);
-                }
             }
+        }
 
         public Dictionary<ulong, string> SearchIncompatibilities()
         {
             if (IncompatibleModList.Count == 0)
             {
                 return null;
-        }
+            }
             else
             {
                 return VerifyModsEnabled(IncompatibleModListAll, IncompatibleDllModListAll);
@@ -427,7 +432,7 @@ namespace Klyte.Commons.Interfaces
             && (
                  modIds.Contains(pi.publishedFileID.AsUInt64)
                 || pi.GetAssemblies().Where(x =>
-                    modsDlls.Contains(x.GetName().Name)                    
+                    modsDlls.Contains(x.GetName().Name)
                 ).Count() > 0)
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
         public void OnViewStart()
