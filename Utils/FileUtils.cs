@@ -44,7 +44,6 @@ namespace Klyte.Commons.Utils
             });
         }
 
-
         public static void ScanPrefabsFolders<T>(Dictionary<string, Action<FileStream, T>> actions) where T : PrefabInfo
         {
             var list = new List<string>();
@@ -72,6 +71,20 @@ namespace Klyte.Commons.Utils
                     }
                 }
             });
+        }
+
+        public static void DoInPrefabFolder(PrefabInfo targetPrefab, Action<string> actionToPerform) => DoInPrefabFolder(targetPrefab.name, actionToPerform);
+        public static void DoInPrefabFolder(string prefabName, Action<string> actionToPerform)
+        {
+            Package.Asset asset = PackageManager.FindAssetByName(prefabName);
+            if (!(asset == null) && !(asset.package == null))
+            {
+                string packagePath = asset.package.packagePath;
+                if (packagePath != null)
+                {
+                    actionToPerform(Path.GetDirectoryName(packagePath));
+                }
+            }
         }
         public static void ScanPrefabsFoldersDirectory<T>(string directoryToFind, Action<string, T> action) where T : PrefabInfo
         {

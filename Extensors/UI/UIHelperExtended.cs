@@ -45,11 +45,12 @@ namespace Klyte.Commons.Extensors
         //
         // Methods
         //
-        public object AddButton(string text, OnButtonClicked eventCallback)
+        public object AddButton(string text, OnButtonClicked eventCallback) => AddButton(m_root, text, eventCallback);
+        public static UIButton AddButton(UIComponent parent, string text, OnButtonClicked eventCallback)
         {
             if (eventCallback != null && !string.IsNullOrEmpty(text))
             {
-                var uIButton = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kButtonTemplate)) as UIButton;
+                var uIButton = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kButtonTemplate)) as UIButton;
                 uIButton.text = text;
                 uIButton.eventClick += delegate (UIComponent c, UIMouseEventParameter sel)
                 {
