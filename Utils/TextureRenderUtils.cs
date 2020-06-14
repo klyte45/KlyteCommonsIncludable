@@ -5,7 +5,6 @@ using Klyte.Commons.Extensors;
 using Klyte.Commons.Redirectors;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -398,7 +397,7 @@ namespace Klyte.Commons.Utils
             return x;
         }
 
-        private static void MergeTextures(Texture2D tex, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
+        internal static void MergeTextures(Texture2D tex, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
         {
             for (int i = 0; i < sizeX; i++)
             {
@@ -444,7 +443,7 @@ namespace Klyte.Commons.Utils
             return new Vector4(targetPosition.x, targetPosition.y, width, height);
         }
 
-        private static Vector2[] kOutlineOffsets = new Vector2[]
+        internal static readonly Vector2[] kOutlineOffsets = new Vector2[]
             {
                 new Vector2(-1f, -1f),
                 new Vector2(-1f, 0),
