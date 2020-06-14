@@ -488,7 +488,7 @@ namespace Klyte.Commons.Extensors
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
             return null;
         }
-        public UITextField[] AddVector2Field(string name, Vector2 defaultValue, Action<Vector2> eventSubmittedCallback)
+        public UITextField[] AddVector2Field(string name, Vector2 defaultValue, Action<Vector2> eventSubmittedCallback, bool integerOnly = false)
         {
             if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
             {
@@ -513,6 +513,11 @@ namespace Klyte.Commons.Extensors
                     var resultV3 = new Vector2();
                     float.TryParse(result[0].text, out resultV3.x);
                     float.TryParse(result[1].text, out resultV3.y);
+                    if (integerOnly)
+                    {
+                        resultV3.x = Mathf.RoundToInt(resultV3.x);
+                        resultV3.y = Mathf.RoundToInt(resultV3.y);
+                    }
                     eventSubmittedCallback?.Invoke(resultV3);
                 }
                 result[0].eventTextSubmitted += textSubmitAction;
