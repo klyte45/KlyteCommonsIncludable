@@ -437,6 +437,57 @@ namespace Klyte.Commons.Extensors
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
             return null;
         }
+
+        public UITextField[] AddVector4Field(string name, Vector4 defaultValue, Action<Vector4> eventSubmittedCallback)
+        {
+            if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
+            {
+                var result = new UITextField[4];
+                var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.Find<UILabel>("Label").text = name;
+                uIPanel.autoLayout = true;
+                uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
+                uIPanel.wrapLayout = false;
+                uIPanel.autoFitChildrenVertically = true;
+                result[0] = uIPanel.Find<UITextField>("Text Field");
+                result[0].numericalOnly = true;
+                result[0].width = 90;
+                result[0].allowNegative = true;
+                result[0].allowFloats = true;
+                result[1] = GameObject.Instantiate(result[0]);
+                result[2] = GameObject.Instantiate(result[0]);
+                result[3] = GameObject.Instantiate(result[0]);
+                result[1].transform.SetParent(result[0].transform.parent);
+                result[2].transform.SetParent(result[0].transform.parent);
+                result[3].transform.SetParent(result[0].transform.parent);
+
+                void textSubmitAction(UIComponent c, string sel)
+                {
+                    (c as UITextField).text = sel.Replace(LocaleManager.cultureInfo.NumberFormat.NumberDecimalSeparator, ".");
+                    var resultV3 = new Vector4();
+                    float.TryParse(result[0].text, out resultV3.x);
+                    float.TryParse(result[1].text, out resultV3.y);
+                    float.TryParse(result[2].text, out resultV3.z);
+                    float.TryParse(result[3].text, out resultV3.w);
+                    eventSubmittedCallback?.Invoke(resultV3);
+                }
+                result[0].eventTextSubmitted += textSubmitAction;
+                result[1].eventTextSubmitted += textSubmitAction;
+                result[2].eventTextSubmitted += textSubmitAction;
+                result[3].eventTextSubmitted += textSubmitAction;
+                result[0].text = defaultValue.x.ToString();
+                result[1].text = defaultValue.y.ToString();
+                result[2].text = defaultValue.z.ToString();
+                result[3].text = defaultValue.w.ToString();
+                result[0].zOrder = 1;
+                result[1].zOrder = 2;
+                result[2].zOrder = 3;
+                result[3].zOrder = 4;
+                return result;
+            }
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            return null;
+        }
         public UITextField[] AddVector2Field(string name, Vector2 defaultValue, Action<Vector2> eventSubmittedCallback)
         {
             if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
