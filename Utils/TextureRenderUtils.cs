@@ -415,6 +415,24 @@ namespace Klyte.Commons.Utils
                 }
             }
         }
+        internal static void MergeColorArrays(Color[] colorOr, int widthOr, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
+        {
+            for (int i = 0; i < sizeX; i++)
+            {
+                for (int j = 0; j < sizeY; j++)
+                {
+                    Color orPixel = colorOr[startX + i + (widthOr * (startY + j))];
+                    Color newPixel = colors[((flipVertical ? sizeY - j - 1 : j) * (swapXY ? 1 : sizeX)) + ((flipHorizontal ? sizeX - i - 1 : i) * (swapXY ? sizeY : 1))];
+
+                    if (plain && newPixel.a != 1)
+                    {
+                        continue;
+                    }
+
+                    colorOr[startX + i + (widthOr * (startY + j))] = Color.Lerp(orPixel, newPixel, newPixel.a);
+                }
+            }
+        }
 
         internal static Vector4 RenderSprite(UITextureAtlas atlas, string spriteName, Color color, Texture2D tex, float? targetScale, int? targetHeight = null, Vector2? position = null, Vector2 positionOffset = default, Func<Color, Color, Color> blendFunction = null)
         {
