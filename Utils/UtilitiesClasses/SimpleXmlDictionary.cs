@@ -33,7 +33,12 @@ namespace Klyte.Commons.Utils
                     continue;
                 }
 
-                var value = (EntryStructValueContainer<TKey, TValue>) valueSerializer.Deserialize(reader);
+                var value = (EntryStructValueContainer<TKey, TValue>)valueSerializer.Deserialize(reader);
+                if (value.Value is IKeyGetter<TKey> keyGetter)
+                {
+                    value.Id = keyGetter.GetKeyString() ?? value.Id;
+                }
+
                 if (value.Id == null)
                 {
                     continue;
@@ -82,6 +87,10 @@ namespace Klyte.Commons.Utils
 
         [XmlElement]
         public TValue Value { get; set; }
+    }
+    public interface IKeyGetter<TKey>
+    {
+        public TKey GetKeyString();
     }
 
 }

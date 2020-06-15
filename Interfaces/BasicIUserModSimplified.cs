@@ -349,30 +349,30 @@ namespace Klyte.Commons.Interfaces
                         title = title,
                         message = text,
                     }, (x) =>
-                            {
-                                switch (x)
-                                {
-                                    case 0:
-                                    case 1:
-                                        needShowPopup = false;
-                                        CurrentSaveVersion.value = FullVersion;
-                                        break;
-                                    case 2:
+                    {
+                        switch (x)
+                        {
+                            case 0:
+                            case 1:
+                                needShowPopup = false;
+                                CurrentSaveVersion.value = FullVersion;
+                                break;
+                            case 2:
                                         ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
                                         break;
                                     case 3:
-                                        ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
-                                        break;
+                                ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
+                                break;
                                     case 4:
-                                        ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
-                                        break;
+                                ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
+                                break;
                                     case 5:
-                                        ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
-                                        break;
+                                ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
+                                break;
 
-                                }
-                                return x <= 1;
-                            });
+                        }
+                        return x <= 1;
+                    });
 
                     return true;
                 }
@@ -423,18 +423,9 @@ namespace Klyte.Commons.Interfaces
             }
             else
             {
-                return VerifyModsEnabled(IncompatibleModListAll, IncompatibleDllModListAll);
+                return PluginUtils.VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
             }
         }
-        public static Dictionary<ulong, string> VerifyModsEnabled(IEnumerable<ulong> modIds, IEnumerable<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
-            pi.assemblyCount > 0
-            && pi.isEnabled
-            && (
-                 modIds.Contains(pi.publishedFileID.AsUInt64)
-                || pi.GetAssemblies().Where(x =>
-                    modsDlls.Contains(x.GetName().Name)
-                ).Count() > 0)
-        ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
         public void OnViewStart()
         {
             ShowVersionInfoPopup();
