@@ -181,12 +181,12 @@ namespace Klyte.Commons.Interfaces
                 LogUtils.DoErrorLog($"Saved {cityId} from {ThisPath}");
             }
         }
-        public string GetString(T i) => GetFromFileString(i) ?? GetDefaultStringValueForProperty(i);
-        public bool GetBool(T i) => GetFromFileBool(i) ?? GetDefaultBoolValueForProperty(i);
-        public int GetInt(T i) => GetFromFileInt(i) ?? GetDefaultIntValueForProperty(i);
-        public void SetString(T i, string value) => SetToFile(i, value);
-        public void SetBool(T idx, bool? newVal) => SetToFile(idx, newVal);
-        public void SetInt(T idx, int? value) => SetToFile(idx, value);
+        public virtual string GetString(T i) => GetFromFileString(i) ?? GetDefaultStringValueForProperty(i);
+        public virtual bool GetBool(T i) => GetFromFileBool(i) ?? GetDefaultBoolValueForProperty(i);
+        public virtual int GetInt(T i) => GetFromFileInt(i) ?? GetDefaultIntValueForProperty(i);
+        public virtual void SetString(T i, string value) => SetToFile(i, value);
+        public virtual void SetBool(T idx, bool? newVal) => SetToFile(idx, newVal);
+        public virtual void SetInt(T idx, int? value) => SetToFile(idx, value);
 
         [XmlElement("StringData")]
         public SimpleEnumerableList<T, string> m_cachedStringSaved = new SimpleEnumerableList<T, string>();
