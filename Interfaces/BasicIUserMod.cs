@@ -209,6 +209,8 @@ namespace Klyte.Commons.Interfaces
             m_modsTabstrip.ShowTab(CommonProperties.Acronym);
         }
 
+        public void UnselectTab() => m_modsTabstrip.selectedIndex = -1;
+
         public static SavedFloat ButtonPosX { get; } = new SavedFloat("K45_ButtonPosX_v2", Settings.gameSettingsFile, 5, true);
         public static SavedFloat ButtonPosY { get; } = new SavedFloat("K45_ButtonPosY_v2", Settings.gameSettingsFile, 60, true);
 

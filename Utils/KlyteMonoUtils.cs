@@ -257,6 +257,7 @@ namespace Klyte.Commons.Utils
             CreateUIElement(out boxContainer, label.parent.transform, "CompoentContainer", new Vector4(0, 0, maxWidth, label.height));
             boxContainer.autoLayout = true;
             boxContainer.autoSize = true;
+            boxContainer.autoFitChildrenVertically = true;
             boxContainer.zOrder = label.zOrder;
             boxContainer.maximumSize = new Vector2(maxWidth, 0);
             if (alsoMinSize)
@@ -422,7 +423,7 @@ namespace Klyte.Commons.Utils
             component.size = new Vector2(28, 28);
             return component;
         }
-        private static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
+        public static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
         {
             UIPanel panel = popup.GetComponent<UIPanel>();
             overridden = true;
@@ -431,7 +432,7 @@ namespace Klyte.Commons.Utils
             UiTextFieldDefaults(textField);
             textField.normalBgSprite = "TextFieldPanel";
             textField.maxLength = 6;
-            textField.eventKeyUp += (x, y) =>
+            textField.eventTextChanged += (x, y) =>
             {
                 if (popup && textField.text.Length == 6)
                 {
@@ -446,11 +447,6 @@ namespace Klyte.Commons.Utils
                     {
                         ((UITextField)x).textColor = Color.red;
                     }
-                }
-                else if (textField.text.Length == 0)
-                {
-                    colorField.selectedColor = Color.clear;
-                    ((UITextField)x).text = "";
                 }
             };
             popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();

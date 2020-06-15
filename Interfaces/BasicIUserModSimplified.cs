@@ -44,7 +44,7 @@ namespace Klyte.Commons.Interfaces
                  pi.assemblyCount > 0
                  && pi.isEnabled
                  && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
-             ).FirstOrDefault()?.publishedFileID.AsUInt64 ?? 0xFFFFFFFFFFFFFFFE;
+             ).Select(x => x?.publishedFileID.AsUInt64 ?? ulong.MaxValue).Min();
                 }
                 return m_modId;
             }
@@ -338,11 +338,13 @@ namespace Klyte.Commons.Interfaces
                         showButton1 = true,
                         textButton1 = "Okay!",
                         showButton2 = true,
-                        textButton2 = "Follow Klyte45 on Twitter!",
+                        textButton2 = "See the news on the mod page at Workshop!",
                         showButton3 = true,
-                        textButton3 = "Follow Klyte45 on Facebook!",
+                        textButton3 = "Follow Klyte45 on Twitter!",
                         showButton4 = true,
-                        textButton4 = "Subscribe to Klyte45 channel on YouTube!",
+                        textButton4 = "Follow Klyte45 on Facebook!",
+                        showButton5 = true,
+                        textButton5 = "Subscribe to Klyte45 channel on YouTube!",
                         messageAlign = UIHorizontalAlignment.Left,
                         title = title,
                         message = text,
@@ -356,12 +358,15 @@ namespace Klyte.Commons.Interfaces
                                 CurrentSaveVersion.value = FullVersion;
                                 break;
                             case 2:
+                                        ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
+                                        break;
+                                    case 3:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
                                 break;
-                            case 3:
+                                    case 4:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
                                 break;
-                            case 4:
+                                    case 5:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
                                 break;
 
@@ -430,8 +435,15 @@ namespace Klyte.Commons.Interfaces
 
         protected virtual void ExtraOnViewStartActions() { }
 
-        public virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
-        public virtual List<string> IncompatibleDllModList { get; } = new List<string>();
+        protected virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
+        protected virtual List<string> IncompatibleDllModList { get; } = new List<string>();
+
+        private List<ulong> IncompatibleModListCommons { get; } = new List<ulong>();
+        private List<string> IncompatibleDllModListCommons { get; } = new List<string>();
+
+
+        public IEnumerable<ulong> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);
+        public IEnumerable<string> IncompatibleDllModListAll => IncompatibleDllModListCommons.Union(IncompatibleDllModList);
 
     }
 
