@@ -1,9 +1,16 @@
-﻿using ColossalFramework.DataBinding;
+﻿using ColossalFramework;
+using ColossalFramework.DataBinding;
+using ColossalFramework.Globalization;
 using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensors;
+using Klyte.Commons.i18n;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -11,7 +18,10 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200409";
+        public const string VERSION = "20200426";
+        private const string TEXT_INPUT_ID = "TextInput";
+        private const string DD_INPUT_ID = "DropDownInput";
+        private const string TUTORIAL_FOLDER_NAME = "Tutorial";
 
         #region Panel composition
         public static UIDynamicPanels.DynamicPanelInfo CreatePanelInfo(UIView view)
@@ -27,6 +37,7 @@ namespace Klyte.Commons.Utils
             mainPanel.autoFitChildrenVertically = true;
             mainPanel.autoLayoutDirection = LayoutDirection.Vertical;
             mainPanel.autoLayoutStart = LayoutStart.TopLeft;
+            mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
 
             #region Title
@@ -55,6 +66,23 @@ namespace Klyte.Commons.Utils
 
             #endregion
 
+            #region Texture area
+            KlyteMonoUtils.CreateUIElement(out UIPanel textureContainer, mainPanel.transform, "TextureSupContainer");
+            textureContainer.size = new Vector2(800, 0);
+            textureContainer.autoFitChildrenVertically = true;
+
+            KlyteMonoUtils.CreateUIElement(out UIPanel textureSubContainer, textureContainer.transform, "TextureContainer");
+            textureSubContainer.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
+            textureSubContainer.pivot = UIPivotPoint.TopCenter;
+            textureSubContainer.autoFitChildrenVertically = true;
+            textureSubContainer.autoFitChildrenHorizontally = true;
+            textureSubContainer.autoLayout = true;
+            textureSubContainer.relativePosition = new Vector3(0, 0);
+
+            KlyteMonoUtils.CreateUIElement(out UITextureSprite textureSprite, textureSubContainer.transform, "TextureSprite");
+            textureSprite.size = default;
+            #endregion
+
             #region Text area
             KlyteMonoUtils.CreateUIElement(out UILabel boxText, mainPanel.transform, "BoxText");
             boxText.minimumSize = new Vector2(800, 60);
@@ -65,6 +93,10 @@ namespace Klyte.Commons.Utils
             boxText.padding = new RectOffset(10, 10, 5, 5);
             boxText.textAlignment = UIHorizontalAlignment.Center;
             boxText.verticalAlignment = UIVerticalAlignment.Middle;
+            #endregion
+
+            #region Inputs
+            CreateInputs(mainPanel, boxText);
             #endregion
 
             #region Action Buttons
@@ -137,6 +169,18 @@ namespace Klyte.Commons.Utils
             return panelTestInfo;
         }
 
+        private static void CreateInputs(UIPanel mainPanel, UILabel boxText)
+        {
+            KlyteMonoUtils.CreateUIElement(out UITextField textField, mainPanel.transform, TEXT_INPUT_ID);
+            textField.minimumSize = new Vector2(boxText.minimumSize.x - 10, 25);
+            textField.autoSize = false;
+            textField.processMarkup = true;
+            textField.padding = new RectOffset(10, 10, 5, 5);
+            textField.verticalAlignment = UIVerticalAlignment.Middle;
+            textField.horizontalAlignment = UIHorizontalAlignment.Left;
+            KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
+        }
+
         private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property)
         {
             return new BindPropertyByKey.BindingInfo()
@@ -154,6 +198,7 @@ namespace Klyte.Commons.Utils
         public void Awake()
         {
             m_mainPanel = GetComponent<UIPanel>();
+
             m_titleContainer = m_mainPanel.Find<UIPanel>("TitleContainer");
             m_title = m_titleContainer.Find<UILabel>("Title");
             m_modIcon = m_titleContainer.Find<UISprite>("ModIcon");
@@ -165,6 +210,11 @@ namespace Klyte.Commons.Utils
             m_button2 = m_mainPanel.Find<UIButton>("ButtonAction2");
             m_button3 = m_mainPanel.Find<UIButton>("ButtonAction3");
             m_button4 = m_mainPanel.Find<UIButton>("ButtonAction4");
+
+            m_textField = m_mainPanel.Find<UITextField>(TEXT_INPUT_ID);
+
+            m_textureSupContainer = m_mainPanel.Find<UIPanel>("TextureSupContainer");
+            m_textureSprite = m_mainPanel.Find<UITextureSprite>("TextureSprite");
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
 
@@ -182,7 +232,7 @@ namespace Klyte.Commons.Utils
             boxContainerTitle.relativePosition = new Vector3(0, 2);
 
             //This action allow centralize all calls to single object, coming from any mod
-            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => Enqueue(BindProperties.FromDictionary(properties), callback));
+            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => StartCoroutine(Enqueue(BindProperties.FromDictionary(properties), callback)));
             m_mainPanel.stringUserData = VERSION;
 
 
@@ -208,17 +258,24 @@ namespace Klyte.Commons.Utils
 
         private void OnButton4() => Close(4);
 
-        private void Enqueue(BindProperties properties, Func<int, bool> callback)
+        private IEnumerator Enqueue(BindProperties properties, Func<int, bool> callback)
         {
-            if (m_currentCallback == null)
+            yield return 0;
+            lock (this)
             {
-                UIView.library.ShowModal(PANEL_ID);
-                m_currentCallback = callback;
-                SetProperties(properties);
-            }
-            else
-            {
-                m_modalStack.Enqueue(Tuple.NewRef(ref properties, ref callback));
+                if (m_currentCallback == null)
+                {
+                    UIView.library.ShowModal(PANEL_ID);
+                    SetProperties(properties, callback);
+                }
+                else
+                {
+                    string str = properties.ToString();
+                    if (m_modalQueue.Where(x => x.First == str).Count() == 0)
+                    {
+                        m_modalQueue.Enqueue(Tuple.NewRef(ref str, ref properties, ref callback));
+                    }
+                }
             }
         }
 
@@ -228,36 +285,164 @@ namespace Klyte.Commons.Utils
             {
                 m_currentCallback = null;
                 UIView.library.Hide(PANEL_ID);
-                if (m_modalStack.Count > 0)
+                if (m_modalQueue.Count > 0)
                 {
-                    Tuple<BindProperties, Func<int, bool>> next = m_modalStack.Dequeue();
+                    TupleRef<string, BindProperties, Func<int, bool>> next = m_modalQueue.Dequeue();
                     UIView.library.ShowModal(PANEL_ID);
-                    m_currentCallback = next.Second;
-                    SetProperties(next.First);
+                    SetProperties(next.Second, next.Third);
                 }
             }
         }
 
-        private void SetProperties(BindProperties propertiesToSet)
+        private void SetProperties(BindProperties propertiesToSet, Func<int, bool> callback)
         {
+            m_mainPanel.autoLayout = true;
+            if (propertiesToSet.help_isArticle)
+            {
+
+                if (!Directory.Exists(propertiesToSet.help_fullPathName))
+                {
+                    LogUtils.DoErrorLog($"Invalid tutorial path! {propertiesToSet.help_fullPathName}");
+                    Close(-1);
+                    return;
+                }
+
+                string fullText;
+                if (File.Exists($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts_{KlyteLocaleManager.CurrentLanguageId}.txt"))
+                {
+                    fullText = File.ReadAllText($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts_{KlyteLocaleManager.CurrentLanguageId}.txt");
+                }
+                else if (File.Exists($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts.txt"))
+                {
+                    fullText = File.ReadAllText($"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}texts.txt");
+                }
+                else
+                {
+                    LogUtils.DoErrorLog($"Corrupted tutorial path! File \"texts.txt\" not found at folder {propertiesToSet.help_fullPathName}.");
+                    Close(-1);
+                    return;
+                }
+                string[] tutorialEntries = Regex.Split(fullText, "<BR>", RegexOptions.Multiline | RegexOptions.ECMAScript);
+
+                int lastPage = tutorialEntries.Length - 1;
+                int currentPage = Math.Max(0, Math.Min(lastPage, propertiesToSet.help_currentPage));
+                string targetImg = $"{propertiesToSet.help_fullPathName}{Path.DirectorySeparatorChar}{currentPage.ToString("D3")}.jpg";
+                string textureImagePath = File.Exists(targetImg) ? targetImg : null;
+                string path = propertiesToSet.help_fullPathName;
+                string feature = propertiesToSet.help_featureName;
+                LogUtils.DoLog($"IMG: {targetImg}");
+                propertiesToSet = new BindProperties
+                {
+                    title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
+                    message = tutorialEntries[currentPage],
+                    imageTexturePath = textureImagePath,
+
+                    showClose = true,
+                    showButton1 = currentPage != 0,
+                    textButton1 = "<<<\n" + Locale.Get("K45_CMNS_PREV"),
+                    showButton2 = true,
+                    textButton2 = Locale.Get("K45_CMNS_OK"),
+                    showButton3 = currentPage != lastPage,
+                    textButton3 = ">>>\n" + Locale.Get("K45_CMNS_NEXT"),
+                };
+                callback = (x) =>
+                {
+                    if (x == 1)
+                    {
+                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1);
+                    }
+                    if (x == 3)
+                    {
+                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1);
+                    }
+                    return true;
+                };
+
+            }
+
+            m_currentCallback = callback;
+
             m_properties.FindBinding("title").property.value = propertiesToSet.title;
-            m_properties.FindBinding("icon").property.value = propertiesToSet.icon;
-            m_properties.FindBinding("showClose").property.value = propertiesToSet.showClose;
+            m_properties.FindBinding("icon").property.value = propertiesToSet.icon ?? CommonProperties.ModIcon;
+            m_properties.FindBinding("showClose").property.value = propertiesToSet.showClose || !(propertiesToSet.showButton1 || propertiesToSet.showButton2 || propertiesToSet.showButton3 || propertiesToSet.showButton4);
             m_properties.FindBinding("message").property.value = propertiesToSet.message;
             m_properties.FindBinding("messageAlign").property.value = propertiesToSet.messageAlign;
             m_properties.FindBinding("showButton1").property.value = propertiesToSet.showButton1;
             m_properties.FindBinding("showButton2").property.value = propertiesToSet.showButton2;
             m_properties.FindBinding("showButton3").property.value = propertiesToSet.showButton3;
             m_properties.FindBinding("showButton4").property.value = propertiesToSet.showButton4;
-            m_properties.FindBinding("textButton1").property.value = propertiesToSet.textButton1;
-            m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2;
-            m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3;
-            m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4;
+            m_properties.FindBinding("textButton1").property.value = propertiesToSet.textButton1 ?? "";
+            m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2 ?? "";
+            m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3 ?? "";
+            m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4 ?? "";
+
+            m_textField.isVisible = propertiesToSet.showTextField;
+            m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
+
+            if (m_dropDown == null)
+            {
+                KlyteMonoUtils.CreateUIElement(out UIPanel DDpanel, m_mainPanel.transform);
+                DDpanel.maximumSize = new Vector2(m_boxText.minimumSize.x - 10, 40);
+                DDpanel.anchor = UIAnchorStyle.CenterHorizontal;
+                DDpanel.zOrder = m_textField.zOrder + 1;
+                DDpanel.autoLayout = true;
+                m_dropDown = UIHelperExtension.CloneBasicDropDownNoLabel(new string[0], (x) => { }, DDpanel);
+                m_dropDown.name = DD_INPUT_ID;
+                m_dropDown.minimumSize = new Vector2(m_boxText.minimumSize.x - 10, 25);
+                m_dropDown.size = new Vector2(m_boxText.minimumSize.x - 10, 40);
+                m_dropDown.autoSize = false;
+                m_dropDown.processMarkup = true;
+                m_dropDown.verticalAlignment = UIVerticalAlignment.Middle;
+                m_dropDown.horizontalAlignment = UIHorizontalAlignment.Left;
+            }
+            m_dropDown.parent.isVisible = propertiesToSet.showDropDown;
+            m_dropDown.items = propertiesToSet.dropDownOptions?.Split(BindProperties.DD_OPTIONS_SEPARATOR.ToCharArray()) ?? new string[0];
+            m_dropDown.selectedIndex = propertiesToSet.dropDownCurrentSelection;
+
+
+            m_textureSprite.size = default;
+            if (!propertiesToSet.imageTexturePath.IsNullOrWhiteSpace())
+            {
+                if (File.Exists(propertiesToSet.imageTexturePath))
+                {
+                    byte[] fileData = File.ReadAllBytes(propertiesToSet.imageTexturePath);
+                    var tex = new Texture2D(2, 2);
+                    if (tex.LoadImage(fileData))
+                    {
+                        m_textureSupContainer.isVisible = true;
+                        m_textureSprite.texture = tex;
+                        m_textureSprite.size = new Vector2(tex.width, tex.height);
+                        if (m_textureSprite.height > 400)
+                        {
+                            float proportion = m_textureSprite.width / m_textureSprite.height;
+                            m_textureSprite.height = 400;
+                            m_textureSprite.width = proportion * 400;
+                        }
+                        m_textureSupContainer.height = m_textureSprite.size.y;
+                    }
+                    else
+                    {
+                        LogUtils.DoWarnLog($"Failed loading image: {propertiesToSet.imageTexturePath}");
+                        m_textureSupContainer.isVisible = false;
+                    }
+                }
+            }
+            else
+            {
+                m_textureSprite.texture = null;
+                m_textureSupContainer.isVisible = false;
+            }
 
             float width;
-            if (propertiesToSet.useFullWindowWidth)
+            if (propertiesToSet.useFullWindowWidth || m_textureSprite.width > 800)
             {
                 width = UIView.GetAView().fixedWidth - 100;
+                if (width < m_textureSprite.width)
+                {
+                    float proportion = m_textureSprite.width / m_textureSprite.height;
+                    m_textureSprite.width = width;
+                    m_textureSprite.height = width / proportion;
+                }
             }
             else
             {
@@ -265,16 +450,20 @@ namespace Klyte.Commons.Utils
             }
             m_mainPanel.width = width;
             m_closeButton.area = new Vector4(width - 37, 3, 32, 32);
+            width -= m_mainPanel.padding.horizontal;
             m_titleContainer.width = width;
             m_boxText.width = width;
             m_buttonSupContainer.width = width;
+            m_textureSupContainer.width = width;
+            m_mainPanel.autoLayout = !propertiesToSet.showDropDown;
         }
 
+        #region Field Declaration
         private Func<int, bool> m_currentCallback;
         //queue to store the modal order
-        private readonly Queue<Tuple<BindProperties, Func<int, bool>>> m_modalStack = new Queue<Tuple<BindProperties, Func<int, bool>>>();
+        private readonly Queue<TupleRef<string, BindProperties, Func<int, bool>>> m_modalQueue = new Queue<TupleRef<string, BindProperties, Func<int, bool>>>();
 
-        private UIPanel m_mainPanel; 
+        private UIPanel m_mainPanel;
         private UIPanel m_titleContainer;
         private UILabel m_title;
         private UISprite m_modIcon;
@@ -285,10 +474,18 @@ namespace Klyte.Commons.Utils
         private UIButton m_button2;
         private UIButton m_button3;
         private UIButton m_button4;
-        private BindPropertyByKey m_properties;
+        private UITextField m_textField;
+        private UIDropDown m_dropDown;
+        private UITextureSprite m_textureSprite;
+        private UIPanel m_textureSupContainer;
 
+        private BindPropertyByKey m_properties;
+        #endregion
+
+        #region Modal calls
         public static void ShowModal(BindProperties properties, Func<int, bool> action)
         {
+            properties.showTextField = false;
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
                 ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, action));
@@ -308,37 +505,173 @@ namespace Klyte.Commons.Utils
             }
             else
             {
-                uIComponent = UIView.library.ShowModal("ExceptionPanel");
-                if (uIComponent != null)
+                ShowErrorPanelNotFound();
+            }
+        }
+
+        public static void UpdateCurrentMessage(string newText)
+        {
+            UIComponent uIComponent = UIView.library.Get(PANEL_ID);
+            if (uIComponent != null && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
+            {
+                properties.FindBinding("message").property.value = newText;
+            }
+            else
+            {
+                ShowErrorPanelNotFound();
+            }
+        }
+
+        private static void ShowErrorPanelNotFound()
+        {
+            UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
+            if (uIComponent != null)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
+                if (component != null)
                 {
-                    Cursor.lockState = CursorLockMode.None;
-                    Cursor.visible = true;
-                    BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                    if (component != null)
+                    string title = $"Mod not loaded";
+                    string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                    string img = "IconMessage";
+                    component.SetProperties(TooltipHelper.Format(new string[]
                     {
-                        string title = $"Mod not loaded";
-                        string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
-                        string img = "IconMessage";
-                        component.SetProperties(TooltipHelper.Format(new string[]
-                        {
                             "title",
                             title,
                             "message",
                             text,
                             "img",
                             img
-                        }));
-                    }
+                    }));
                 }
-                else
-                {
-                    LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
-                }
+            }
+            else
+            {
+                LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
             }
         }
 
+        public static void ShowModalPromptText(BindProperties properties, Func<int, string, bool> action)
+        {
+            properties.showTextField = true;
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalPromptTextInternal(properties, action));
+            }
+            else
+            {
+                ShowModalPromptTextInternal(properties, action);
+            }
+        }
+
+        private static void ShowModalPromptTextInternal(BindProperties properties, Func<int, string, bool> action)
+        {
+            UIComponent uIComponent = UIView.library.Get(PANEL_ID);
+            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            {
+                bool targetAction(int x)
+                {
+                    string result = uIComponent.Find<UITextField>(TEXT_INPUT_ID)?.text;
+                    return action(x, result);
+                }
+
+                addAction(properties.ToDictionary(), targetAction);
+            }
+            else
+            {
+                ShowErrorPanelNotFound();
+            }
+        }
+
+        public static void ShowModalHelp(string pathName, string featureName, int startPage = 0)
+        {
+            string fullPathName = $"{CommonProperties.ModDllRootFolder}{Path.DirectorySeparatorChar}{TUTORIAL_FOLDER_NAME}{Path.DirectorySeparatorChar}{pathName}";
+
+            var properties = new BindProperties
+            {
+                help_isArticle = true,
+                help_currentPage = startPage,
+                help_fullPathName = fullPathName,
+                help_featureName = featureName,
+            };
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, null));
+            }
+            else
+            {
+                ShowModalInternal(properties, null);
+            }
+        }
+        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage)
+        {
+
+            var properties = new BindProperties
+            {
+                help_isArticle = true,
+                help_currentPage = startPage,
+                help_fullPathName = fullPathName,
+                help_featureName = featureName,
+            };
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, null));
+            }
+            else
+            {
+                ShowModalInternal(properties, null);
+            }
+        }
+
+
+
+        public static void ShowModalPromptDropDown(BindProperties properties, string[] options, int selIdx, Func<int, int, string, bool> action)
+        {
+            if (options == null || options.Length == 0)
+            {
+                LogUtils.DoErrorLog("ShowModalPromptDropDown: INVALID OPTIONS LIST!!!");
+                return;
+            }
+            properties.showDropDown = true;
+            properties.dropDownOptions = string.Join(BindProperties.DD_OPTIONS_SEPARATOR, options);
+            properties.dropDownCurrentSelection = selIdx;
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalPromptDropDownInternal(properties, action));
+            }
+            else
+            {
+                ShowModalPromptDropDownInternal(properties, action);
+            }
+        }
+
+        private static void ShowModalPromptDropDownInternal(BindProperties properties, Func<int, int, string, bool> action)
+        {
+            UIComponent uIComponent = UIView.library.Get(PANEL_ID);
+            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            {
+                bool targetAction(int x)
+                {
+                    UIDropDown dd = uIComponent.Find<UIDropDown>(DD_INPUT_ID);
+                    string result = dd?.selectedValue;
+                    int selIdx = dd?.selectedIndex ?? -2;
+                    return action(x, selIdx, result);
+                }
+                addAction(properties.ToDictionary(), targetAction);
+            }
+            else
+            {
+                ShowErrorPanelNotFound();
+            }
+        }
+        #endregion
+
+        #region Extra Classes
         internal struct BindProperties
         {
+            public const string DD_OPTIONS_SEPARATOR = "∫";
+
             public string title;
             public string icon;
             public bool showClose;
@@ -353,6 +686,19 @@ namespace Klyte.Commons.Utils
             public string textButton3;
             public string textButton4;
             public bool useFullWindowWidth;
+            public bool showTextField;
+            public bool showDropDown;
+            public string dropDownOptions;
+            public int dropDownCurrentSelection;
+            public string defaultTextFieldContent;
+            public string imageTexturePath;
+
+            public bool help_isArticle;
+            public string help_fullPathName;
+            public int help_currentPage;
+            public string help_featureName;
+
+
 
             public static BindProperties FromDictionary(Dictionary<string, object> dict)
             {
@@ -375,6 +721,17 @@ namespace Klyte.Commons.Utils
                         case "textButton3": result.textButton3 = (string)kv.Value; break;
                         case "textButton4": result.textButton4 = (string)kv.Value; break;
                         case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
+                        case "showTextField": result.showTextField = (bool)kv.Value; break;
+                        case "showDropDown": result.showDropDown = (bool)kv.Value; break;
+                        case "dropDownOptions": result.dropDownOptions = (string)kv.Value; break;
+                        case "dropDownCurrentSelection": result.dropDownCurrentSelection = (int)kv.Value; break;
+                        case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
+                        case "imageTexturePath": result.imageTexturePath = (string)kv.Value; break;
+
+                        case "help_isArticle": result.help_isArticle = (bool)kv.Value; break;
+                        case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
+                        case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
+                        case "help_featureName": result.help_featureName = (string)kv.Value; break;
                     }
                 }
                 return result;
@@ -398,11 +755,25 @@ namespace Klyte.Commons.Utils
                     ["textButton3"] = textButton3,
                     ["textButton4"] = textButton4,
                     ["useFullWindowWidth"] = useFullWindowWidth,
+                    ["showTextField"] = showTextField,
+                    ["showDropDown"] = showDropDown,
+                    ["dropDownOptions"] = dropDownOptions,
+                    ["dropDownCurrentSelection"] = dropDownCurrentSelection,
+                    ["defaultTextFieldContent"] = defaultTextFieldContent,
+                    ["imageTexturePath"] = imageTexturePath,
+
+
+                    ["help_isArticle"] = help_isArticle,
+                    ["help_fullPathName"] = help_fullPathName,
+                    ["help_currentPage"] = help_currentPage,
+                    ["help_featureName"] = help_featureName,
                 };
             }
 
-
-
+            public override string ToString() => string.Join(",", ToDictionary().ToList().Select(x => $"{x.Key}≠{x.Value}").ToArray());
         }
+
+
+        #endregion
     }
 }

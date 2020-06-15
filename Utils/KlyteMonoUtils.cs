@@ -1,6 +1,8 @@
-﻿using ColossalFramework.UI;
+﻿using ColossalFramework.Globalization;
+using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensors;
+using Klyte.Commons.UI.SpriteNames;
 using System;
 using UnityEngine;
 
@@ -54,6 +56,19 @@ namespace Klyte.Commons.Utils
             uiItem.focusedBgSprite = "TextFieldPanel";
             uiItem.builtinKeyNavigation = true;
             uiItem.submitOnFocusLost = true;
+        }
+        public static void UiTextFieldDefaultsForm(UITextField uiItem)
+        {
+            uiItem.selectionSprite = "EmptySprite";
+            uiItem.useOutline = true;
+            uiItem.hoveredBgSprite = "OptionsDropboxListboxHovered";
+            uiItem.focusedBgSprite = "OptionsDropboxListboxFocused";
+            uiItem.normalBgSprite = "OptionsDropboxListbox";
+            uiItem.builtinKeyNavigation = true;
+            uiItem.submitOnFocusLost = true;
+            uiItem.horizontalAlignment = UIHorizontalAlignment.Left;
+            uiItem.height = 28;
+            uiItem.padding = new RectOffset(5, 5, 5, 5);
         }
         public static Color ContrastColor(Color color)
         {
@@ -117,6 +132,8 @@ namespace Klyte.Commons.Utils
 
             component.textColor = new Color32(255, 255, 255, 255);
         }
+
+
         public static void InitButtonFull<T>(T component, bool isCheck, string baseSprite, bool noCaps = false) where T : UIInteractiveComponent
         {
             string sprite = baseSprite;
@@ -151,6 +168,45 @@ namespace Klyte.Commons.Utils
             button.pressedFgSprite = isCheck ? sprite + "Pressed" : spriteHov;
             button.textColor = new Color32(255, 255, 255, 255);
         }
+        public static void InitCircledButton(UIComponent parent, out UIButton button, CommonsSpriteNames sprite, MouseEventHandler onClicked, string tooltipLocale, float size = 40) => InitCircledButton(parent, out button, KlyteResourceLoader.GetDefaultSpriteNameFor(sprite), onClicked, tooltipLocale == null ? null : Locale.Get(tooltipLocale), size);
+
+        public static void InitCircledButton(UIComponent parent, out UIButton button, string sprite, MouseEventHandler onClicked, string name, float size = 40)
+        {
+            KlyteMonoUtils.CreateUIElement(out button, parent.transform, name, new UnityEngine.Vector4(0, 0, size, size));
+            KlyteMonoUtils.InitButtonFull(button, false, "OptionBase");
+            button.focusedBgSprite = "";
+            button.normalFgSprite = sprite;
+            button.scaleFactor = 0.6f;
+            button.eventClicked += onClicked;
+            button.tooltip = name;
+        }
+        public static void InitCircledButtonText(UIComponent parent, out UIButton button, string text, MouseEventHandler onClicked, string tooltip, float size = 40)
+        {
+            KlyteMonoUtils.CreateUIElement(out button, parent.transform, tooltip, new UnityEngine.Vector4(0, 0, size, size));
+            KlyteMonoUtils.InitButtonFull(button, false, "OptionBase");
+            button.focusedBgSprite = "";
+            button.text = text;
+            button.eventClicked += onClicked;
+            button.tooltip = tooltip;
+        }
+
+        public static UIButton AddHelpButton(UIComponent label, UIComponent field, Action onClicked, bool resizeToCreateSpace = true)
+        {
+            if (label.parent != field.parent)
+            {
+                LogUtils.DoWarnLog("Invalid request to add help button - different parents!");
+                return null;
+            }
+            if (resizeToCreateSpace)
+            {
+                label.width -= 15;
+                field.width -= 15;
+            }
+            InitCircledButton(label.parent, out UIButton result, CommonsSpriteNames.K45_QuestionMark, (x, y) => onClicked(), "K45_CMNS_HELP", 30);
+            result.scaleFactor = 1;
+            return result;
+        }
+
         public static void CopySpritesEvents(UIButton source, UIButton target)
         {
             target.disabledBgSprite = source.disabledBgSprite;
@@ -229,7 +285,7 @@ namespace Klyte.Commons.Utils
             callback(null, default);
             return callback;
         }
-        public static UIHelperExtension CreateScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition)
+        public static UIHelperExtension CreateScrollPanel(UIComponent parent, out UIScrollablePanel scrollablePanel, out UIScrollbar scrollbar, float width, float height, Vector3 relativePosition = default)
         {
             CreateUIElement(out scrollablePanel, parent?.transform);
             scrollablePanel.width = width;
@@ -366,7 +422,7 @@ namespace Klyte.Commons.Utils
             component.size = new Vector2(28, 28);
             return component;
         }
-        private static void DefaultColorPickerHandler(UIColorField dropdown, UIColorPicker popup, ref bool overridden)
+        private static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
         {
             UIPanel panel = popup.GetComponent<UIPanel>();
             overridden = true;
@@ -382,8 +438,7 @@ namespace Klyte.Commons.Utils
                     try
                     {
                         Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
-                        dropdown.selectedColor = targetColor;
-                        popup.color = targetColor;
+                        colorField.selectedColor = targetColor;
                         ((UITextField)x).textColor = Color.white;
                         ((UITextField)x).text = targetColor.ToRGB();
                     }
@@ -392,17 +447,30 @@ namespace Klyte.Commons.Utils
                         ((UITextField)x).textColor = Color.red;
                     }
                 }
+                else if (textField.text.Length == 0)
+                {
+                    colorField.selectedColor = Color.clear;
+                    ((UITextField)x).text = "";
+                }
             };
             popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();
             textField.text = ((Color32)popup.color).ToRGB();
+            InitCircledButton(panel, out UIButton clearButton, "Niet", (x, y) =>
+            {
+                colorField.selectedColor = Color.clear;
+                textField.text = "";
+            }, null, 20);
+            clearButton.relativePosition = new Vector3(220, 225);
+            clearButton.color = Color.red;
         }
 
         #endregion
-        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parent, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer)
+        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parent, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer) => CreateTabsComponent(out tabstrip, out tabContainer, parent, parent, namePrefix, areaTabstrip, areaContainer);
+        public static void CreateTabsComponent(out UITabstrip tabstrip, out UITabContainer tabContainer, Transform parentStrip, Transform parentContainer, string namePrefix, Vector4 areaTabstrip, Vector4 areaContainer)
         {
-            KlyteMonoUtils.CreateUIElement(out tabstrip, parent, $"{namePrefix}_Tabstrip", areaTabstrip);
+            KlyteMonoUtils.CreateUIElement(out tabstrip, parentStrip, $"{namePrefix}_Tabstrip", areaTabstrip);
 
-            KlyteMonoUtils.CreateUIElement(out tabContainer, parent, $"{namePrefix}_TabContainer", areaContainer);
+            KlyteMonoUtils.CreateUIElement(out tabContainer, parentContainer, $"{namePrefix}_TabContainer", areaContainer);
             tabstrip.tabPages = tabContainer;
             tabstrip.selectedIndex = 0;
             tabstrip.selectedIndex = -1;
