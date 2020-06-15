@@ -16,13 +16,14 @@ namespace Klyte.Commons.Extensors
 
     public interface IRedirectable
     {
-        Redirector RedirectorInstance { get; }
     }
 
     public class Redirector : MonoBehaviour
     {
         #region Class Base
         private static readonly HarmonyInstance m_harmony = HarmonyInstance.Create($"com.klyte.redirectors.{CommonProperties.Acronym}");
+        private static readonly List<MethodInfo> m_patches = new List<MethodInfo>();
+        private static readonly List<Action> m_onUnpatchActions = new List<Action>();
 
         private readonly List<DynamicMethod> m_detourList = new List<DynamicMethod>();
 
@@ -47,18 +48,40 @@ namespace Klyte.Commons.Extensors
 
         public static bool PreventDefault() => false;
 
-        public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null) => m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
-
-        public void OnDestroy()
+        public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null)
         {
-            foreach (DynamicMethod patch in m_detourList)
+
+            LogUtils.DoLog($"Adding patch! {oldMethod}");
+            m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
+            m_patches.Add(oldMethod);
+        }
+        public void AddUnpatchAction(Action unpatchAction) => m_onUnpatchActions.Add(unpatchAction);
+
+        public static void UnpatchAll()
+        {
+            LogUtils.DoWarnLog($"Unpatching all: {m_harmony.Id}");
+            foreach (MethodInfo method in m_patches)
             {
-                foreach (HarmonyMethod method in patch.GetHarmonyMethods())
-                {
-                    GetHarmonyInstance().Unpatch(patch.GetBaseDefinition(), method.method);
-
-                }
-
+                m_harmony.Unpatch(method, HarmonyPatchType.All, m_harmony.Id);
+            }
+            foreach (Action action in m_onUnpatchActions)
+            {
+                action?.Invoke();
+            }
+            m_onUnpatchActions.Clear();
+            m_patches.Clear();
+        }
+        public static void PatchAll()
+        {
+            LogUtils.DoWarnLog($"Patching all: {m_harmony.Id}");
+            GameObject m_topObj = GameObject.Find("k45_Redirectors") ?? new GameObject("k45_Redirectors");
+            Type typeTarg = typeof(IRedirectable);
+            List<Type> instances = ReflectionUtils.GetInterfaceImplementations(typeTarg, typeTarg);
+            LogUtils.DoLog($"Found Redirectors: {instances.Count}");
+            foreach (Type t in instances)
+            {
+                LogUtils.DoLog($"Redirector: {t}");
+                m_topObj.AddComponent(t);
             }
         }
 

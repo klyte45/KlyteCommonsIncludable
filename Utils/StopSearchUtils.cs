@@ -18,10 +18,10 @@ namespace Klyte.Commons.Utils
 
 
             var bounds = new Bounds(position, new Vector3(maxDistance * 2f, maxDistance * 2f, maxDistance * 2f));
-            int num = Mathf.Max((int) (((bounds.min.x - 64f) / 64f) + 135f), 0);
-            int num2 = Mathf.Max((int) (((bounds.min.z - 64f) / 64f) + 135f), 0);
-            int num3 = Mathf.Min((int) (((bounds.max.x + 64f) / 64f) + 135f), 269);
-            int num4 = Mathf.Min((int) (((bounds.max.z + 64f) / 64f) + 135f), 269);
+            int num = Mathf.Max((int)(((bounds.min.x - 64f) / 64f) + 135f), 0);
+            int num2 = Mathf.Max((int)(((bounds.min.z - 64f) / 64f) + 135f), 0);
+            int num3 = Mathf.Min((int)(((bounds.max.x + 64f) / 64f) + 135f), 269);
+            int num4 = Mathf.Min((int)(((bounds.max.z + 64f) / 64f) + 135f), 269);
             NetManager instance = Singleton<NetManager>.instance;
             var result = new List<Tuple<ushort, float, Vector3>>();
 
@@ -46,7 +46,8 @@ namespace Klyte.Commons.Utils
                                 && (instance.m_nodes.m_buffer[nodeId].m_flags & (NetNode.Flags.Created)) != NetNode.Flags.None
                                 && instance.m_nodes.m_buffer[nodeId].m_transportLine > 0
                                 && (allowUnderground || !info.m_netAI.IsUnderground())
-                                && (stopType == VehicleInfo.VehicleType.None || stopType == TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine].Info.m_vehicleType))
+                                && (stopType == VehicleInfo.VehicleType.None || stopType == (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine]).Info.m_vehicleType)
+                                && (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine].m_flags & TransportLine.Flags.Complete) != TransportLine.Flags.None)
                             {
                                 NetNode node = instance.m_nodes.m_buffer[nodeId];
                                 Vector3 nodePos = node.m_position;
@@ -64,7 +65,7 @@ namespace Klyte.Commons.Utils
                                     }
                                 }
                             }
-                            GOTO_NEXT:
+                        GOTO_NEXT:
                             nodeId = instance.m_nodes.m_buffer[nodeId].m_nextGridNode;
                             if (++num7 >= 36864)
                             {
@@ -183,7 +184,7 @@ namespace Klyte.Commons.Utils
                         x.platformLine.b = (rotationToApply * x.platformLine.b) + buildingInfo.m_subBuildings[i].m_position;
                         x.platformLine.c = (rotationToApply * x.platformLine.c) + buildingInfo.m_subBuildings[i].m_position;
                         x.platformLine.d = (rotationToApply * x.platformLine.d) + buildingInfo.m_subBuildings[i].m_position;
-                        x.subbuildingId = (sbyte) i;
+                        x.subbuildingId = (sbyte)i;
                         return x;
                     }));
                 }

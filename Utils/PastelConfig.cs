@@ -17,6 +17,5 @@
         AVOID_NEUTRALS_REDS = 12,
         GREENS_ONLY = 13,
         BLUES_ONLY = 14,
-
     }
 }

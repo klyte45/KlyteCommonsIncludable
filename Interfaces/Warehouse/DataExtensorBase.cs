@@ -5,12 +5,6 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public interface IDataExtensor
-    {
-        string SaveId { get; }
-        IDataExtensor Deserialize(Type type, byte[] data);
-        byte[] Serialize();
-    }
 
     [XmlRoot("DataExtensor")]
     public abstract class DataExtensorBase<U> : IDataExtensor where U : DataExtensorBase<U>, new()
@@ -29,7 +23,24 @@ namespace Klyte.Commons.Interfaces
         }
 
 
-        public IDataExtensor Deserialize(Type type, byte[] data) => XmlUtils.DefaultXmlDeserialize<U>(Encoding.UTF8.GetString(data));
-        public byte[] Serialize() => Encoding.UTF8.GetBytes(XmlUtils.DefaultXmlSerialize((U) this, false));
+        public IDataExtensor Deserialize(Type type, byte[] data)
+        {
+            string content;
+            if (data[0] == '<')
+            {
+                content = Encoding.UTF8.GetString(data);
+            }
+            else
+            {
+                content = ZipUtils.Unzip(data);
+            }
+
+            return XmlUtils.DefaultXmlDeserialize<U>(content);
+        }
+
+        public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((U)this, false));
+        public virtual void OnReleased() { }
+
+        public virtual void LoadDefaults() { }
     }
 }

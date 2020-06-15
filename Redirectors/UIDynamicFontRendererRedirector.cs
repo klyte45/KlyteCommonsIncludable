@@ -5,6 +5,7 @@ using Harmony;
 using Klyte.Commons.Extensors;
 using Klyte.Commons.Utils;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection.Emit;
 using UnityEngine;
 using static ColossalFramework.UI.UIDynamicFont;
@@ -17,18 +18,17 @@ namespace Klyte.Commons.Redirectors
         public const string TAG_LINE = "k45Symbol";
         public readonly string[] LEGACY_TAG_LINE = new string[] { "k45LineSymbol" };
 
-        private static UIDynamicFontRendererRedirector Instance { get; set; }
-
-        public Redirector RedirectorInstance => Instance;
+        public Redirector RedirectorInstance => this;
         #region Awake 
         public void Awake()
         {
+            LogUtils.DoLog("AWAKE DYNAMIC FONT RENDERER!!!");
             if (GetList().Contains(TAG_LINE))
             {
+                LogUtils.DoLog("ALREADY AWAKEN!!!");
                 Destroy(this);
                 return;
             }
-            Instance = this;
 
             GetList().Add(TAG_LINE);
             GetList().AddRange(LEGACY_TAG_LINE);
@@ -36,7 +36,12 @@ namespace Klyte.Commons.Redirectors
 
             AddRedirect(typeof(DynamicFontRenderer).GetMethod("CalculateTokenRenderSize", RedirectorUtils.allFlags), null, null, GetType().GetMethod("CalculateTokenRenderSizeTranspile", RedirectorUtils.allFlags));
             AddRedirect(typeof(DynamicFontRenderer).GetMethod("RenderLine", RedirectorUtils.allFlags), null, null, GetType().GetMethod("RenderLineTranspile", RedirectorUtils.allFlags));
-
+            AddUnpatchAction(() =>
+            {
+                LogUtils.DoLog("DESTROYING DYNAMIC FONT RENDERER!!!");
+                GetList().Remove(TAG_LINE);
+                GetList().RemoveAll((x) => LEGACY_TAG_LINE.Contains(x));
+            });
         }
 
         public static IEnumerable<CodeInstruction> CalculateTokenRenderSizeTranspile(IEnumerable<CodeInstruction> instructions)
@@ -81,7 +86,7 @@ namespace Klyte.Commons.Redirectors
             {
                 if (inst[i].opcode == OpCodes.Ldstr && inst[i].operand is string str && str == "color")
                 {
-                    Label newRef = il.DefineLabel();
+                    var newRef = il.DefineLabel();
                     object oldRef = inst[i + 2].operand;
                     inst[i + 2].opcode = OpCodes.Brtrue;
                     inst[i + 2].operand = newRef;

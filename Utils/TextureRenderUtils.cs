@@ -21,8 +21,8 @@ namespace Klyte.Commons.Utils
             textDimensions = MeasureTextWidth(font, text, textScale, out Vector2 yBounds);
 
 
-            var tex = new Texture2D((int) textDimensions.x, (int) textDimensions.y, TextureFormat.ARGB32, false);
-            tex.SetPixels(new Color[(int) (textDimensions.x * textDimensions.y)]);
+            var tex = new Texture2D((int)textDimensions.x, (int)textDimensions.y, TextureFormat.ARGB32, false);
+            tex.SetPixels(new Color[(int)(textDimensions.x * textDimensions.y)]);
 
             RenderText(font, text, new Vector3(0, -yBounds.x), textScale, textColor, outlineColor, tex);
 
@@ -34,7 +34,7 @@ namespace Klyte.Commons.Utils
         {
             var imageSize = new Vector2(Mathf.Max(Mathf.NextPowerOfTwo(tex.width), 1), Mathf.Max(Mathf.NextPowerOfTwo(tex.height), 1));
 
-            TextureScaler.scale(tex, (int) imageSize.x, (int) imageSize.y);
+            TextureScaler.scale(tex, (int)imageSize.x, (int)imageSize.y);
             return tex;
         }
 
@@ -78,44 +78,44 @@ namespace Klyte.Commons.Utils
                     textDimensions = MeasureTextWidth(font, text, textScale, out yBounds);
                 }
 
-                var imageSize = new Vector2(Mathf.NextPowerOfTwo((int) Mathf.Max(textDimensions.x * multipler, width)), Mathf.NextPowerOfTwo((int) Mathf.Max(textDimensions.y, height)));
+                var imageSize = new Vector2(Mathf.NextPowerOfTwo((int)Mathf.Max(textDimensions.x * multipler, width)), Mathf.NextPowerOfTwo((int)Mathf.Max(textDimensions.y, height)));
 
 
-                var tex = new Texture2D((int) imageSize.x, (int) imageSize.y, TextureFormat.ARGB32, false);
-                tex.SetPixels(new Color[(int) (imageSize.x * imageSize.y)]);
+                var tex = new Texture2D((int)imageSize.x, (int)imageSize.y, TextureFormat.ARGB32, false);
+                tex.SetPixels(new Color[(int)(imageSize.x * imageSize.y)]);
 
 
-                var texText = new Texture2D((int) textDimensions.x, (int) textDimensions.y, TextureFormat.ARGB32, false);
-                texText.SetPixels(new Color[(int) (textDimensions.x * textDimensions.y)]);
+                var texText = new Texture2D((int)textDimensions.x, (int)textDimensions.y, TextureFormat.ARGB32, false);
+                texText.SetPixels(new Color[(int)(textDimensions.x * textDimensions.y)]);
 
                 Color contrastColor = KlyteMonoUtils.ContrastColor(bgColor);
 
                 Vector2 position = RenderSprite(atlas, spriteName, contrastColor, tex, textureScale);
-                RenderSprite(atlas, spriteName, bgColor, tex, null, tex.height - (int) (borderWidth * 2), null, new Vector2((textScale / 2) - 0.5f, (textScale / 2) - 0.5f), (a, b) =>
-                          {
-                              if (b.a == 1)
-                              {
-                                  return b;
-                              }
+                RenderSprite(atlas, spriteName, bgColor, tex, null, tex.height - (int)(borderWidth * 2), null, new Vector2((textScale / 2) - 0.5f, (textScale / 2) - 0.5f), (a, b) =>
+                         {
+                             if (b.a == 1)
+                             {
+                                 return b;
+                             }
 
-                              if (b.a == 0)
-                              {
-                                  return a;
-                              }
+                             if (b.a == 0)
+                             {
+                                 return a;
+                             }
 
-                              float totalAlpha = a.a + b.a;
-                              return (a * (1 - b.a)) + (b * b.a);
+                             float totalAlpha = a.a + b.a;
+                             return (a * (1 - b.a)) + (b * b.a);
 
-                          });
+                         });
                 Vector2 posText = position + VectorUtils.XY(textAreaSize) + new Vector2((textAreaSize.z / 2) - (textDimensions.x * multipler / 2) + 1, (textAreaSize.w / 2) - (textDimensions.y / 2) - (yBounds.x / 2));
 
                 RenderText(font, text, new Vector3(0, -yBounds.x), textScale, contrastColor, bgColor, texText);
 
                 if (multipler < 1)
                 {
-                    TextureScaler.scale(texText, (int) (texText.width * multipler), texText.height);
+                    TextureScaler.scale(texText, (int)(texText.width * multipler), texText.height);
                 }
-                MergeTextures(tex, texText.GetPixels(), (int) posText.x, (int) posText.y, texText.width, texText.height, false);
+                MergeTextures(tex, texText.GetPixels(), (int)posText.x, (int)posText.y, texText.width, texText.height, false);
                 UnityEngine.Object.Destroy(texText);
                 tex.Apply();
 
@@ -173,7 +173,7 @@ namespace Klyte.Commons.Utils
             var textColors = new Stack<ColorInfo>();
             textColors.Clear();
             textColors.Push(new ColorInfo(baseColor));
-            var tokens = (PoolList<UIMarkupToken>) typeof(UIMarkupTokenizer).GetMethod("Tokenize", RedirectorUtils.allFlags).Invoke(null, new object[] { text });
+            var tokens = (PoolList<UIMarkupToken>)typeof(UIMarkupTokenizer).GetMethod("Tokenize", RedirectorUtils.allFlags).Invoke(null, new object[] { text });
             Vector2 texSize = CalculateTextureSize(uidynamicFont, textScale, ref tokens, out int startYPos);
             if (texSize.x <= 0 || texSize.y <= 0)
             {
@@ -181,7 +181,7 @@ namespace Klyte.Commons.Utils
                 return new Texture2D(1, 1);
             }
             var position = new Vector3(0, startYPos);
-            var result = new Texture2D((int) texSize.x, (int) texSize.y, TextureFormat.RGBA32, false);
+            var result = new Texture2D((int)texSize.x, (int)texSize.y, TextureFormat.RGBA32, false);
             result.SetPixels(new Color[result.width * result.height]);
             RenderLine(tokens, uidynamicFont, textScale, textColors, position, result);
             tokens.Release();
@@ -244,8 +244,8 @@ namespace Klyte.Commons.Utils
                         }
                         float targetScale = font.baseline * textScale / spriteInfo.texture.height;
 
-                        token.height = (int) (targetScale * spriteInfo.texture.height);
-                        xAdvance += (int) (targetScale * spriteInfo.texture.width);
+                        token.height = (int)(targetScale * spriteInfo.texture.height);
+                        xAdvance += (int)(targetScale * spriteInfo.texture.width);
                         yBounds.x = Mathf.Min(yBounds.x, 0);
                         yBounds.y = Mathf.Max(yBounds.y, token.height);
                     }
@@ -274,8 +274,8 @@ namespace Klyte.Commons.Utils
                         float baseScale = font.baseline * textScale / spriteInfo.texture.height;
                         float targetScale = baseScale * 2;
 
-                        token.height = (int) (targetScale * spriteInfo.texture.height);
-                        xAdvance += (int) (targetScale * spriteInfo.texture.width);
+                        token.height = (int)(targetScale * spriteInfo.texture.height);
+                        xAdvance += (int)(targetScale * spriteInfo.texture.width);
                         yBounds.x = Mathf.Min(yBounds.x, -token.height / 3);
                         yBounds.y = Mathf.Max(yBounds.y, token.height / 3 * 2);
                     }
@@ -287,7 +287,7 @@ namespace Klyte.Commons.Utils
                 return new Vector2(1, 1);
             }
             float ySize = yBounds.y - yBounds.x;
-            startYPos = (int) (-yBounds.x);
+            startYPos = (int)(-yBounds.x);
             return new Vector2(xAdvance, ySize);
         }
 
@@ -329,11 +329,11 @@ namespace Klyte.Commons.Utils
                         Texture2D spriteLineTex = RenderSpriteLine(uidynamicFont, UIView.GetAView().defaultAtlas, args[0], ColorExtensions.FromRGB(args[1]), args[2], textScale);
                         if (spriteLineTex.height > outputTexture.height)
                         {
-                            float scale = ((float) outputTexture.height) / spriteLineTex.height;
+                            float scale = ((float)outputTexture.height) / spriteLineTex.height;
                             TextureScaler.scale(spriteLineTex, Mathf.RoundToInt(spriteLineTex.width * scale), Mathf.RoundToInt(spriteLineTex.height * scale));
                         }
                         int targetY = (outputTexture.height - spriteLineTex.height) / 2;
-                        outputTexture.SetPixels((int) position.x, targetY, spriteLineTex.width, spriteLineTex.height, spriteLineTex.GetPixels());
+                        outputTexture.SetPixels((int)position.x, targetY, spriteLineTex.width, spriteLineTex.height, spriteLineTex.GetPixels());
                         position.x += spriteLineTex.width;
                     }
                 }
@@ -352,7 +352,7 @@ namespace Klyte.Commons.Utils
             float y = position.y;
             Color color2 = textColor;
             Color c = color2;
-            Texture2D readableTex = ((Texture2D) uidynamicFont.baseFont.material.mainTexture).MakeReadable();
+            Texture2D readableTex = ((Texture2D)uidynamicFont.baseFont.material.mainTexture).MakeReadable();
             for (int i = 0; i < text.Length; i++)
             {
                 if (i > 0)
@@ -376,8 +376,8 @@ namespace Klyte.Commons.Utils
                     float maxU = Mathf.Max(glyph.uvTopLeft.x, glyph.uvTopRight.x, glyph.uvBottomRight.x, glyph.uvBottomLeft.x);
                     float minV = Mathf.Min(glyph.uvTopLeft.y, glyph.uvTopRight.y, glyph.uvBottomRight.y, glyph.uvBottomLeft.y);
                     float maxV = Mathf.Max(glyph.uvTopLeft.y, glyph.uvTopRight.y, glyph.uvBottomRight.y, glyph.uvBottomLeft.y);
-                    int sizeU = (int) ((maxU - minU) * readableTex.width);
-                    int sizeV = (int) ((maxV - minV) * readableTex.height);
+                    int sizeU = (int)((maxU - minU) * readableTex.width);
+                    int sizeV = (int)((maxV - minV) * readableTex.height);
                     Color[] colors = readableTex.GetPixels(Mathf.RoundToInt(minU * readableTex.width), Mathf.RoundToInt(minV * readableTex.height), sizeU, sizeV);
                     if (outlineColor != default)
                     {
@@ -397,7 +397,7 @@ namespace Klyte.Commons.Utils
             return x;
         }
 
-        private static void MergeTextures(Texture2D tex, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
+        internal static void MergeTextures(Texture2D tex, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
         {
             for (int i = 0; i < sizeX; i++)
             {
@@ -415,6 +415,24 @@ namespace Klyte.Commons.Utils
                 }
             }
         }
+        internal static void MergeColorArrays(Color[] colorOr, int widthOr, Color[] colors, int startX, int startY, int sizeX, int sizeY, bool swapXY = false, bool flipVertical = false, bool flipHorizontal = false, bool plain = false)
+        {
+            for (int i = 0; i < sizeX; i++)
+            {
+                for (int j = 0; j < sizeY; j++)
+                {
+                    Color orPixel = colorOr[startX + i + (widthOr * (startY + j))];
+                    Color newPixel = colors[((flipVertical ? sizeY - j - 1 : j) * (swapXY ? 1 : sizeX)) + ((flipHorizontal ? sizeX - i - 1 : i) * (swapXY ? sizeY : 1))];
+
+                    if (plain && newPixel.a != 1)
+                    {
+                        continue;
+                    }
+
+                    colorOr[startX + i + (widthOr * (startY + j))] = Color.Lerp(orPixel, newPixel, newPixel.a);
+                }
+            }
+        }
 
         internal static Vector4 RenderSprite(UITextureAtlas atlas, string spriteName, Color color, Texture2D tex, float? targetScale, int? targetHeight = null, Vector2? position = null, Vector2 positionOffset = default, Func<Color, Color, Color> blendFunction = null)
         {
@@ -426,10 +444,10 @@ namespace Klyte.Commons.Utils
                     LogUtils.DoErrorLog("Target scale or target height must be set to render sprite!");
                     return new Vector2();
                 }
-                targetScale = (float) targetHeight / spriteInfo.height;
+                targetScale = (float)targetHeight / spriteInfo.height;
             }
             Texture2D readableTexture = spriteInfo.texture.MakeReadable();
-            TextureScaler.scale(readableTexture, (int) (readableTexture.width * targetScale), (int) (readableTexture.height * targetScale));
+            TextureScaler.scale(readableTexture, (int)(readableTexture.width * targetScale), (int)(readableTexture.height * targetScale));
             int width = readableTexture.width;
             int height = readableTexture.height;
             Vector2 targetPosition = (position ?? new Vector2((tex.width - width) / 2, (tex.height - height) / 2)) + positionOffset;
@@ -439,11 +457,11 @@ namespace Klyte.Commons.Utils
                 blendFunction = (x, y) => y;
             }
 
-            tex.SetPixels((int) targetPosition.x, (int) targetPosition.y, width, height, colors.Select((x, y) => blendFunction(tex.GetPixel((int) targetPosition.x + (y % width), (int) targetPosition.y + (y / width)), x * color)).ToArray());
+            tex.SetPixels((int)targetPosition.x, (int)targetPosition.y, width, height, colors.Select((x, y) => blendFunction(tex.GetPixel((int)targetPosition.x + (y % width), (int)targetPosition.y + (y / width)), x * color)).ToArray());
             return new Vector4(targetPosition.x, targetPosition.y, width, height);
         }
 
-        private static Vector2[] kOutlineOffsets = new Vector2[]
+        internal static readonly Vector2[] kOutlineOffsets = new Vector2[]
             {
                 new Vector2(-1f, -1f),
                 new Vector2(-1f, 0),
