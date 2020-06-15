@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200426";
+        public const string VERSION = "20200514";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -137,6 +137,12 @@ namespace Klyte.Commons.Utils
             button4.text = "DDDDD";
             button4.wordWrap = true;
             KlyteMonoUtils.InitButtonFull(button4, false, "ButtonMenu");
+            KlyteMonoUtils.CreateUIElement(out UIButton button5, buttonSubContainer.transform, "ButtonAction5");
+            button5.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
+            button5.size = new Vector2(150, 60);
+            button5.text = "EEEEE";
+            button5.wordWrap = true;
+            KlyteMonoUtils.InitButtonFull(button5, false, "ButtonMenu");
             #endregion
 
             #region Bindings creation
@@ -152,10 +158,12 @@ namespace Klyte.Commons.Utils
                 CreateBind("showButton2"        ,button2,"isVisible"),
                 CreateBind("showButton3"        ,button3,"isVisible"),
                 CreateBind("showButton4"        ,button4,"isVisible"),
+                CreateBind("showButton5"        ,button5,"isVisible"),
                 CreateBind("textButton1"        ,button1,"text"),
                 CreateBind("textButton2"        ,button2,"text"),
                 CreateBind("textButton3"        ,button3,"text"),
                 CreateBind("textButton4"        ,button4,"text"),
+                CreateBind("textButton5"        ,button5,"text"),
             });
             #endregion
 
@@ -210,6 +218,7 @@ namespace Klyte.Commons.Utils
             m_button2 = m_mainPanel.Find<UIButton>("ButtonAction2");
             m_button3 = m_mainPanel.Find<UIButton>("ButtonAction3");
             m_button4 = m_mainPanel.Find<UIButton>("ButtonAction4");
+            m_button5 = m_mainPanel.Find<UIButton>("ButtonAction5");
 
             m_textField = m_mainPanel.Find<UITextField>(TEXT_INPUT_ID);
 
@@ -225,6 +234,7 @@ namespace Klyte.Commons.Utils
             m_button2.eventClicked += (x, y) => OnButton2();
             m_button3.eventClicked += (x, y) => OnButton3();
             m_button4.eventClicked += (x, y) => OnButton4();
+            m_button5.eventClicked += (x, y) => OnButton5();
 
 
             KlyteMonoUtils.LimitWidthAndBox(m_title, out UIPanel boxContainerTitle);
@@ -257,6 +267,7 @@ namespace Klyte.Commons.Utils
         private void OnButton3() => Close(3);
 
         private void OnButton4() => Close(4);
+        private void OnButton5() => Close(5);
 
         private IEnumerator Enqueue(BindProperties properties, Func<int, bool> callback)
         {
@@ -330,11 +341,12 @@ namespace Klyte.Commons.Utils
                 string textureImagePath = File.Exists(targetImg) ? targetImg : null;
                 string path = propertiesToSet.help_fullPathName;
                 string feature = propertiesToSet.help_featureName;
+                string[] formatEntries = propertiesToSet.help_formatsEntries;
                 LogUtils.DoLog($"IMG: {targetImg}");
                 propertiesToSet = new BindProperties
                 {
                     title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
-                    message = tutorialEntries[currentPage],
+                    message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
 
                     showClose = true,
@@ -349,11 +361,11 @@ namespace Klyte.Commons.Utils
                 {
                     if (x == 1)
                     {
-                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1);
+                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1, formatEntries);
                     }
                     if (x == 3)
                     {
-                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1);
+                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1, formatEntries);
                     }
                     return true;
                 };
@@ -371,10 +383,12 @@ namespace Klyte.Commons.Utils
             m_properties.FindBinding("showButton2").property.value = propertiesToSet.showButton2;
             m_properties.FindBinding("showButton3").property.value = propertiesToSet.showButton3;
             m_properties.FindBinding("showButton4").property.value = propertiesToSet.showButton4;
+            m_properties.FindBinding("showButton5").property.value = propertiesToSet.showButton5;
             m_properties.FindBinding("textButton1").property.value = propertiesToSet.textButton1 ?? "";
             m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2 ?? "";
             m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3 ?? "";
             m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4 ?? "";
+            m_properties.FindBinding("textButton5").property.value = propertiesToSet.textButton5 ?? "";
 
             m_textField.isVisible = propertiesToSet.showTextField;
             m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
@@ -474,6 +488,7 @@ namespace Klyte.Commons.Utils
         private UIButton m_button2;
         private UIButton m_button3;
         private UIButton m_button4;
+        private UIButton m_button5;
         private UITextField m_textField;
         private UIDropDown m_dropDown;
         private UITextureSprite m_textureSprite;
@@ -533,7 +548,7 @@ namespace Klyte.Commons.Utils
                 if (component != null)
                 {
                     string title = $"Mod not loaded";
-                    string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                    string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
                     string img = "IconMessage";
                     component.SetProperties(TooltipHelper.Format(new string[]
                     {
@@ -584,7 +599,7 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static void ShowModalHelp(string pathName, string featureName, int startPage = 0)
+        public static void ShowModalHelp(string pathName, string featureName, int startPage, params string[] formatsEntries)
         {
             string fullPathName = $"{CommonProperties.ModDllRootFolder}{Path.DirectorySeparatorChar}{TUTORIAL_FOLDER_NAME}{Path.DirectorySeparatorChar}{pathName}";
 
@@ -594,6 +609,7 @@ namespace Klyte.Commons.Utils
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
+                help_formatsEntries = new string[] { featureName }.Union(formatsEntries).ToArray(),
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
@@ -604,7 +620,7 @@ namespace Klyte.Commons.Utils
                 ShowModalInternal(properties, null);
             }
         }
-        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage)
+        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage, params string[] formatsEntries)
         {
 
             var properties = new BindProperties
@@ -613,6 +629,7 @@ namespace Klyte.Commons.Utils
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
+                help_formatsEntries = formatsEntries,
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
@@ -681,10 +698,12 @@ namespace Klyte.Commons.Utils
             public bool showButton2;
             public bool showButton3;
             public bool showButton4;
+            public bool showButton5;
             public string textButton1;
             public string textButton2;
             public string textButton3;
             public string textButton4;
+            public string textButton5;
             public bool useFullWindowWidth;
             public bool showTextField;
             public bool showDropDown;
@@ -697,6 +716,7 @@ namespace Klyte.Commons.Utils
             public string help_fullPathName;
             public int help_currentPage;
             public string help_featureName;
+            public string[] help_formatsEntries;
 
 
 
@@ -716,10 +736,12 @@ namespace Klyte.Commons.Utils
                         case "showButton2": result.showButton2 = (bool)kv.Value; break;
                         case "showButton3": result.showButton3 = (bool)kv.Value; break;
                         case "showButton4": result.showButton4 = (bool)kv.Value; break;
+                        case "showButton5": result.showButton5 = (bool)kv.Value; break;
                         case "textButton1": result.textButton1 = (string)kv.Value; break;
                         case "textButton2": result.textButton2 = (string)kv.Value; break;
                         case "textButton3": result.textButton3 = (string)kv.Value; break;
                         case "textButton4": result.textButton4 = (string)kv.Value; break;
+                        case "textButton5": result.textButton5 = (string)kv.Value; break;
                         case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
                         case "showTextField": result.showTextField = (bool)kv.Value; break;
                         case "showDropDown": result.showDropDown = (bool)kv.Value; break;
@@ -732,6 +754,7 @@ namespace Klyte.Commons.Utils
                         case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
                         case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
                         case "help_featureName": result.help_featureName = (string)kv.Value; break;
+                        case "help_formatsEntries": result.help_formatsEntries = (string[])kv.Value; break;
                     }
                 }
                 return result;
@@ -750,10 +773,12 @@ namespace Klyte.Commons.Utils
                     ["showButton2"] = showButton2,
                     ["showButton3"] = showButton3,
                     ["showButton4"] = showButton4,
+                    ["showButton5"] = showButton5,
                     ["textButton1"] = textButton1,
                     ["textButton2"] = textButton2,
                     ["textButton3"] = textButton3,
                     ["textButton4"] = textButton4,
+                    ["textButton5"] = textButton5,
                     ["useFullWindowWidth"] = useFullWindowWidth,
                     ["showTextField"] = showTextField,
                     ["showDropDown"] = showDropDown,
@@ -767,6 +792,7 @@ namespace Klyte.Commons.Utils
                     ["help_fullPathName"] = help_fullPathName,
                     ["help_currentPage"] = help_currentPage,
                     ["help_featureName"] = help_featureName,
+                    ["help_formatsEntries"] = help_formatsEntries,
                 };
             }
 

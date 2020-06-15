@@ -45,11 +45,12 @@ namespace Klyte.Commons.Extensors
         //
         // Methods
         //
-        public object AddButton(string text, OnButtonClicked eventCallback)
+        public object AddButton(string text, OnButtonClicked eventCallback) => AddButton(m_root, text, eventCallback);
+        public static UIButton AddButton(UIComponent parent, string text, OnButtonClicked eventCallback)
         {
             if (eventCallback != null && !string.IsNullOrEmpty(text))
             {
-                var uIButton = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kButtonTemplate)) as UIButton;
+                var uIButton = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kButtonTemplate)) as UIButton;
                 uIButton.text = text;
                 uIButton.eventClick += delegate (UIComponent c, UIMouseEventParameter sel)
                 {
@@ -552,20 +553,13 @@ namespace Klyte.Commons.Extensors
             return null;
         }
 
-        public UILabel AddLabel(string name)
+        public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
+        public static UILabel AddLabel(UIComponent parent, string name, float width)
         {
-
-            var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
-            uIPanel.autoFitChildrenVertically = true;
-            UILabel label = uIPanel.Find<UILabel>("Label");
+            KlyteMonoUtils.CreateUIElement(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
+            KlyteMonoUtils.LimitWidthAndBox(label, width);
             label.text = name;
-            label.maximumSize = new Vector2(700, 9999);
-            label.minimumSize = new Vector2(700, 0);
-            label.wordWrap = true;
-            GameObject.Destroy(uIPanel.Find<UIDropDown>("Dropdown").gameObject);
-
             return label;
-
         }
 
         public UITextureSprite AddNamedTexture(string name)

@@ -10,18 +10,18 @@ namespace Klyte.Commons.Utils
     {
         #region XML Utils
 
-        public static T DefaultXmlDeserialize<T>(string s)
+        public static T DefaultXmlDeserialize<T>(string s, Action<string, Exception> OnException = null)
         {
             var xmlser = new XmlSerializer(typeof(T));
-            return DefaultXmlDeserializeImpl<T>(s, xmlser);
+            return DefaultXmlDeserializeImpl<T>(s, xmlser, OnException);
         }
-        public static object DefaultXmlDeserialize(Type t, string s)
+        public static object DefaultXmlDeserialize(Type t, string s, Action<string, Exception> OnException = null)
         {
             var xmlser = new XmlSerializer(t);
-            return DefaultXmlDeserializeImpl<object>(s, xmlser);
+            return DefaultXmlDeserializeImpl<object>(s, xmlser, OnException);
         }
 
-        private static T DefaultXmlDeserializeImpl<T>(string s, XmlSerializer xmlser)
+        private static T DefaultXmlDeserializeImpl<T>(string s, XmlSerializer xmlser, Action<string, Exception> OnException = null)
         {
             try
             {
@@ -35,11 +35,13 @@ namespace Klyte.Commons.Utils
                 else
                 {
                     LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}");
+                    OnException?.Invoke(s, null);
                 }
             }
             catch (Exception e)
             {
                 LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.GetType().Name}: {e.Message}\n{e.StackTrace}");
+                OnException?.Invoke(s, e);
                 throw e;
             }
             return default;
