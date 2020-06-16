@@ -53,6 +53,33 @@ namespace Klyte.Commons.UI
             labelValue.padding = new RectOffset(4, 4, 0, 0);
             KlyteMonoUtils.LimitWidthAndBox(labelValue, (parentHelper.Self.width / 2) - slider.width, true);
         }
+        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false)
+        {
+            fieldArray = parentHelper.AddVector2Field(label, Vector3.zero, onChange, integerOnly);
+            KlyteMonoUtils.LimitWidthAndBox(fieldArray[0].parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
+            if (addRollEvent)
+            {
+                fieldArray.ForEach(x =>
+                {
+                    if (integerOnly)
+                    {
+                        x.eventMouseWheel += RollInteger;
+                    }
+                    else
+                    {
+                        x.eventMouseWheel += RollFloat;
+                    }
+                    x.tooltip = Locale.Get("K45_CMNS_FLOAT_EDITOR_TOOLTIP_HELP");
+                });
+            }
+            fieldArray[0].zOrder = 1;
+            fieldArray[1].zOrder = 2;
+            if (integerOnly)
+            {
+                fieldArray.ForEach(x => x.allowFloats = false);
+            }
+        }
+
         public static void AddVector3Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector3> onChange)
         {
             fieldArray = parentHelper.AddVector3Field(label, Vector3.zero, onChange);
@@ -67,21 +94,21 @@ namespace Klyte.Commons.UI
             fieldArray[2].zOrder = 3;
         }
 
-        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true)
+        public static void AddVector4Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector4> onChange)
         {
-            fieldArray = parentHelper.AddVector2Field(label, Vector3.zero, onChange);
+            fieldArray = parentHelper.AddVector4Field(label, Vector4.zero, onChange);
             KlyteMonoUtils.LimitWidthAndBox(fieldArray[0].parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
-            if (addRollEvent)
+            fieldArray.ForEach(x =>
             {
-                fieldArray.ForEach(x =>
-                    {
-                        x.eventMouseWheel += RollFloat;
-                        x.tooltip = Locale.Get("K45_CMNS_FLOAT_EDITOR_TOOLTIP_HELP");
-                    });
-            }
+                x.eventMouseWheel += RollFloat;
+                x.tooltip = Locale.Get("K45_CMNS_FLOAT_EDITOR_TOOLTIP_HELP");
+            });
             fieldArray[0].zOrder = 1;
             fieldArray[1].zOrder = 2;
+            fieldArray[2].zOrder = 3;
+            fieldArray[3].zOrder = 4;
         }
+
 
         private static readonly MethodInfo m_submitField = typeof(UITextField).GetMethod("OnSubmit", RedirectorUtils.allFlags);
         public static void RollFloat(UIComponent component, UIMouseEventParameter eventParam)
@@ -95,7 +122,15 @@ namespace Klyte.Commons.UI
                 m_submitField.Invoke(tf, new object[0]);
             }
         }
-
+        public static void RollInteger(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            if (component is UITextField tf && tf.numericalOnly && float.TryParse(tf.text, out float currentValue))
+            {
+                bool shiftPressed = Event.current.shift;
+                tf.text = Mathf.Max(tf.allowNegative ? float.MinValue : 0, currentValue + 0.0003f + (eventParam.wheelDelta * (shiftPressed ? 10 : 1))).ToString("F0");
+                m_submitField.Invoke(tf, new object[0]);
+            }
+        }
         public static void AddFloatField(string label, out UITextField field, UIHelperExtension parentHelper, Action<float> onChange, bool acceptNegative)
         {
             field = parentHelper.AddFloatField(label, 0, onChange, acceptNegative);
@@ -159,6 +194,19 @@ namespace Klyte.Commons.UI
             popup.EnsureVisible(popup.selectedIndex);
 
             return popup;
+        }
+
+        public static void AddLabel(string text, UIHelperExtension parentHelper, out UILabel label, out UIPanel cbPanel)
+        {
+            label = parentHelper.AddLabel(text);
+            KlyteMonoUtils.CreateUIElement(out cbPanel, parentHelper.Self.transform);
+            cbPanel.autoLayoutDirection = LayoutDirection.Horizontal;
+            cbPanel.wrapLayout = false;
+            cbPanel.autoLayout = true;
+            cbPanel.autoFitChildrenHorizontally = true;
+            cbPanel.autoFitChildrenVertically = true;
+
+            cbPanel.AttachUIComponent(label.gameObject);
         }
 
         private static Vector2 CalculatePopupSize(UIPanel root, int itemCount, float itemHeight, float listPaddingVertical)
@@ -272,14 +320,14 @@ namespace Klyte.Commons.UI
             icon.color = color;
         }
 
-        public static void AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, bool reduceSize = true)
+        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true)
         {
             if (reduceSize)
             {
                 component.minimumSize -= new Vector2(0, 40);
                 component.width -= 40;
             }
-            ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), null);
+            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip);
         }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
