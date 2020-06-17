@@ -29,6 +29,7 @@ namespace Klyte.Commons.UI
         {
             field = parentHelper.AddIntField(label, 0, onChange, acceptNegative);
             KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
+            field.eventMouseWheel += RollInteger;
         }
 
         public static UIButton ConfigureActionButton(UIComponent parent, CommonsSpriteNames sprite, MouseEventHandler onClicked, string tooltipLocale, float size = 40)
