@@ -227,7 +227,26 @@ namespace Klyte.Commons.UI
             Action actionCopy, out UIButton pasteButton,
             Action actionPaste, out UIButton deleteButton,
             Action actionDelete, Action<string> onLoad,
-            Func<string> getContentToSave, Action<UIHelperExtension> doWithLibGroup = null) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
+            Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
+
+        {
+            AddLibBox<LIB, DESC>(parentHelper,
+           out copyButton, actionCopy,
+           out pasteButton, actionPaste,
+           out deleteButton, actionDelete,
+           out UIDropDown result, out _, out _,
+           out _, out _, out _,
+            onLoad, getContentToSave);
+            return result;
+        }
+
+        public static void AddLibBox<LIB, DESC>(UIHelperExtension parentHelper,
+            out UIButton copyButton, Action actionCopy,
+            out UIButton pasteButton, Action actionPaste,
+            out UIButton deleteButton, Action actionDelete,
+            out UIDropDown libFilesDD, out UIButton libLoadButton, out UIButton libDeleteButton,
+            out UITextField libSaveNameField, out UIButton libSaveButton, out UIButton goToFileButton,
+            Action<string> onLoad, Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
         {
             KlyteMonoUtils.CreateUIElement(out UIPanel cbPanel, parentHelper.Self.transform);
             UILabel label = UIHelperExtension.AddLabel(cbPanel, Locale.Get("K45_CMNS_CLIPBOARD_TITLE"), parentHelper.Self.width / 2);
@@ -266,50 +285,52 @@ namespace Klyte.Commons.UI
             }
 
 
-            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out UIDropDown loadDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().ToArray(), (x) => { });
-            loadDD.width -= 80;
-            UIPanel parent = loadDD.GetComponentInParent<UIPanel>();
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_Load, (x, t) =>
-            {
-                DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(loadDD.selectedValue);
-                if (groupInfo != null)
-                {
-                    onLoad(XmlUtils.DefaultXmlSerialize(groupInfo));
-                }
+            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out libFilesDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().ToArray(), (x) => { });
+            libFilesDD.width -= 80;
+            var locDD = libFilesDD;
+            UIPanel parent = libFilesDD.GetComponentInParent<UIPanel>();
+            libLoadButton = ConfigureActionButton(parent, CommonsSpriteNames.K45_Load, (x, t) =>
+             {
+                 DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(locDD.selectedValue);
+                 if (groupInfo != null)
+                 {
+                     onLoad(XmlUtils.DefaultXmlSerialize(groupInfo));
+                 }
 
-            }, "LOAD");
+             }, "LOAD");
 
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_X, (x, t) =>
-            {
-                DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(loadDD.selectedValue);
-                if (groupInfo != null)
-                {
-                    LibBaseFile<LIB, DESC>.Instance.Remove(loadDD.selectedValue);
-                    loadDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
-                }
+            libDeleteButton = ConfigureActionButton(parent, CommonsSpriteNames.K45_X, (x, t) =>
+             {
+                 DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(locDD.selectedValue);
+                 if (groupInfo != null)
+                 {
+                     LibBaseFile<LIB, DESC>.Instance.Remove(locDD.selectedValue);
+                     locDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
+                 }
 
-            }, "CONTENT_DELETE");
+             }, "CONTENT_DELETE");
 
             AddTextField(Locale.Get("K45_CMNS_SAVE_TO_LIB"), out UITextField saveTxt, parentHelper, (x) => { });
             saveTxt.width -= 30;
             parent = saveTxt.GetComponentInParent<UIPanel>();
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_Save, (x, t) =>
-            {
-                if (!saveTxt.text.IsNullOrWhiteSpace())
-                {
-                    DESC newEntry = XmlUtils.DefaultXmlDeserialize<DESC>(getContentToSave() ?? "");
-                    if (newEntry != default)
-                    {
-                        LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text, ref newEntry);
-                        loadDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
-                        loadDD.selectedValue = saveTxt.text;
-                    }
-                }
-            }, "SAVE", 30);
+            libSaveButton = ConfigureActionButton(parent, CommonsSpriteNames.K45_Save, (x, t) =>
+             {
+                 if (!saveTxt.text.IsNullOrWhiteSpace())
+                 {
+                     DESC newEntry = XmlUtils.DefaultXmlDeserialize<DESC>(getContentToSave() ?? "");
+                     if (newEntry != default)
+                     {
+                         LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text, ref newEntry);
+                         locDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
+                         locDD.selectedValue = saveTxt.text;
+                     }
+                 }
+             }, "SAVE", 30);
+            libSaveNameField = saveTxt;
             LibBaseFile<LIB, DESC>.Instance.EnsureFileExists();
-            KlyteMonoUtils.LimitWidthAndBox(parentHelper.AddButton(Locale.Get("K45_CMNS_GOTO_LIBFILE"), () => ColossalFramework.Utils.OpenInFileBrowser(LibBaseFile<LIB, DESC>.Instance.DefaultXmlFileBaseFullPath)) as UIButton, parentHelper.Self.width);
-            doWithLibGroup?.Invoke(parentHelper);
-            return loadDD;
+            goToFileButton = parentHelper.AddButton(Locale.Get("K45_CMNS_GOTO_LIBFILE"), () => ColossalFramework.Utils.OpenInFileBrowser(LibBaseFile<LIB, DESC>.Instance.DefaultXmlFileBaseFullPath)) as UIButton;
+            KlyteMonoUtils.LimitWidthAndBox(goToFileButton, parentHelper.Self.width - 20, true);
+
         }
         public static void SetIcon(UIButton copyButton, CommonsSpriteNames spriteName, Color color)
         {
@@ -339,12 +360,16 @@ namespace Klyte.Commons.UI
 
         public static void InitTabButton(UIComponent parent, out UIButton tabTemplate, string text, Vector2 size, MouseEventHandler onClicked)
         {
-            KlyteMonoUtils.CreateUIElement(out tabTemplate, parent.transform, text, new UnityEngine.Vector4(0, 0, 40, 40));
+            InitTabButton(parent.gameObject, out tabTemplate, text, size, onClicked);
+            tabTemplate.group = parent;
+        }
+        public static void InitTabButton(GameObject go, out UIButton tabTemplate, string text, Vector2 size, MouseEventHandler onClicked)
+        {
+            KlyteMonoUtils.CreateUIElement(out tabTemplate, go.transform, text, new UnityEngine.Vector4(0, 0, 40, 40));
             KlyteMonoUtils.InitButton(tabTemplate, false, "GenericTab");
             tabTemplate.autoSize = false;
             tabTemplate.size = size;
             tabTemplate.text = text;
-            tabTemplate.group = parent;
             if (onClicked != null)
             {
                 tabTemplate.eventClicked += onClicked;
