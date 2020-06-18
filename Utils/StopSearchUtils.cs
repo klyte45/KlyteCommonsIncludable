@@ -185,6 +185,7 @@ namespace Klyte.Commons.Utils
                         x.platformLine.c = (rotationToApply * x.platformLine.c) + buildingInfo.m_subBuildings[i].m_position;
                         x.platformLine.d = (rotationToApply * x.platformLine.d) + buildingInfo.m_subBuildings[i].m_position;
                         x.subbuildingId = (sbyte)i;
+                        x.directionPath = (rotationToApply * x.directionPath).normalized;
                         return x;
                     }));
                 }
