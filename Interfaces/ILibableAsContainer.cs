@@ -4,7 +4,7 @@ using static Klyte.Commons.Utils.XmlUtils;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ILibableAsContainer<D> : ILibable
+    public class ILibableAsContainer<D> : ILibable
     {
         [XmlIgnore]
         internal D[] m_dataArray = new D[0];
@@ -14,6 +14,7 @@ namespace Klyte.Commons.Interfaces
             get => new ListWrapper<D> { listVal = m_dataArray.ToList() };
             set => m_dataArray = value.listVal.ToArray();
         }
-        public abstract string SaveName { get; set; }
+        [XmlAttribute("saveName")]
+        public virtual string SaveName { get; set; }
     }
 }

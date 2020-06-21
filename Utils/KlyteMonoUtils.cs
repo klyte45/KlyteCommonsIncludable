@@ -70,7 +70,7 @@ namespace Klyte.Commons.Utils
             uiItem.height = 28;
             uiItem.padding = new RectOffset(5, 5, 5, 5);
         }
-        public static Color ContrastColor(Color color)
+        public static Color ContrastColor(Color color, bool grayAsWhite = false)
         {
             if (color == default)
             {
@@ -86,7 +86,7 @@ namespace Klyte.Commons.Utils
             }
             else
             {
-                d = 1; // dark colors - white font
+                d = grayAsWhite ? 0.5f : 1; // dark colors - white font
             }
 
             return new Color(d, d, d, 1);

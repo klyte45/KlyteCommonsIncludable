@@ -49,8 +49,8 @@ namespace Klyte.Commons.Utils
 
         public static string DefaultXmlSerialize<T>(T targetObj, bool indent = true)
         {
-            var xmlser = new XmlSerializer(typeof(T));
-            var settings = new XmlWriterSettings { Indent = indent };
+            var xmlser = new XmlSerializer(targetObj?.GetType() ?? typeof(T));
+            var settings = new XmlWriterSettings { Indent = indent, OmitXmlDeclaration = true };
             using var textWriter = new StringWriter();
             using var xw = XmlWriter.Create(textWriter, settings);
             var ns = new XmlSerializerNamespaces();

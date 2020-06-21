@@ -29,6 +29,7 @@ namespace Klyte.Commons.UI
         {
             field = parentHelper.AddIntField(label, 0, onChange, acceptNegative);
             KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
+            field.eventMouseWheel += RollInteger;
         }
 
         public static UIButton ConfigureActionButton(UIComponent parent, CommonsSpriteNames sprite, MouseEventHandler onClicked, string tooltipLocale, float size = 40)
@@ -53,6 +54,33 @@ namespace Klyte.Commons.UI
             labelValue.padding = new RectOffset(4, 4, 0, 0);
             KlyteMonoUtils.LimitWidthAndBox(labelValue, (parentHelper.Self.width / 2) - slider.width, true);
         }
+        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false)
+        {
+            fieldArray = parentHelper.AddVector2Field(label, Vector3.zero, onChange, integerOnly);
+            KlyteMonoUtils.LimitWidthAndBox(fieldArray[0].parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
+            if (addRollEvent)
+            {
+                fieldArray.ForEach(x =>
+                {
+                    if (integerOnly)
+                    {
+                        x.eventMouseWheel += RollInteger;
+                    }
+                    else
+                    {
+                        x.eventMouseWheel += RollFloat;
+                    }
+                    x.tooltip = Locale.Get("K45_CMNS_FLOAT_EDITOR_TOOLTIP_HELP");
+                });
+            }
+            fieldArray[0].zOrder = 1;
+            fieldArray[1].zOrder = 2;
+            if (integerOnly)
+            {
+                fieldArray.ForEach(x => x.allowFloats = false);
+            }
+        }
+
         public static void AddVector3Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector3> onChange)
         {
             fieldArray = parentHelper.AddVector3Field(label, Vector3.zero, onChange);
@@ -67,21 +95,21 @@ namespace Klyte.Commons.UI
             fieldArray[2].zOrder = 3;
         }
 
-        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true)
+        public static void AddVector4Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector4> onChange)
         {
-            fieldArray = parentHelper.AddVector2Field(label, Vector3.zero, onChange);
+            fieldArray = parentHelper.AddVector4Field(label, Vector4.zero, onChange);
             KlyteMonoUtils.LimitWidthAndBox(fieldArray[0].parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
-            if (addRollEvent)
+            fieldArray.ForEach(x =>
             {
-                fieldArray.ForEach(x =>
-                    {
-                        x.eventMouseWheel += RollFloat;
-                        x.tooltip = Locale.Get("K45_CMNS_FLOAT_EDITOR_TOOLTIP_HELP");
-                    });
-            }
+                x.eventMouseWheel += RollFloat;
+                x.tooltip = Locale.Get("K45_CMNS_FLOAT_EDITOR_TOOLTIP_HELP");
+            });
             fieldArray[0].zOrder = 1;
             fieldArray[1].zOrder = 2;
+            fieldArray[2].zOrder = 3;
+            fieldArray[3].zOrder = 4;
         }
+
 
         private static readonly MethodInfo m_submitField = typeof(UITextField).GetMethod("OnSubmit", RedirectorUtils.allFlags);
         public static void RollFloat(UIComponent component, UIMouseEventParameter eventParam)
@@ -95,7 +123,15 @@ namespace Klyte.Commons.UI
                 m_submitField.Invoke(tf, new object[0]);
             }
         }
-
+        public static void RollInteger(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            if (component is UITextField tf && tf.numericalOnly && float.TryParse(tf.text, out float currentValue))
+            {
+                bool shiftPressed = Event.current.shift;
+                tf.text = Mathf.Max(tf.allowNegative ? float.MinValue : 0, currentValue + 0.0003f + (eventParam.wheelDelta * (shiftPressed ? 10 : 1))).ToString("F0");
+                m_submitField.Invoke(tf, new object[0]);
+            }
+        }
         public static void AddFloatField(string label, out UITextField field, UIHelperExtension parentHelper, Action<float> onChange, bool acceptNegative)
         {
             field = parentHelper.AddFloatField(label, 0, onChange, acceptNegative);
@@ -161,6 +197,19 @@ namespace Klyte.Commons.UI
             return popup;
         }
 
+        public static void AddLabel(string text, UIHelperExtension parentHelper, out UILabel label, out UIPanel cbPanel)
+        {
+            label = parentHelper.AddLabel(text);
+            KlyteMonoUtils.CreateUIElement(out cbPanel, parentHelper.Self.transform);
+            cbPanel.autoLayoutDirection = LayoutDirection.Horizontal;
+            cbPanel.wrapLayout = false;
+            cbPanel.autoLayout = true;
+            cbPanel.autoFitChildrenHorizontally = true;
+            cbPanel.autoFitChildrenVertically = true;
+
+            cbPanel.AttachUIComponent(label.gameObject);
+        }
+
         private static Vector2 CalculatePopupSize(UIPanel root, int itemCount, float itemHeight, float listPaddingVertical)
         {
             float num = root.size.x - root.padding.horizontal;
@@ -178,7 +227,26 @@ namespace Klyte.Commons.UI
             Action actionCopy, out UIButton pasteButton,
             Action actionPaste, out UIButton deleteButton,
             Action actionDelete, Action<string> onLoad,
-            Func<string> getContentToSave, Action<UIHelperExtension> doWithLibGroup = null) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
+            Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
+
+        {
+            AddLibBox<LIB, DESC>(parentHelper,
+           out copyButton, actionCopy,
+           out pasteButton, actionPaste,
+           out deleteButton, actionDelete,
+           out UIDropDown result, out _, out _,
+           out _, out _, out _,
+            onLoad, getContentToSave);
+            return result;
+        }
+
+        public static void AddLibBox<LIB, DESC>(UIHelperExtension parentHelper,
+            out UIButton copyButton, Action actionCopy,
+            out UIButton pasteButton, Action actionPaste,
+            out UIButton deleteButton, Action actionDelete,
+            out UIDropDown libFilesDD, out UIButton libLoadButton, out UIButton libDeleteButton,
+            out UITextField libSaveNameField, out UIButton libSaveButton, out UIButton goToFileButton,
+            Action<string> onLoad, Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
         {
             KlyteMonoUtils.CreateUIElement(out UIPanel cbPanel, parentHelper.Self.transform);
             UILabel label = UIHelperExtension.AddLabel(cbPanel, Locale.Get("K45_CMNS_CLIPBOARD_TITLE"), parentHelper.Self.width / 2);
@@ -217,50 +285,52 @@ namespace Klyte.Commons.UI
             }
 
 
-            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out UIDropDown loadDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().ToArray(), (x) => { });
-            loadDD.width -= 80;
-            UIPanel parent = loadDD.GetComponentInParent<UIPanel>();
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_Load, (x, t) =>
-            {
-                DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(loadDD.selectedValue);
-                if (groupInfo != null)
-                {
-                    onLoad(XmlUtils.DefaultXmlSerialize(groupInfo));
-                }
+            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out libFilesDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().ToArray(), (x) => { });
+            libFilesDD.width -= 80;
+            var locDD = libFilesDD;
+            UIPanel parent = libFilesDD.GetComponentInParent<UIPanel>();
+            libLoadButton = ConfigureActionButton(parent, CommonsSpriteNames.K45_Load, (x, t) =>
+             {
+                 DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(locDD.selectedValue);
+                 if (groupInfo != null)
+                 {
+                     onLoad(XmlUtils.DefaultXmlSerialize(groupInfo));
+                 }
 
-            }, "LOAD");
+             }, "LOAD");
 
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_X, (x, t) =>
-            {
-                DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(loadDD.selectedValue);
-                if (groupInfo != null)
-                {
-                    LibBaseFile<LIB, DESC>.Instance.Remove(loadDD.selectedValue);
-                    loadDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
-                }
+            libDeleteButton = ConfigureActionButton(parent, CommonsSpriteNames.K45_X, (x, t) =>
+             {
+                 DESC groupInfo = LibBaseFile<LIB, DESC>.Instance.Get(locDD.selectedValue);
+                 if (groupInfo != null)
+                 {
+                     LibBaseFile<LIB, DESC>.Instance.Remove(locDD.selectedValue);
+                     locDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
+                 }
 
-            }, "CONTENT_DELETE");
+             }, "CONTENT_DELETE");
 
             AddTextField(Locale.Get("K45_CMNS_SAVE_TO_LIB"), out UITextField saveTxt, parentHelper, (x) => { });
             saveTxt.width -= 30;
             parent = saveTxt.GetComponentInParent<UIPanel>();
-            ConfigureActionButton(parent, CommonsSpriteNames.K45_Save, (x, t) =>
-            {
-                if (!saveTxt.text.IsNullOrWhiteSpace())
-                {
-                    DESC newEntry = XmlUtils.DefaultXmlDeserialize<DESC>(getContentToSave() ?? "");
-                    if (newEntry != default)
-                    {
-                        LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text, ref newEntry);
-                        loadDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
-                        loadDD.selectedValue = saveTxt.text;
-                    }
-                }
-            }, "SAVE", 30);
+            libSaveButton = ConfigureActionButton(parent, CommonsSpriteNames.K45_Save, (x, t) =>
+             {
+                 if (!saveTxt.text.IsNullOrWhiteSpace())
+                 {
+                     DESC newEntry = XmlUtils.DefaultXmlDeserialize<DESC>(getContentToSave() ?? "");
+                     if (newEntry != default)
+                     {
+                         LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text, ref newEntry);
+                         locDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
+                         locDD.selectedValue = saveTxt.text;
+                     }
+                 }
+             }, "SAVE", 30);
+            libSaveNameField = saveTxt;
             LibBaseFile<LIB, DESC>.Instance.EnsureFileExists();
-            KlyteMonoUtils.LimitWidthAndBox(parentHelper.AddButton(Locale.Get("K45_CMNS_GOTO_LIBFILE"), () => ColossalFramework.Utils.OpenInFileBrowser(LibBaseFile<LIB, DESC>.Instance.DefaultXmlFileBaseFullPath)) as UIButton, parentHelper.Self.width);
-            doWithLibGroup?.Invoke(parentHelper);
-            return loadDD;
+            goToFileButton = parentHelper.AddButton(Locale.Get("K45_CMNS_GOTO_LIBFILE"), () => ColossalFramework.Utils.OpenInFileBrowser(LibBaseFile<LIB, DESC>.Instance.DefaultXmlFileBaseFullPath)) as UIButton;
+            KlyteMonoUtils.LimitWidthAndBox(goToFileButton, parentHelper.Self.width - 20, true);
+
         }
         public static void SetIcon(UIButton copyButton, CommonsSpriteNames spriteName, Color color)
         {
@@ -272,14 +342,14 @@ namespace Klyte.Commons.UI
             icon.color = color;
         }
 
-        public static void AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, bool reduceSize = true)
+        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true)
         {
             if (reduceSize)
             {
                 component.minimumSize -= new Vector2(0, 40);
                 component.width -= 40;
             }
-            ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), null);
+            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip);
         }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
@@ -290,19 +360,23 @@ namespace Klyte.Commons.UI
 
         public static void InitTabButton(UIComponent parent, out UIButton tabTemplate, string text, Vector2 size, MouseEventHandler onClicked)
         {
-            KlyteMonoUtils.CreateUIElement(out tabTemplate, parent.transform, text, new UnityEngine.Vector4(0, 0, 40, 40));
+            InitTabButton(parent.gameObject, out tabTemplate, text, size, onClicked);
+            tabTemplate.group = parent;
+        }
+        public static void InitTabButton(GameObject go, out UIButton tabTemplate, string text, Vector2 size, MouseEventHandler onClicked)
+        {
+            KlyteMonoUtils.CreateUIElement(out tabTemplate, go.transform, text, new UnityEngine.Vector4(0, 0, 40, 40));
             KlyteMonoUtils.InitButton(tabTemplate, false, "GenericTab");
             tabTemplate.autoSize = false;
             tabTemplate.size = size;
             tabTemplate.text = text;
-            tabTemplate.group = parent;
             if (onClicked != null)
             {
                 tabTemplate.eventClicked += onClicked;
             }
         }
 
-        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string[]> FilterFunc, Action<int> OnSelectItem, Func<string> GetCurrentSelectionName)
+        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string, string[]> FilterFunc, Func<int, string[], string> OnSelectItem, Func<string> GetCurrentSelectionName)
         {
             var selectorPanel = textField.parent as UIPanel;
             selectorPanel.autoLayout = true;
@@ -318,7 +392,7 @@ namespace Klyte.Commons.UI
             textField.eventGotFocus += (x, t) =>
             {
                 result.isVisible = true;
-                result.items = FilterFunc();
+                result.items = FilterFunc(textField.text);
                 result.selectedIndex = Array.IndexOf(result.items, textField.text);
                 result.EnsureVisible(result.selectedIndex);
                 textField.SelectAll();
@@ -327,8 +401,7 @@ namespace Klyte.Commons.UI
             {
                 if (result.selectedIndex >= 0)
                 {
-                    textField.text = result.items[result.selectedIndex];
-                    OnSelectItem(result.selectedIndex);
+                    textField.text = OnSelectItem(result.selectedIndex, result.items);
                 }
                 else
                 {
@@ -340,7 +413,7 @@ namespace Klyte.Commons.UI
             {
                 if (textField.hasFocus)
                 {
-                    result.items = FilterFunc();
+                    result.items = FilterFunc(textField.text);
                     result.Invalidate();
                 }
             };
@@ -350,8 +423,7 @@ namespace Klyte.Commons.UI
                 {
                     if (result.selectedIndex >= 0)
                     {
-                        textField.text = result.items[result.selectedIndex];
-                        OnSelectItem(result.selectedIndex);
+                        textField.text = OnSelectItem(result.selectedIndex, result.items);
                     }
                     else
                     {
@@ -360,6 +432,16 @@ namespace Klyte.Commons.UI
                 }
             };
             return result;
+        }
+
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string> GetCurrentValue, Func<int, string[], string> OnValueChanged)
+        {
+            AddTextField(name, out inputField, helper, null);
+
+            KlyteMonoUtils.UiTextFieldDefaultsForm(inputField);
+            listPopup = ConfigureListSelectionPopupForUITextField(inputField, OnFilterChanged, OnValueChanged, GetCurrentValue);
+            listPopup.height = 290;
+            listPopup.width -= 20;
         }
         #endregion
     }

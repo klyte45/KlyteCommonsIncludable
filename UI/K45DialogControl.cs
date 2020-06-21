@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200514";
+        public const string VERSION = "20200618";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -764,8 +764,8 @@ namespace Klyte.Commons.Utils
             {
                 return new Dictionary<string, object>()
                 {
-                    ["title"] = title,
-                    ["icon"] = icon,
+                    ["title"] = title ?? CommonProperties.ModName,
+                    ["icon"] = icon ?? CommonProperties.ModIcon,
                     ["showClose"] = showClose,
                     ["message"] = message,
                     ["messageAlign"] = messageAlign,
