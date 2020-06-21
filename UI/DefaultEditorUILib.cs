@@ -376,7 +376,7 @@ namespace Klyte.Commons.UI
             }
         }
 
-        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string[]> FilterFunc, Action<int> OnSelectItem, Func<string> GetCurrentSelectionName)
+        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string, string[]> FilterFunc, Func<int, string[], string> OnSelectItem, Func<string> GetCurrentSelectionName)
         {
             var selectorPanel = textField.parent as UIPanel;
             selectorPanel.autoLayout = true;
@@ -392,7 +392,7 @@ namespace Klyte.Commons.UI
             textField.eventGotFocus += (x, t) =>
             {
                 result.isVisible = true;
-                result.items = FilterFunc();
+                result.items = FilterFunc(textField.text);
                 result.selectedIndex = Array.IndexOf(result.items, textField.text);
                 result.EnsureVisible(result.selectedIndex);
                 textField.SelectAll();
@@ -401,8 +401,7 @@ namespace Klyte.Commons.UI
             {
                 if (result.selectedIndex >= 0)
                 {
-                    textField.text = result.items[result.selectedIndex];
-                    OnSelectItem(result.selectedIndex);
+                    textField.text = OnSelectItem(result.selectedIndex, result.items);
                 }
                 else
                 {
@@ -414,7 +413,7 @@ namespace Klyte.Commons.UI
             {
                 if (textField.hasFocus)
                 {
-                    result.items = FilterFunc();
+                    result.items = FilterFunc(textField.text);
                     result.Invalidate();
                 }
             };
@@ -424,8 +423,7 @@ namespace Klyte.Commons.UI
                 {
                     if (result.selectedIndex >= 0)
                     {
-                        textField.text = result.items[result.selectedIndex];
-                        OnSelectItem(result.selectedIndex);
+                        textField.text = OnSelectItem(result.selectedIndex, result.items);
                     }
                     else
                     {
@@ -434,6 +432,16 @@ namespace Klyte.Commons.UI
                 }
             };
             return result;
+        }
+
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string> GetCurrentValue, Func<int, string[], string> OnValueChanged)
+        {
+            AddTextField(name, out inputField, helper, null);
+
+            KlyteMonoUtils.UiTextFieldDefaultsForm(inputField);
+            listPopup = ConfigureListSelectionPopupForUITextField(inputField, OnFilterChanged, OnValueChanged, GetCurrentValue);
+            listPopup.height = 290;
+            listPopup.width -= 20;
         }
         #endregion
     }
