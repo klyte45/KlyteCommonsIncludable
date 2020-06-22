@@ -38,6 +38,22 @@ namespace Klyte.Commons.Utils
             }
             return authors;
         }
+
+        public List<T> GetInfos<T>() where T : PrefabInfo
+        {
+            var list = new List<T>();
+            uint num = 0u;
+            while (num < (ulong)PrefabCollection<T>.LoadedCount())
+            {
+                T prefabInfo = PrefabCollection<T>.GetLoaded(num);
+                if (prefabInfo != null)
+                {
+                    list.Add(prefabInfo);
+                }
+                num += 1u;
+            }
+            return list;
+        }
     }
 }
 
