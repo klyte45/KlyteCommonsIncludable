@@ -30,7 +30,15 @@ namespace Klyte.Commons.Utils
 
         ).Count() > 0)
             {
-                return objTarget.AddComponent<O>();
+                try
+                {
+                    return objTarget.AddComponent<O>();
+                }
+                catch (Exception e)
+                {
+                    LogUtils.DoWarnLog($"Failed loading integration with {dllName}. Fallback class was loaded. Check for a more recent version of that or this mod to fix this.\nDetails:\n{e}");
+                    return objTarget.AddComponent<F>();
+                }
             }
             else
             {
