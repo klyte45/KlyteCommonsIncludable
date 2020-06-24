@@ -15,7 +15,7 @@ namespace Klyte.Commons.i18n
     {
         internal static readonly string m_translateFilesPath = $"{FileUtils.BASE_FOLDER_PATH}__translations{Path.DirectorySeparatorChar}";
 
-        public static readonly string[] locales = new string[] { "en", "pt", "ko", "de", "cn", "pl", "nl", "fr", "es", "ru" };
+        public static readonly string[] locales = new string[] { "en", "pt", "ko", "de", "cn", "pl", "nl", "fr", "es", "ru", "zh" };
 
         public const string m_defaultPrefixInGame = "K45_";
         public const string m_defaultTestKey = "K45_TEST_UP";
