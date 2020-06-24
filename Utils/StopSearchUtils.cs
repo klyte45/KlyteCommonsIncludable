@@ -171,7 +171,7 @@ namespace Klyte.Commons.Utils
                     }
                 }
             }
-            for (int i = 0; i < buildingInfo.m_subBuildings.Length; i++)
+            for (int i = 0; i < (buildingInfo.m_subBuildings?.Length ?? 0); i++)
             {
                 StopPointDescriptorLanes[] subPlats = MapStopPoints(buildingInfo.m_subBuildings[i].m_buildingInfo, thresold);
                 if (subPlats != null)
