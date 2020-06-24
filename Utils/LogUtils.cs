@@ -49,7 +49,7 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static void PrintMethodIL(List<CodeInstruction> inst, bool force = false)
+        public static void PrintMethodIL(IEnumerable<CodeInstruction> inst, bool force = false)
         {
             if (force || CommonProperties.DebugMode)
             {
@@ -59,7 +59,7 @@ namespace Klyte.Commons.Utils
         }
 
 
-        private static string ParseOperand(List<CodeInstruction> instr, object operand)
+        private static string ParseOperand(IEnumerable<CodeInstruction> instr, object operand)
         {
             if (operand is null)
             {

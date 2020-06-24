@@ -342,14 +342,14 @@ namespace Klyte.Commons.UI
             icon.color = color;
         }
 
-        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true)
+        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true, int width = 40)
         {
             if (reduceSize)
             {
-                component.minimumSize -= new Vector2(0, 40);
-                component.width -= 40;
+                component.minimumSize -= new Vector2(0, width);
+                component.width -= width;
             }
-            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip);
+            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
         }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
@@ -403,6 +403,10 @@ namespace Klyte.Commons.UI
                 {
                     textField.text = OnSelectItem(result.selectedIndex, result.items);
                 }
+                else if (result.items.Contains(textField.text))
+                {
+                    OnSelectItem(Array.IndexOf(result.items, textField.text), result.items);
+                }
                 else
                 {
                     textField.text = GetCurrentSelectionName();
@@ -442,6 +446,44 @@ namespace Klyte.Commons.UI
             listPopup = ConfigureListSelectionPopupForUITextField(inputField, OnFilterChanged, OnValueChanged, GetCurrentValue);
             listPopup.height = 290;
             listPopup.width -= 20;
+        }
+
+
+        public static void AddMultistateButton(string title, UIComponent parent, out UIMultiStateButton multiStateButton, out UILabel label, out UIPanel container, float width, string[] options, PropertyChangedEventHandler<int> OnActiveStateChanged, Vector2? spriteSizeP = null)
+        {
+            var spriteSize = spriteSizeP ?? Vector2.one * 25;
+            if (options == null || options.Length == 0)
+            {
+                multiStateButton = null;
+                label = null;
+                container = null;
+                return;
+            }
+
+            KlyteMonoUtils.CreateUIElement(out container, parent.transform, "MSBContainer", new Vector4(0, 0, width, 25));
+            container.autoLayout = true;
+            container.autoLayoutDirection = LayoutDirection.Horizontal;
+            container.autoLayoutPadding = new RectOffset(5, 0, 0, 0);
+            KlyteMonoUtils.CreateUIElement(out multiStateButton, container.transform, "MultistateButton", new Vector4(0, 0, spriteSize.x, spriteSize.y));
+            multiStateButton.textPadding = new RectOffset(0, 0, 0, 0);
+            multiStateButton.foregroundSpriteMode = UIForegroundSpriteMode.Scale;
+            multiStateButton.foregroundSprites[0].normal = options[0];
+
+            for (int i = 1; i < options.Length; i++)
+            {
+                multiStateButton.backgroundSprites.AddState();
+                multiStateButton.foregroundSprites.AddState();
+                multiStateButton.foregroundSprites[i].normal = options[i];
+            }
+            multiStateButton.spritePadding = new RectOffset();
+
+            multiStateButton.eventActiveStateIndexChanged += OnActiveStateChanged;
+
+
+            KlyteMonoUtils.CreateUIElement(out label, container.transform, "MultistateButtonLabel", new Vector4(0, 0, width - 15 - spriteSize.x, spriteSize.y));
+            label.text = title;
+            label.padding.top = Mathf.RoundToInt(spriteSize.y / 2 - 7.5f);
+            KlyteMonoUtils.LimitWidthAndBox(label, width - 15 - spriteSize.x);
         }
         #endregion
     }
