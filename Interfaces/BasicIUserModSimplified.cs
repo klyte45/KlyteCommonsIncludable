@@ -61,7 +61,7 @@ namespace Klyte.Commons.Interfaces
                  pi.assemblyCount > 0
                  && pi.isEnabled
                  && pi.GetAssemblies().Where(x => x == typeof(U).Assembly).Count() > 0
-             ).FirstOrDefault()?.modPath ?? "????";
+             ).FirstOrDefault()?.modPath;
                 }
                 return m_rootFolder;
             }
@@ -358,15 +358,15 @@ namespace Klyte.Commons.Interfaces
                                 CurrentSaveVersion.value = FullVersion;
                                 break;
                             case 2:
-                                        ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
-                                        break;
-                                    case 3:
+                                ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
+                                break;
+                            case 3:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
                                 break;
-                                    case 4:
+                            case 4:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
                                 break;
-                                    case 5:
+                            case 5:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
                                 break;
 

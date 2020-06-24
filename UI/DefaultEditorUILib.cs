@@ -342,14 +342,14 @@ namespace Klyte.Commons.UI
             icon.color = color;
         }
 
-        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true)
+        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true, int width = 40)
         {
             if (reduceSize)
             {
-                component.minimumSize -= new Vector2(0, 40);
-                component.width -= 40;
+                component.minimumSize -= new Vector2(0, width);
+                component.width -= width;
             }
-            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip);
+            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
         }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
