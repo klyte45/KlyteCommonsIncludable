@@ -209,6 +209,7 @@ namespace Klyte.Commons.Interfaces
             foreach (string lang in KlyteLocaleManager.locales)
             {
                 string content = KlyteResourceLoader.LoadResourceString($"UI.i18n.{lang}.properties");
+                FileUtils.EnsureFolderCreation($"{KlyteLocaleManager.m_translateFilesPath}{lang}");
                 if (content != null)
                 {
                     File.WriteAllText($"{KlyteLocaleManager.m_translateFilesPath}{lang}{Path.DirectorySeparatorChar}1_{Assembly.GetExecutingAssembly().GetName().Name}.txt", content);
