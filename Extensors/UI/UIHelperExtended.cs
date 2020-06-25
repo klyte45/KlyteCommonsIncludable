@@ -17,13 +17,13 @@ namespace Klyte.Commons.Extensors
         //
         // Static Fields
         //
-        public static readonly string kButtonTemplate = "OptionsButtonTemplate";
-        public static readonly string kGroupTemplate = "OptionsGroupTemplate";
-        public static readonly string kDropdownTemplate = "OptionsDropdownTemplate";
-        public static readonly string kCheckBoxTemplate = "OptionsCheckBoxTemplate";
-        public static readonly string kSliderTemplate = "OptionsSliderTemplate";
-        public static readonly string kTextfieldTemplate = "OptionsTextfieldTemplate";
-        public static readonly string kGroupPropertyTemplate = "GroupPropertySet";
+        public const string kButtonTemplate = "OptionsButtonTemplate";
+        public const string kGroupTemplate = "OptionsGroupTemplate";
+        public const string kDropdownTemplate = "OptionsDropdownTemplate";
+        public const string kCheckBoxTemplate = "OptionsCheckBoxTemplate";
+        public const string kSliderTemplate = "OptionsSliderTemplate";
+        public const string kTextfieldTemplate = "OptionsTextfieldTemplate";
+        public const string kGroupPropertyTemplate = "GroupPropertySet";
 
         public static readonly UIFont defaultFontCheckbox = ((UITemplateManager.GetAsGameObject(kCheckBoxTemplate)).GetComponent<UICheckBox>()).label.font;
 

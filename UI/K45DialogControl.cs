@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200615";
+        public const string VERSION = "20200624";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -345,6 +345,7 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"IMG: {targetImg}");
                 propertiesToSet = new BindProperties
                 {
+                    icon = propertiesToSet.icon, 
                     title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
                     message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
@@ -353,7 +354,7 @@ namespace Klyte.Commons.Utils
                     showButton1 = currentPage != 0,
                     textButton1 = "<<<\n" + Locale.Get("K45_CMNS_PREV"),
                     showButton2 = true,
-                    textButton2 = Locale.Get("K45_CMNS_OK"),
+                    textButton2 = Locale.Get("EXCEPTION_OK"),
                     showButton3 = currentPage != lastPage,
                     textButton3 = ">>>\n" + Locale.Get("K45_CMNS_NEXT"),
                 };
@@ -605,6 +606,7 @@ namespace Klyte.Commons.Utils
 
             var properties = new BindProperties
             {
+                icon = CommonProperties.ModIcon,
                 help_isArticle = true,
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
@@ -625,6 +627,7 @@ namespace Klyte.Commons.Utils
 
             var properties = new BindProperties
             {
+                icon = CommonProperties.ModIcon,
                 help_isArticle = true,
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
@@ -764,7 +767,7 @@ namespace Klyte.Commons.Utils
             {
                 return new Dictionary<string, object>()
                 {
-                    ["title"] = title,
+                    ["title"] = title ?? CommonProperties.ModName,
                     ["icon"] = icon ?? CommonProperties.ModIcon,
                     ["showClose"] = showClose,
                     ["message"] = message,
