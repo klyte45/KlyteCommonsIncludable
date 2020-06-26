@@ -346,7 +346,7 @@ namespace Klyte.Commons.Utils
                 propertiesToSet = new BindProperties
                 {
                     icon = propertiesToSet.icon, 
-                    title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1), 
+                    title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
                     message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
 
