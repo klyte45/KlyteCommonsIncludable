@@ -18,22 +18,23 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static byte[] Zip(string str)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(str);
+        public static byte[] Zip(string str) => ZipBytes(Encoding.UTF8.GetBytes(str));
 
+        public static byte[] ZipBytes(byte[] bytes)
+        {
             using var msi = new MemoryStream(bytes);
             using var mso = new MemoryStream();
             using (var gs = new GZipStream(mso, CompressionMode.Compress))
             {
-                //msi.CopyTo(gs);
                 CopyTo(msi, gs);
             }
 
             return mso.ToArray();
         }
 
-        public static string Unzip(byte[] bytes)
+        public static string Unzip(byte[] bytes) => Encoding.UTF8.GetString(UnzipBytes(bytes));
+
+        public static byte[] UnzipBytes(byte[] bytes)
         {
             using var msi = new MemoryStream(bytes);
             using var mso = new MemoryStream();
@@ -43,7 +44,7 @@ namespace Klyte.Commons.Utils
                 CopyTo(gs, mso);
             }
 
-            return Encoding.UTF8.GetString(mso.ToArray());
+            return mso.ToArray();
         }
     }
 }
