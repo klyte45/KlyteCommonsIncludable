@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Klyte.Commons.Utils;
+using System.Linq;
 using System.Xml.Serialization;
 using static Klyte.Commons.Utils.XmlUtils;
 
@@ -17,4 +18,12 @@ namespace Klyte.Commons.Interfaces
         [XmlAttribute("saveName")]
         public virtual string SaveName { get; set; }
     }
+
+    public class ILibableAsContainer<I, D> : ILibable where I : class where D : class
+    {
+        public SimpleXmlDictionary<I, D> Data { get; set; }
+        [XmlAttribute("saveName")]
+        public virtual string SaveName { get; set; }
+    }
+
 }
