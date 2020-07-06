@@ -347,6 +347,7 @@ namespace Klyte.Commons.Interfaces
                         showButton5 = true,
                         textButton5 = "Subscribe to Klyte45 channel on YouTube!",
                         messageAlign = UIHorizontalAlignment.Left,
+                        useFullWindowWidth = notes.Contains("<k45ExtraParam largeWindow>"),
                         title = title,
                         message = text,
                     }, (x) =>

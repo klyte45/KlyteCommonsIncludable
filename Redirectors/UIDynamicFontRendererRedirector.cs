@@ -16,6 +16,7 @@ namespace Klyte.Commons.Redirectors
     public class UIDynamicFontRendererRedirector : Redirector, IRedirectable
     {
         public const string TAG_LINE = "k45Symbol";
+        public const string TAG_EXTRA_PARAM = "k45ExtraParam";
         public readonly string[] LEGACY_TAG_LINE = new string[] { "k45LineSymbol" };
 
         public Redirector RedirectorInstance => this;
@@ -23,6 +24,10 @@ namespace Klyte.Commons.Redirectors
         public void Awake()
         {
             LogUtils.DoLog("AWAKE DYNAMIC FONT RENDERER!!!");
+            if (!GetList().Contains(TAG_EXTRA_PARAM))
+            {
+                GetList().Add(TAG_EXTRA_PARAM);
+            }
             if (GetList().Contains(TAG_LINE))
             {
                 LogUtils.DoLog("ALREADY AWAKEN!!!");
