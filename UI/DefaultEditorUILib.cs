@@ -54,7 +54,7 @@ namespace Klyte.Commons.UI
             labelValue.padding = new RectOffset(4, 4, 0, 0);
             KlyteMonoUtils.LimitWidthAndBox(labelValue, (parentHelper.Self.width / 2) - slider.width, true);
         }
-        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false)
+        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false, bool allowNegative = true)
         {
             fieldArray = parentHelper.AddVector2Field(label, Vector3.zero, onChange, integerOnly);
             KlyteMonoUtils.LimitWidthAndBox(fieldArray[0].parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
@@ -79,6 +79,8 @@ namespace Klyte.Commons.UI
             {
                 fieldArray.ForEach(x => x.allowFloats = false);
             }
+            fieldArray.ForEach(x => x.allowNegative = allowNegative);
+
         }
 
         public static void AddVector3Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector3> onChange)
