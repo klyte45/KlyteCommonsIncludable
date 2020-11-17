@@ -123,6 +123,7 @@ namespace Klyte.Commons.UI
                 bool altPressed = Event.current.alt;
                 tf.text = Mathf.Max(tf.allowNegative ? float.MinValue : 0, currentValue + 0.0003f + (eventParam.wheelDelta * (altPressed && ctrlPressed ? 0.001f : ctrlPressed ? 0.1f : altPressed ? 0.01f : shiftPressed ? 10 : 1))).ToString("F3");
                 m_submitField.Invoke(tf, new object[0]);
+                eventParam.Use();
             }
         }
         public static void RollInteger(UIComponent component, UIMouseEventParameter eventParam)
@@ -132,6 +133,7 @@ namespace Klyte.Commons.UI
                 bool shiftPressed = Event.current.shift;
                 tf.text = Mathf.Max(tf.allowNegative ? float.MinValue : 0, currentValue + 0.0003f + (eventParam.wheelDelta * (shiftPressed ? 10 : 1))).ToString("F0");
                 m_submitField.Invoke(tf, new object[0]);
+                eventParam.Use();
             }
         }
         public static void AddFloatField(string label, out UITextField field, UIHelperExtension parentHelper, Action<float> onChange, bool acceptNegative)
