@@ -53,6 +53,7 @@ namespace Klyte.Commons.UI
             labelValue.textAlignment = UIHorizontalAlignment.Center;
             labelValue.padding = new RectOffset(4, 4, 0, 0);
             KlyteMonoUtils.LimitWidthAndBox(labelValue, (parentHelper.Self.width / 2) - slider.width, true);
+            labelValue.text = valueLabelFunc(slider.value);
         }
         public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false, bool allowNegative = true)
         {
