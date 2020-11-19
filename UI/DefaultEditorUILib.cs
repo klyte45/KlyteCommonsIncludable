@@ -202,16 +202,18 @@ namespace Klyte.Commons.UI
             return popup;
         }
 
-        public static void AddLabel(string text, UIHelperExtension parentHelper, out UILabel label, out UIPanel cbPanel)
+        public static void AddLabel(string text, UIHelperExtension parentHelper, out UILabel label, out UIPanel cbPanel, bool autoSize = true)
         {
             label = parentHelper.AddLabel(text);
+            label.autoSize = autoSize;
             KlyteMonoUtils.CreateUIElement(out cbPanel, parentHelper.Self.transform);
             cbPanel.autoLayoutDirection = LayoutDirection.Horizontal;
             cbPanel.wrapLayout = false;
             cbPanel.autoLayout = true;
             cbPanel.autoFitChildrenHorizontally = true;
             cbPanel.autoFitChildrenVertically = true;
-
+            cbPanel.width = parentHelper.Self.width;
+            label.width = parentHelper.Self.width-10;
             cbPanel.AttachUIComponent(label.gameObject);
         }
 
