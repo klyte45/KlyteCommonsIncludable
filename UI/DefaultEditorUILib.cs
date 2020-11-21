@@ -432,15 +432,15 @@ namespace Klyte.Commons.UI
             {
                 if (result.selectedIndex >= 0)
                 {
-                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items);
+                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
                 }
                 else if (result.items.Contains(textField.text))
                 {
-                    textField.text = OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items);
+                    textField.text = OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? "";
                 }
                 else
                 {
-                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items);
+                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
                 }
                 result.isVisible = false;
             };
@@ -463,13 +463,10 @@ namespace Klyte.Commons.UI
             };
             result.eventItemMouseUp += (x, y) =>
             {
-                textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items);
+                textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
                 result.isVisible = false;
             };
-            result.eventMouseWheel += (x, y) =>
-            {
-                y.Use();
-            };
+            result.eventMouseWheel += (x, y) => y.Use();
             return result;
         }
 
