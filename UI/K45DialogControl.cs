@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200624";
+        public const string VERSION = "20201122";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -249,14 +249,25 @@ namespace Klyte.Commons.Utils
             m_closeButton.eventClicked += (x, y) => Close(0);
 
             m_mainPanel.enabled = true;
+
+            m_mainPanel.parent.parent.eventKeyDown += OnKeyPress;
             #endregion
+        }
+
+        private void OnKeyPress(UIComponent component, UIKeyEventParameter eventParam)
+        {
+            if (m_closeButton.isVisible && eventParam.keycode == KeyCode.Escape)
+            {
+                Close(0);
+                eventParam.Use();
+            }
         }
 
         public void Update()
         {
             if (UIView.GetModalComponent()?.GetComponent<K45DialogControl>() != null)
             {
-                m_mainPanel.zOrder = 9999;
+                m_mainPanel.zOrder = UIView.GetModalComponent().zOrder + 1;
             }
         }
 
@@ -345,8 +356,8 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"IMG: {targetImg}");
                 propertiesToSet = new BindProperties
                 {
-                    icon = propertiesToSet.icon, 
-                    title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1), 
+                    icon = propertiesToSet.icon,
+                    title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
                     message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
 
