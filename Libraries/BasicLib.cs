@@ -26,9 +26,9 @@ namespace Klyte.Commons.Libraries
         private void UpdateIndex() => m_indexes = m_savedDescriptorsSerialized.Select((x, y) => Tuple.New(x.SaveName, y)).ToDictionary(x => x.First, (x) => x.Second);
 
         [XmlIgnore]
-        private Dictionary<string, int> m_indexes = new Dictionary<string, int>();
+        protected Dictionary<string, int> m_indexes = new Dictionary<string, int>();
 
-        private DESC[] m_savedDescriptorsSerialized = new DESC[0];
+        protected DESC[] m_savedDescriptorsSerialized = new DESC[0];
 
         public void Add(string indexName, ref DESC descriptor)
         {
