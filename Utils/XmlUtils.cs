@@ -10,8 +10,9 @@ namespace Klyte.Commons.Utils
     {
         #region XML Utils
 
+        public static T CloneViaXml<T>(T input) => XmlUtils.DefaultXmlDeserialize<T>(XmlUtils.DefaultXmlSerialize(input));
         public static T DefaultXmlDeserialize<T>(string s, Action<string, Exception> OnException = null)
-        {
+        { 
             var xmlser = new XmlSerializer(typeof(T));
             return DefaultXmlDeserializeImpl<T>(s, xmlser, OnException);
         }

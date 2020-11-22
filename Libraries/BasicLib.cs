@@ -14,7 +14,7 @@ namespace Klyte.Commons.Libraries
     {
 
         [XmlElement("descriptorsData")]
-        public ListWrapper<DESC> SavedDescriptorsSerialized
+        public virtual ListWrapper<DESC> SavedDescriptorsSerialized
         {
             get => new ListWrapper<DESC>() { listVal = m_savedDescriptorsSerialized.ToList() };
             set {
@@ -23,7 +23,7 @@ namespace Klyte.Commons.Libraries
             }
         }
 
-        private void UpdateIndex() => m_indexes = m_savedDescriptorsSerialized.Select((x, y) => Tuple.New(x.SaveName, y)).ToDictionary(x => x.First, (x) => x.Second);
+        protected void UpdateIndex() => m_indexes = m_savedDescriptorsSerialized.Select((x, y) => Tuple.New(x.SaveName, y)).ToDictionary(x => x.First, (x) => x.Second);
 
         [XmlIgnore]
         protected Dictionary<string, int> m_indexes = new Dictionary<string, int>();
