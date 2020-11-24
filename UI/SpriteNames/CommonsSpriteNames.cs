@@ -39,6 +39,6 @@
         K45_Import,
         K45_Export,
         K45_Steam,
-        K45_Pipette
+        K45_Dropper
     }
 }

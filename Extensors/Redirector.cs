@@ -51,7 +51,7 @@ namespace Klyte.Commons.Extensors
         public void AddRedirect(MethodInfo oldMethod, MethodInfo newMethodPre, MethodInfo newMethodPost = null, MethodInfo transpiler = null)
         {
 
-            LogUtils.DoLog($"Adding patch! {oldMethod}");
+            LogUtils.DoLog($"Adding patch! {oldMethod.DeclaringType} {oldMethod}");
             m_detourList.Add(GetHarmonyInstance().Patch(oldMethod, newMethodPre != null ? new HarmonyMethod(newMethodPre) : null, newMethodPost != null ? new HarmonyMethod(newMethodPost) : null, transpiler != null ? new HarmonyMethod(transpiler) : null));
             m_patches.Add(oldMethod);
         }

@@ -114,7 +114,7 @@ namespace Klyte.Commons.Interfaces
                 if (CommonProperties.DebugMode)
                 {
                     string content = System.Text.Encoding.UTF8.GetString(data);
-                    LogUtils.DoLog($"{type} DATA => {content}");
+                    LogUtils.DoLog($"{type} DATA (L = {data.Length}) =>  {content}");
                 }
                 if (data.Length == 0)
                 {

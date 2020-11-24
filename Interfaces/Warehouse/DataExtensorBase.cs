@@ -35,12 +35,15 @@ namespace Klyte.Commons.Interfaces
                 content = ZipUtils.Unzip(data);
             }
 
-            return XmlUtils.DefaultXmlDeserialize<U>(content);
+            var result = XmlUtils.DefaultXmlDeserialize<U>(content);
+            AfterDeserialize(result);
+            return result;
         }
 
         public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((U)this, false));
         public virtual void OnReleased() { }
 
         public virtual void LoadDefaults() { }
+        public virtual void AfterDeserialize(U loadedData) { }
     }
 }
