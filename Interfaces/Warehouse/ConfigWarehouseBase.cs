@@ -46,7 +46,7 @@ namespace Klyte.Commons.Interfaces
 
         public I CurrentLoadedCityConfig => GetConfig(CurrentCityId, CurrentCityName);
 
-       
+
 
 
         public I GetConfig2(string cityId, string cityName) => GetConfig(cityId, cityName);
@@ -86,28 +86,24 @@ namespace Klyte.Commons.Interfaces
                 try
                 {
                     I defaultFile = GetConfig(GLOBAL_CONFIG_INDEX, GLOBAL_CONFIG_INDEX);
-                    foreach (int value in Enum.GetValues(typeof(T)))
+                    try
                     {
-                        try
+                        foreach (var entry in defaultFile.m_cachedBoolSaved)
                         {
-                            var ci = (T) Enum.ToObject(typeof(T), value);
-                            switch (value & TYPE_PART)
-                            {
-                                case TYPE_BOOL:
-                                    result.SetBool(ci, defaultFile.GetBool(ci));
-                                    break;
-                                case TYPE_STRING:
-                                    result.SetString(ci, defaultFile.GetString(ci));
-                                    break;
-                                case TYPE_INT:
-                                    result.SetInt(ci, defaultFile.GetInt(ci));
-                                    break;
-                            }
+                            result.SetBool(entry.Key, entry.Value);
                         }
-                        catch (Exception e)
+                        foreach (var entry in defaultFile.m_cachedIntSaved)
                         {
-                            LogUtils.DoErrorLog($"Erro copiando propriedade \"{value}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
+                            result.SetInt(entry.Key, entry.Value);
                         }
+                        foreach (var entry in defaultFile.m_cachedStringSaved)
+                        {
+                            result.SetString(entry.Key, entry.Value);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogUtils.DoErrorLog($"Erro copiando propriedades para o novo arquivo da classe {typeof(I)}: {e.Message}");
                     }
                 }
                 catch
@@ -156,7 +152,7 @@ namespace Klyte.Commons.Interfaces
         protected virtual void FallBackDefaultFile() { }
         public void SaveAsDefault()
         {
-            File.WriteAllText(DefaultPath, Serialize((I) this));
+            File.WriteAllText(DefaultPath, Serialize((I)this));
             LogUtils.DoErrorLog($"Saved global at {DefaultPath}");
         }
         public void LoadFromDefault()
@@ -169,7 +165,7 @@ namespace Klyte.Commons.Interfaces
         }
         public string Export()
         {
-            File.WriteAllText(ThisPath, Serialize((I) this));
+            File.WriteAllText(ThisPath, Serialize((I)this));
             LogUtils.DoErrorLog($"Saved Export at {ThisPath}");
             return ThisPath;
         }
