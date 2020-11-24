@@ -109,6 +109,11 @@ namespace Klyte.Commons.Utils
             {
                 foreach (BuildingInfo.PathInfo path in buildingInfo.m_paths)
                 {
+                    if (path.m_nodes.Length < 2)
+                    {
+                        continue;
+                    }
+
                     Vector3 position = path.m_nodes[0];
                     Vector3 position2 = path.m_nodes[1];
 
