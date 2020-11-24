@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Klyte.Commons.Utils
 {
-    public class PrefabIndexes<T> : SingletonLite<PrefabIndexes<T>> where T : PrefabInfo
+    public abstract class PrefabIndexesAbstract<T, I> : Singleton<I> where T : PrefabInfo where I : PrefabIndexesAbstract<T, I>
     {
         private Dictionary<string, string> m_authorList;
 
@@ -77,5 +77,9 @@ namespace Klyte.Commons.Utils
             .OrderBy((x) => x)
             .ToArray();
     }
+
+    public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }
+    public class BuildingIndexes : PrefabIndexesAbstract<BuildingInfo, BuildingIndexes> { }
+    public class VehiclesIndexes : PrefabIndexesAbstract<VehicleInfo, VehiclesIndexes> { }
 }
 

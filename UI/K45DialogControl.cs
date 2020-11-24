@@ -205,6 +205,43 @@ namespace Klyte.Commons.Utils
 
         public void Awake()
         {
+            BindControls();
+
+            m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
+
+            #region Events bindings
+            BindEvents();
+
+            KlyteMonoUtils.LimitWidthAndBox(m_title, out UIPanel boxContainerTitle);
+            boxContainerTitle.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
+            boxContainerTitle.relativePosition = new Vector3(0, 2);
+
+            //This action allow centralize all calls to single object, coming from any mod
+            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => StartCoroutine(Enqueue(BindProperties.FromDictionary(properties), callback)));
+            m_mainPanel.stringUserData = VERSION;
+
+
+            m_closeButton.eventClicked += (x, y) => Close(0);
+            
+            m_mainPanel.enabled = true;
+
+
+            #endregion
+        }
+
+        private void BindEvents()
+        {
+            m_mainPanel.enabled = false;
+
+            m_button1.eventClicked += (x, y) => OnButton1();
+            m_button2.eventClicked += (x, y) => OnButton2();
+            m_button3.eventClicked += (x, y) => OnButton3();
+            m_button4.eventClicked += (x, y) => OnButton4();
+            m_button5.eventClicked += (x, y) => OnButton5();
+        }
+
+        private void BindControls()
+        {
             m_mainPanel = GetComponent<UIPanel>();
 
             m_titleContainer = m_mainPanel.Find<UIPanel>("TitleContainer");
@@ -224,43 +261,6 @@ namespace Klyte.Commons.Utils
 
             m_textureSupContainer = m_mainPanel.Find<UIPanel>("TextureSupContainer");
             m_textureSprite = m_mainPanel.Find<UITextureSprite>("TextureSprite");
-
-            m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
-
-            #region Events bindings
-            m_mainPanel.enabled = false;
-
-            m_button1.eventClicked += (x, y) => OnButton1();
-            m_button2.eventClicked += (x, y) => OnButton2();
-            m_button3.eventClicked += (x, y) => OnButton3();
-            m_button4.eventClicked += (x, y) => OnButton4();
-            m_button5.eventClicked += (x, y) => OnButton5();
-
-
-            KlyteMonoUtils.LimitWidthAndBox(m_title, out UIPanel boxContainerTitle);
-            boxContainerTitle.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
-            boxContainerTitle.relativePosition = new Vector3(0, 2);
-
-            //This action allow centralize all calls to single object, coming from any mod
-            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => StartCoroutine(Enqueue(BindProperties.FromDictionary(properties), callback)));
-            m_mainPanel.stringUserData = VERSION;
-
-
-            m_closeButton.eventClicked += (x, y) => Close(0);
-
-            m_mainPanel.enabled = true;
-
-            m_mainPanel.parent.parent.eventKeyDown += OnKeyPress;
-            #endregion
-        }
-
-        private void OnKeyPress(UIComponent component, UIKeyEventParameter eventParam)
-        {
-            if (m_closeButton.isVisible && eventParam.keycode == KeyCode.Escape)
-            {
-                Close(0);
-                eventParam.Use();
-            }
         }
 
         public void Update()
