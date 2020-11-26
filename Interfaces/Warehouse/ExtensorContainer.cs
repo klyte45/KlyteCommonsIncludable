@@ -79,7 +79,7 @@ namespace Klyte.Commons.Interfaces
                 {
                     string content = System.Text.Encoding.UTF8.GetString(storage);
                     LogUtils.DoLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage.Length}b:\n{content}");
-                    instance.Instances[type] = null;
+                    instance.Instances[type] = basicInstance;
                 }
             }
 

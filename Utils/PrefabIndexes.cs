@@ -1,11 +1,14 @@
 using ColossalFramework;
+using ColossalFramework.Globalization;
 using ColossalFramework.Packaging;
 using ColossalFramework.PlatformServices;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace Klyte.Commons.Utils
 {
-    public class PrefabUtils : SingletonLite<PrefabUtils>
+    public abstract class PrefabIndexesAbstract<T, I> : Singleton<I> where T : PrefabInfo where I : PrefabIndexesAbstract<T, I>
     {
         private Dictionary<string, string> m_authorList;
 
@@ -19,6 +22,18 @@ namespace Klyte.Commons.Utils
                 return m_authorList;
             }
         }
+        private Dictionary<string, T> m_propsLoaded;
+        public Dictionary<string, T> PrefabsLoaded
+        {
+            get {
+                if (m_propsLoaded == null)
+                {
+                    m_propsLoaded = GetInfos().Where(x => x?.name != null).GroupBy(x => GetListName(x)).Select(x => Tuple.New(x.Key, x.FirstOrDefault())).ToDictionary(x => x.First, x => x.Second);
+                }
+                return m_propsLoaded;
+            }
+        }
+        public static string GetListName(T x) => (x?.name?.EndsWith("_Data") ?? false) ? $"{x?.GetLocalizedTitle()}" : x?.name ?? "";
 
         private Dictionary<string, string> LoadAuthors()
         {
@@ -39,7 +54,7 @@ namespace Klyte.Commons.Utils
             return authors;
         }
 
-        public List<T> GetInfos<T>() where T : PrefabInfo
+        private List<T> GetInfos()
         {
             var list = new List<T>();
             uint num = 0u;
@@ -54,6 +69,17 @@ namespace Klyte.Commons.Utils
             }
             return list;
         }
+
+        public string[] BasicInputFiltering(string input) => PrefabsLoaded
+            .ToList()
+            .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf(x.Value + (AuthorList.TryGetValue(x.Value?.name.Split('.')[0], out string author) ? "\n" + author : ""), input, CompareOptions.IgnoreCase) >= 0)
+            .Select(x => x.Key)
+            .OrderBy((x) => x)
+            .ToArray();
     }
+
+    public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }
+    public class BuildingIndexes : PrefabIndexesAbstract<BuildingInfo, BuildingIndexes> { }
+    public class VehiclesIndexes : PrefabIndexesAbstract<VehicleInfo, VehiclesIndexes> { }
 }
 

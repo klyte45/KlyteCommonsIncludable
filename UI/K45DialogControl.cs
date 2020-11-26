@@ -18,7 +18,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200624";
+        public const string VERSION = "20201122";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -205,6 +205,43 @@ namespace Klyte.Commons.Utils
 
         public void Awake()
         {
+            BindControls();
+
+            m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
+
+            #region Events bindings
+            BindEvents();
+
+            KlyteMonoUtils.LimitWidthAndBox(m_title, out UIPanel boxContainerTitle);
+            boxContainerTitle.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
+            boxContainerTitle.relativePosition = new Vector3(0, 2);
+
+            //This action allow centralize all calls to single object, coming from any mod
+            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => StartCoroutine(Enqueue(BindProperties.FromDictionary(properties), callback)));
+            m_mainPanel.stringUserData = VERSION;
+
+
+            m_closeButton.eventClicked += (x, y) => Close(0);
+            
+            m_mainPanel.enabled = true;
+
+
+            #endregion
+        }
+
+        private void BindEvents()
+        {
+            m_mainPanel.enabled = false;
+
+            m_button1.eventClicked += (x, y) => OnButton1();
+            m_button2.eventClicked += (x, y) => OnButton2();
+            m_button3.eventClicked += (x, y) => OnButton3();
+            m_button4.eventClicked += (x, y) => OnButton4();
+            m_button5.eventClicked += (x, y) => OnButton5();
+        }
+
+        private void BindControls()
+        {
             m_mainPanel = GetComponent<UIPanel>();
 
             m_titleContainer = m_mainPanel.Find<UIPanel>("TitleContainer");
@@ -224,39 +261,13 @@ namespace Klyte.Commons.Utils
 
             m_textureSupContainer = m_mainPanel.Find<UIPanel>("TextureSupContainer");
             m_textureSprite = m_mainPanel.Find<UITextureSprite>("TextureSprite");
-
-            m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
-
-            #region Events bindings
-            m_mainPanel.enabled = false;
-
-            m_button1.eventClicked += (x, y) => OnButton1();
-            m_button2.eventClicked += (x, y) => OnButton2();
-            m_button3.eventClicked += (x, y) => OnButton3();
-            m_button4.eventClicked += (x, y) => OnButton4();
-            m_button5.eventClicked += (x, y) => OnButton5();
-
-
-            KlyteMonoUtils.LimitWidthAndBox(m_title, out UIPanel boxContainerTitle);
-            boxContainerTitle.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
-            boxContainerTitle.relativePosition = new Vector3(0, 2);
-
-            //This action allow centralize all calls to single object, coming from any mod
-            m_mainPanel.objectUserData = new Action<Dictionary<string, object>, Func<int, bool>>((Dictionary<string, object> properties, Func<int, bool> callback) => StartCoroutine(Enqueue(BindProperties.FromDictionary(properties), callback)));
-            m_mainPanel.stringUserData = VERSION;
-
-
-            m_closeButton.eventClicked += (x, y) => Close(0);
-
-            m_mainPanel.enabled = true;
-            #endregion
         }
 
         public void Update()
         {
             if (UIView.GetModalComponent()?.GetComponent<K45DialogControl>() != null)
             {
-                m_mainPanel.zOrder = 9999;
+                m_mainPanel.zOrder = UIView.GetModalComponent().zOrder + 1;
             }
         }
 
@@ -345,7 +356,7 @@ namespace Klyte.Commons.Utils
                 LogUtils.DoLog($"IMG: {targetImg}");
                 propertiesToSet = new BindProperties
                 {
-                    icon = propertiesToSet.icon, 
+                    icon = propertiesToSet.icon,
                     title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
                     message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
