@@ -15,15 +15,13 @@ namespace Klyte.Commons.Utils
     public class VehicleUtils
     {
         #region Vehicle Utils
-        public static VehicleInfo GetRandomModel(IEnumerable<string> assetList, out string selectedModel)
+        public static VehicleInfo GetRandomModel(ref Randomizer r, IEnumerable<string> assetList, out string selectedModel)
         {
             selectedModel = null;
             if (assetList.Count() == 0)
             {
                 return null;
-            }
-
-            var r = new Randomizer(new System.Random().Next());
+            }            
 
             selectedModel = assetList.ElementAt(r.Int32(0, assetList.Count() - 1));
 
@@ -148,13 +146,14 @@ namespace Klyte.Commons.Utils
         }
 
         public static bool IsTrailer(PrefabInfo prefab)
-        {
+        {            
             string @unchecked = Locale.GetUnchecked("VEHICLE_TITLE", prefab.name);
             return @unchecked.StartsWith("VEHICLE_TITLE") || @unchecked.StartsWith("Trailer");
         }
 
         public static void ReplaceVehicleModel(ushort idx, VehicleInfo newInfo)
         {
+            if(newInfo == null) throw new ArgumentNullException("newInfo cannot be null!");
             VehicleManager instance = VehicleManager.instance;
             CitizenManager.instance.ReleaseUnits(instance.m_vehicles.m_buffer[idx].m_citizenUnits);
             instance.m_vehicles.m_buffer[idx].Unspawn(idx);
