@@ -1,5 +1,4 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Globalization;
 using ColossalFramework.Math;
 using ColossalFramework.Threading;
 using Klyte.Commons.Extensors;
@@ -21,7 +20,7 @@ namespace Klyte.Commons.Utils
             if (assetList.Count() == 0)
             {
                 return null;
-            }            
+            }
 
             selectedModel = assetList.ElementAt(r.Int32(0, assetList.Count() - 1));
 
@@ -72,8 +71,7 @@ namespace Klyte.Commons.Utils
 
         public static FieldInfo GetVehicleCapacityField<AI>(AI ai) where AI : VehicleAI
         {
-            FieldInfo fieldInfo;
-            if (!m_cachedCapacityFieldForAiType.TryGetValue(ai.GetType(), out fieldInfo))
+            if (!m_cachedCapacityFieldForAiType.TryGetValue(ai.GetType(), out FieldInfo fieldInfo))
             {
                 Type typeTry = ai.GetType();
                 do
@@ -88,8 +86,7 @@ namespace Klyte.Commons.Utils
         }
         public static FieldInfo GetTransportInfoField<AI>(AI ai) where AI : VehicleAI
         {
-            FieldInfo fieldInfo;
-            if (!m_cachedTransportInfoFieldsForAiType.TryGetValue(ai.GetType(), out fieldInfo))
+            if (!m_cachedTransportInfoFieldsForAiType.TryGetValue(ai.GetType(), out FieldInfo fieldInfo))
             {
                 Type typeTry = ai.GetType();
                 do
@@ -145,15 +142,15 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static bool IsTrailer(PrefabInfo prefab)
-        {            
-            string @unchecked = Locale.GetUnchecked("VEHICLE_TITLE", prefab.name);
-            return @unchecked.StartsWith("VEHICLE_TITLE") || @unchecked.StartsWith("Trailer");
-        }
+        public static bool IsTrailer(VehicleInfo prefab) => prefab.m_placementStyle != ItemClass.Placement.Automatic;
 
         public static void ReplaceVehicleModel(ushort idx, VehicleInfo newInfo)
         {
-            if(newInfo == null) throw new ArgumentNullException("newInfo cannot be null!");
+            if (newInfo == null)
+            {
+                throw new ArgumentNullException("newInfo cannot be null!");
+            }
+
             VehicleManager instance = VehicleManager.instance;
             CitizenManager.instance.ReleaseUnits(instance.m_vehicles.m_buffer[idx].m_citizenUnits);
             instance.m_vehicles.m_buffer[idx].Unspawn(idx);
@@ -167,52 +164,52 @@ namespace Klyte.Commons.Utils
             VehicleAI vehicleAI2 = vehicleAI as AmbulanceAI;
             if (vehicleAI2 != null)
             {
-                return ((AmbulanceAI) vehicleAI2).m_patientCapacity + ((AmbulanceAI) vehicleAI2).m_paramedicCount;
+                return ((AmbulanceAI)vehicleAI2).m_patientCapacity + ((AmbulanceAI)vehicleAI2).m_paramedicCount;
             }
             vehicleAI2 = (vehicleAI as BusAI);
             if (vehicleAI2 != null)
             {
-                return ((BusAI) vehicleAI2).m_passengerCapacity;
+                return ((BusAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as HearseAI);
             if (vehicleAI2 != null)
             {
-                return ((HearseAI) vehicleAI2).m_corpseCapacity + ((HearseAI) vehicleAI2).m_driverCount;
+                return ((HearseAI)vehicleAI2).m_corpseCapacity + ((HearseAI)vehicleAI2).m_driverCount;
             }
             vehicleAI2 = (vehicleAI as PassengerPlaneAI);
             if (vehicleAI2 != null)
             {
-                return ((PassengerPlaneAI) vehicleAI2).m_passengerCapacity;
+                return ((PassengerPlaneAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as PassengerShipAI);
             if (vehicleAI2 != null)
             {
-                return ((PassengerShipAI) vehicleAI2).m_passengerCapacity;
+                return ((PassengerShipAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as PassengerTrainAI);
             if (vehicleAI2 != null)
             {
-                return ((PassengerTrainAI) vehicleAI2).m_passengerCapacity;
+                return ((PassengerTrainAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as TramAI);
             if (vehicleAI2 != null)
             {
-                return ((TramAI) vehicleAI2).m_passengerCapacity;
+                return ((TramAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as CableCarAI);
             if (vehicleAI2 != null)
             {
-                return ((CableCarAI) vehicleAI2).m_passengerCapacity;
+                return ((CableCarAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as PassengerFerryAI);
             if (vehicleAI2 != null)
             {
-                return ((PassengerFerryAI) vehicleAI2).m_passengerCapacity;
+                return ((PassengerFerryAI)vehicleAI2).m_passengerCapacity;
             }
             vehicleAI2 = (vehicleAI as PassengerBlimpAI);
             if (vehicleAI2 != null)
             {
-                return ((PassengerBlimpAI) vehicleAI2).m_passengerCapacity;
+                return ((PassengerBlimpAI)vehicleAI2).m_passengerCapacity;
             }
             return -1;
         }
@@ -222,7 +219,7 @@ namespace Klyte.Commons.Utils
             int num = 0;
             while (unitID != 0u)
             {
-                CitizenUnit citizenUnit = Singleton<CitizenManager>.instance.m_units.m_buffer[(int) ((UIntPtr) unitID)];
+                CitizenUnit citizenUnit = Singleton<CitizenManager>.instance.m_units.m_buffer[(int)((UIntPtr)unitID)];
                 unitID = citizenUnit.m_nextUnit;
                 num++;
             }
@@ -234,9 +231,9 @@ namespace Klyte.Commons.Utils
             int count = 0;
             Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
             int i = 0;
-            while ((long) i < (long) ((ulong) vehicles.m_size))
+            while (i < (long)((ulong)vehicles.m_size))
             {
-                if ((vehicles.m_buffer[i].m_flags & Vehicle.Flags.Spawned) == Vehicle.Flags.Spawned )
+                if ((vehicles.m_buffer[i].m_flags & Vehicle.Flags.Spawned) == Vehicle.Flags.Spawned)
                 {
                     int capacity = GetUnitsCapacity(vehicles.m_buffer[i].Info.m_vehicleAI);
                     if (capacity != -1)
@@ -244,27 +241,27 @@ namespace Klyte.Commons.Utils
                         CitizenUnit[] units = Singleton<CitizenManager>.instance.m_units.m_buffer;
                         uint unit = vehicles.m_buffer[i].m_citizenUnits;
                         int currentUnitCount = GetTotalUnitGroups(unit);
-                        int newUnitCount = Mathf.CeilToInt((float) capacity / 5f);
+                        int newUnitCount = Mathf.CeilToInt(capacity / 5f);
                         if (newUnitCount < currentUnitCount)
                         {
                             uint j = unit;
                             for (int k = 1; k < newUnitCount; k++)
                             {
-                                j = units[(int) ((UIntPtr) j)].m_nextUnit;
+                                j = units[(int)((UIntPtr)j)].m_nextUnit;
                             }
-                            Singleton<CitizenManager>.instance.ReleaseUnits(units[(int) ((UIntPtr) j)].m_nextUnit);
-                            units[(int) ((UIntPtr) j)].m_nextUnit = 0u;
+                            Singleton<CitizenManager>.instance.ReleaseUnits(units[(int)((UIntPtr)j)].m_nextUnit);
+                            units[(int)((UIntPtr)j)].m_nextUnit = 0u;
                             count++;
                         }
                         else if (newUnitCount > currentUnitCount)
                         {
                             uint l = unit;
-                            while (units[(int) ((UIntPtr) l)].m_nextUnit != 0u)
+                            while (units[(int)((UIntPtr)l)].m_nextUnit != 0u)
                             {
-                                l = units[(int) ((UIntPtr) l)].m_nextUnit;
+                                l = units[(int)((UIntPtr)l)].m_nextUnit;
                             }
                             int newCapacity = capacity - currentUnitCount * 5;
-                            Singleton<CitizenManager>.instance.CreateUnits(out units[(int) ((UIntPtr) l)].m_nextUnit, ref Singleton<SimulationManager>.instance.m_randomizer, 0, (ushort) i, 0, 0, 0, newCapacity, 0);
+                            Singleton<CitizenManager>.instance.CreateUnits(out units[(int)((UIntPtr)l)].m_nextUnit, ref Singleton<SimulationManager>.instance.m_randomizer, 0, (ushort)i, 0, 0, 0, newCapacity, 0);
                             count++;
                         }
                     }
