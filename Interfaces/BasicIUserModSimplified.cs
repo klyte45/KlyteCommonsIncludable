@@ -246,15 +246,6 @@ namespace Klyte.Commons.Interfaces
             LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
-
-            helper.Self.eventVisibilityChanged += delegate (UIComponent component, bool b)
-            {
-                if (b)
-                {
-                    ShowVersionInfoPopup();
-                }
-            };
-
             TopSettingsUI(helper);
 
             if (UseGroup9)

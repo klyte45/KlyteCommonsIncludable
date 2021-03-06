@@ -81,5 +81,6 @@ namespace Klyte.Commons.Utils
     public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }
     public class BuildingIndexes : PrefabIndexesAbstract<BuildingInfo, BuildingIndexes> { }
     public class VehiclesIndexes : PrefabIndexesAbstract<VehicleInfo, VehiclesIndexes> { }
+    public class TreeIndexes : PrefabIndexesAbstract<TreeInfo, TreeIndexes> { }
 }
 
