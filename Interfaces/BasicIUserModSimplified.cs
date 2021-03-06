@@ -101,6 +101,7 @@ namespace Klyte.Commons.Interfaces
             else
             {
                 LogUtils.DoWarnLog($"Invalid load mode: {mode}. The mod will not be loaded!");
+                Redirector.UnpatchAll();
             }
         }
 
