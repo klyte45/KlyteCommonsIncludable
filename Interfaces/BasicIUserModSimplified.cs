@@ -95,6 +95,12 @@ namespace Klyte.Commons.Interfaces
                     Controller = m_topObj.AddComponent<C>();
                 }
                 SimulationManager.instance.StartCoroutine(LevelUnloadBinds());
+                ShowVersionInfoPopup();
+                SearchIncompatibilitiesModal();
+            }
+            else
+            {
+                LogUtils.DoWarnLog($"Invalid load mode: {mode}. The mod will not be loaded!");
             }
         }
 
@@ -255,8 +261,6 @@ namespace Klyte.Commons.Interfaces
                 CreateGroup9(helper);
             }
 
-            ShowVersionInfoPopup();
-            SearchIncompatibilitiesModal();
             LogUtils.DoLog("End Loading Options");
         }
 
@@ -439,8 +443,6 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnViewStart()
         {
-            ShowVersionInfoPopup();
-            SearchIncompatibilitiesModal();
             ExtraOnViewStartActions();
         }
 

@@ -10,8 +10,6 @@ namespace Klyte.Commons.Interfaces
         public void Start()
         {
             StartActions();
-            BasicIUserModSimplified<U, C>.Instance.ShowVersionInfoPopup();
-            BasicIUserModSimplified<U, C>.Instance.SearchIncompatibilitiesModal();
         }
 
         protected virtual void StartActions() { }
