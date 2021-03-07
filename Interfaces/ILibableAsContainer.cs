@@ -19,9 +19,9 @@ namespace Klyte.Commons.Interfaces
         public virtual string SaveName { get; set; }
     }
 
-    public class ILibableAsContainer<I, D> : ILibable where I : class where D : class
+    public class ILibableAsContainer<I, D> : ILibable where I : class, new() where D : class, new()
     {
-        public SimpleXmlDictionary<I, D> Data { get; set; }
+        public XmlDictionary<I, D> Data { get; set; }
         [XmlAttribute("saveName")]
         public virtual string SaveName { get; set; }
     }
