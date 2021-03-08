@@ -229,6 +229,7 @@ namespace Klyte.Commons.Extensors
             if (eventCallback != null)
             {
                 UIDropDown uIDropDown = GameObject.Instantiate(UITemplateManager.GetAsGameObject(kDropdownTemplate).GetComponentInChildren<UIDropDown>().gameObject, parent.transform).GetComponent<UIDropDown>();
+                uIDropDown.forceZOrder = -1;
                 uIDropDown.items = options;
                 uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
                 {
