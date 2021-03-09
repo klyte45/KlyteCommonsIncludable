@@ -25,7 +25,14 @@ namespace Klyte.Commons.Utils
         private int[] m_allowedItemCount = new int[] { 5, 10, 20, 50 };
         private UIDropDown m_itemsPerPageDD;
 
-        private int TotalPages => Mathf.CeilToInt(m_totalItems / (float)m_itemsPerPage);
+        private int TotalPages
+        {
+            get
+            {
+                var pageCount = m_totalItems / (float)m_itemsPerPage;
+                return Mathf.CeilToInt(pageCount);
+            }
+        }
 
         public event Action<int> OnGoToPage;
 
@@ -55,14 +62,14 @@ namespace Klyte.Commons.Utils
                 m_allowedItemCount.Select(x => x.ToString("0")).ToArray(),
                 (idx) =>
                     {
-                        if (idx > 0)
+                        if (idx >= 0)
                         {
                             SetItemsPerpage(m_allowedItemCount[idx]);
                         }
                     },
                 m_pagePanel);
             m_itemsPerPageDD.area = new Vector4(0, 0, m_pagePanel.width * .1f, height);
-       
+
 
             KlyteMonoUtils.CreateUIElement(out m_firstPage, m_pagePanel.transform, "firstPage", new UnityEngine.Vector4(0, 0, m_pagePanel.width * .05f, height));
             KlyteMonoUtils.InitButton(m_firstPage, false, "ButtonMenu");
@@ -129,7 +136,7 @@ namespace Klyte.Commons.Utils
             var oldItemsPerpage = m_itemsPerPage;
             m_itemsPerPage = newVal;
             m_totalPage.text = TotalPages.ToString("0");
-            GoToPage(Mathf.CeilToInt(m_currentPage * (float)oldItemsPerpage / newVal));
+            GoToPage(Mathf.FloorToInt(m_currentPage * (float)oldItemsPerpage / newVal));
         }
 
         public void SetNewLength(int length)
@@ -187,6 +194,24 @@ namespace Klyte.Commons.Utils
             m_infoLabel.text = string.Format(Locale.Get("K45_CMNS_PAGING_SHOWINGMESSAGE_FMT"), 1 + ((m_currentPage - 1) * m_itemsPerPage), Mathf.Min(m_totalItems, m_currentPage * m_itemsPerPage), m_totalItems);
             OnGoToPage?.Invoke(m_currentPage);
         }
+
+        public int GetCurrentPageSize()
+        {
+            if (TotalPages > 0)
+            {
+                if (m_currentPage < TotalPages)
+                {
+                    return m_itemsPerPage;
+                }
+                if (m_currentPage == TotalPages)
+                {
+                    return m_itemsPerPage - ((TotalPages * m_itemsPerPage) - m_totalItems);
+                }
+            }
+            return 0;
+        }
+
+        public int GetCurrentPageStartIdx() => ((m_currentPage - 1) * m_itemsPerPage);
 
     }
 }
