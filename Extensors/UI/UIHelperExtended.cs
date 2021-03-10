@@ -56,6 +56,8 @@ namespace Klyte.Commons.Extensors
                 {
                     eventCallback();
                 };
+                uIButton.forceZOrder = -1;
+                uIButton.canFocus = false;
                 return uIButton;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create button with no name or no event");

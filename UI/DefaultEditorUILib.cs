@@ -358,6 +358,7 @@ namespace Klyte.Commons.UI
             }
             var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
             result.zOrder = component.zOrder + 1;
+            result.canFocus = false;
             return result;
         }
         public static UISprite AddSpriteInEditorRow(UIComponent component, bool reduceSize = true, float width = 40)
