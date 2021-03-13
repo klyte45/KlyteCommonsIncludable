@@ -358,6 +358,7 @@ namespace Klyte.Commons.UI
             }
             var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
             result.zOrder = component.zOrder + 1;
+            result.canFocus = false;
             return result;
         }
         public static UISprite AddSpriteInEditorRow(UIComponent component, bool reduceSize = true, float width = 40)
@@ -470,15 +471,18 @@ namespace Klyte.Commons.UI
             return result;
         }
 
-        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged)
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight =290)
         {
             AddTextField(name, out inputField, helper, null);
             inputField.submitOnFocusLost = true;
 
             KlyteMonoUtils.UiTextFieldDefaultsForm(inputField);
             listPopup = ConfigureListSelectionPopupForUITextField(inputField, OnFilterChanged, OnValueChanged);
-            listPopup.height = 290;
+            listPopup.height = popupHeight;
             listPopup.width -= 20;
+            listPopup.itemHeight = 15;
+            listPopup.textScale = 0.7f;
+            listPopup.itemPadding = new RectOffset(5, 5, 1, 1);
         }
 
 
