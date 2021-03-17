@@ -22,29 +22,27 @@ namespace Klyte.Commons.Utils
 
         public static byte[] ZipBytes(byte[] bytes)
         {
-            using var msi = new MemoryStream(bytes);
-            using var mso = new MemoryStream();
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
             using (var gs = new GZipStream(mso, CompressionMode.Compress))
             {
                 CopyTo(msi, gs);
+                return mso.ToArray();
             }
-
-            return mso.ToArray();
         }
 
         public static string Unzip(byte[] bytes) => Encoding.UTF8.GetString(UnzipBytes(bytes));
 
         public static byte[] UnzipBytes(byte[] bytes)
         {
-            using var msi = new MemoryStream(bytes);
-            using var mso = new MemoryStream();
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
             using (var gs = new GZipStream(msi, CompressionMode.Decompress))
             {
                 //gs.CopyTo(mso);
                 CopyTo(gs, mso);
+                return mso.ToArray();
             }
-
-            return mso.ToArray();
         }
     }
 }

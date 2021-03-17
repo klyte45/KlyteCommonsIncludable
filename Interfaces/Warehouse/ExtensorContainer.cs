@@ -64,22 +64,24 @@ namespace Klyte.Commons.Interfaces
                     continue;
 
                 }
-                using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId));
-                byte[] storage = memoryStream.ToArray();
-                try
+                using (var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId)))
                 {
-                    instance.Instances[type] = basicInstance.Deserialize(type, storage) ?? basicInstance;
-                    if (CommonProperties.DebugMode)
+                    byte[] storage = memoryStream.ToArray();
+                    try
+                    {
+                        instance.Instances[type] = basicInstance.Deserialize(type, storage) ?? basicInstance;
+                        if (CommonProperties.DebugMode)
+                        {
+                            string content = System.Text.Encoding.UTF8.GetString(storage);
+                            LogUtils.DoLog($"{type} DATA {storage.Length}b => {content}");
+                        }
+                    }
+                    catch (Exception e)
                     {
                         string content = System.Text.Encoding.UTF8.GetString(storage);
-                        LogUtils.DoLog($"{type} DATA {storage.Length}b => {content}");
+                        LogUtils.DoLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage.Length}b:\n{content}");
+                        instance.Instances[type] = null;
                     }
-                }
-                catch (Exception e)
-                {
-                    string content = System.Text.Encoding.UTF8.GetString(storage);
-                    LogUtils.DoLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage.Length}b:\n{content}");
-                    instance.Instances[type] = null;
                 }
             }
 
@@ -92,9 +94,11 @@ namespace Klyte.Commons.Interfaces
 
         private byte[] MemoryStreamToArray(string saveId)
         {
-            using var memoryStream2 = new MemoryStream(SerializableDataManager.LoadData(saveId));
-            byte[] storage2 = memoryStream2.ToArray();
-            return storage2;
+            using (var memoryStream2 = new MemoryStream(SerializableDataManager.LoadData(saveId)))
+            {
+                byte[] storage2 = memoryStream2.ToArray();
+                return storage2;
+            }
         }
 
         // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220
