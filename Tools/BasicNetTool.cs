@@ -1,7 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.UI;
-using Klyte.Commons.Utils;
 using System;
 using System.Diagnostics;
 using UnityEngine;
@@ -16,7 +15,7 @@ namespace Klyte.Commons
         {
             m_toolController = UnityEngine.Object.FindObjectOfType<ToolController>();
             base.enabled = false;
-            instance = (T) this;
+            instance = (T)this;
         }
 
         protected override void OnToolGUI(Event e)
@@ -195,50 +194,7 @@ namespace Klyte.Commons
         protected static NetSegment[] SegmentBuffer => Singleton<NetManager>.instance.m_segments.m_buffer;
         protected static NetNode[] NodeBuffer => Singleton<NetManager>.instance.m_nodes.m_buffer;
 
-        public void RenderOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort netSegment)
-        {
-            if (netSegment == 0)
-            {
-                return;
-            }
-            NetInfo info = SegmentBuffer[netSegment].Info;
-            var startNode = SegmentBuffer[netSegment].m_startNode;
-            var endNode = SegmentBuffer[netSegment].m_endNode;
-            var smoothStart = (NodeBuffer[startNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
-            var smoothEnd = (NodeBuffer[endNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
-            Bezier3 bezier;
-            bezier.a = NodeBuffer[startNode].m_position;
-            bezier.d = NodeBuffer[endNode].m_position;
-            NetSegment.CalculateMiddlePoints(bezier.a, SegmentBuffer[netSegment].m_startDirection, bezier.d, SegmentBuffer[netSegment].m_endDirection, smoothStart, smoothEnd, out bezier.b, out bezier.c);
-            Singleton<RenderManager>.instance.OverlayEffect.DrawBezier(cameraInfo, toolColor, bezier, info.m_halfWidth * 4f / 3f, 100000f, -100000f, -1f, 1280f, false, true);
-            Segment3 segment;
-            segment.a = NodeBuffer[startNode].m_position;
-            Segment3 segment2;
-            segment2.a = NodeBuffer[endNode].m_position;
-            segment.b = GetControlPoint(netSegment);
-            segment2.b = segment.b;
-            toolColor.a /= 2f;
-            Singleton<RenderManager>.instance.OverlayEffect.DrawSegment(cameraInfo, toolColor, segment, segment2, 0f, 10f, -1f, 1280f, false, true);
-            Singleton<RenderManager>.instance.OverlayEffect.DrawCircle(cameraInfo, toolColor, segment.b, info.m_halfWidth / 2f, -1f, 1280f, false, true);
-        }
 
-        private Vector3 GetControlPoint(ushort segment)
-        {
-            Vector3 position = NodeBuffer[SegmentBuffer[segment].m_startNode].m_position;
-            Vector3 startDirection = SegmentBuffer[segment].m_startDirection;
-            Vector3 position2 = NodeBuffer[SegmentBuffer[segment].m_endNode].m_position;
-            Vector3 endDirection = SegmentBuffer[segment].m_endDirection;
-            if (!NetSegment.IsStraight(position, startDirection, position2, endDirection, out _))
-            {
-                var num2 = (startDirection.x * endDirection.x) + (startDirection.z * endDirection.z);
-                if (num2 >= -0.999f && Line2.Intersect(VectorUtils.XZ(position), VectorUtils.XZ(position + startDirection), VectorUtils.XZ(position2), VectorUtils.XZ(position2 + endDirection), out var d, out _))
-                {
-                    return position + (startDirection * d);
-                }
-                LogUtils.DoErrorLog("Warning! Invalid segment directions!");
-            }
-            return (position + position2) / 2f;
-        }
 
 
         public static T instance;
@@ -268,10 +224,10 @@ namespace Klyte.Commons
             if (ray.Clip(bounds))
             {
                 Vector3 vector = ray.b - ray.a;
-                var num = (int) ((ray.a.x / 64f) + 135f);
-                var num2 = (int) ((ray.a.z / 64f) + 135f);
-                var num3 = (int) ((ray.b.x / 64f) + 135f);
-                var num4 = (int) ((ray.b.z / 64f) + 135f);
+                var num = (int)((ray.a.x / 64f) + 135f);
+                var num2 = (int)((ray.a.z / 64f) + 135f);
+                var num3 = (int)((ray.b.x / 64f) + 135f);
+                var num4 = (int)((ray.b.z / 64f) + 135f);
                 var num5 = Mathf.Abs(vector.x);
                 var num6 = Mathf.Abs(vector.z);
                 int num7;
@@ -316,7 +272,7 @@ namespace Klyte.Commons
                     {
                         if ((num16 == num && num7 > 0) || (num16 == num3 && num7 < 0))
                         {
-                            num18 = Mathf.Max((int) (((vector4.x - 64f) / 64f) + 135f), 0);
+                            num18 = Mathf.Max((int)(((vector4.x - 64f) / 64f) + 135f), 0);
                         }
                         else
                         {
@@ -324,20 +280,20 @@ namespace Klyte.Commons
                         }
                         if ((num16 == num && num7 < 0) || (num16 == num3 && num7 > 0))
                         {
-                            num19 = Mathf.Min((int) (((vector4.x + 64f) / 64f) + 135f), 269);
+                            num19 = Mathf.Min((int)(((vector4.x + 64f) / 64f) + 135f), 269);
                         }
                         else
                         {
                             num19 = Mathf.Min(num16, 269);
                         }
-                        num20 = Mathf.Max((int) (((Mathf.Min(vector2.z, vector4.z) - 64f) / 64f) + 135f), 0);
-                        num21 = Mathf.Min((int) (((Mathf.Max(vector2.z, vector4.z) + 64f) / 64f) + 135f), 269);
+                        num20 = Mathf.Max((int)(((Mathf.Min(vector2.z, vector4.z) - 64f) / 64f) + 135f), 0);
+                        num21 = Mathf.Min((int)(((Mathf.Max(vector2.z, vector4.z) + 64f) / 64f) + 135f), 269);
                     }
                     else
                     {
                         if ((num17 == num2 && num8 > 0) || (num17 == num4 && num8 < 0))
                         {
-                            num20 = Mathf.Max((int) (((vector4.z - 64f) / 64f) + 135f), 0);
+                            num20 = Mathf.Max((int)(((vector4.z - 64f) / 64f) + 135f), 0);
                         }
                         else
                         {
@@ -345,14 +301,14 @@ namespace Klyte.Commons
                         }
                         if ((num17 == num2 && num8 < 0) || (num17 == num4 && num8 > 0))
                         {
-                            num21 = Mathf.Min((int) (((vector4.z + 64f) / 64f) + 135f), 269);
+                            num21 = Mathf.Min((int)(((vector4.z + 64f) / 64f) + 135f), 269);
                         }
                         else
                         {
                             num21 = Mathf.Min(num17, 269);
                         }
-                        num18 = Mathf.Max((int) (((Mathf.Min(vector2.x, vector4.x) - 64f) / 64f) + 135f), 0);
-                        num19 = Mathf.Min((int) (((Mathf.Max(vector2.x, vector4.x) + 64f) / 64f) + 135f), 269);
+                        num18 = Mathf.Max((int)(((Mathf.Min(vector2.x, vector4.x) - 64f) / 64f) + 135f), 0);
+                        num19 = Mathf.Min((int)(((Mathf.Max(vector2.x, vector4.x) + 64f) / 64f) + 135f), 269);
                     }
                     for (var i = num20; i <= num21; i++)
                     {
@@ -490,5 +446,4 @@ namespace Klyte.Commons
         }
 
     }
-
 }

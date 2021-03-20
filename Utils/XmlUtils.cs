@@ -24,40 +24,46 @@ namespace Klyte.Commons.Utils
 
         private static T DefaultXmlDeserializeImpl<T>(string s, XmlSerializer xmlser, Action<string, Exception> OnException = null)
         {
-            try
+            using (TextReader tr = new StringReader(s))
             {
-                using TextReader tr = new StringReader(s);
-                using var reader = XmlReader.Create(tr);
-                if (xmlser.CanDeserialize(reader))
+                using (var reader = XmlReader.Create(tr))
                 {
-                    var val = (T)xmlser.Deserialize(reader);
-                    return val;
-                }
-                else
-                {
-                    LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}");
-                    OnException?.Invoke(s, null);
+                    try
+                    {
+                        if (xmlser.CanDeserialize(reader))
+                        {
+                            var val = (T)xmlser.Deserialize(reader);
+                            return val;
+                        }
+                        else
+                        {
+                            LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}");
+                            OnException?.Invoke(s, null);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.GetType().Name}: {e.Message}\n{e.StackTrace}");
+                        OnException?.Invoke(s, e);
+                        throw e;
+                    }
+                    return default;
                 }
             }
-            catch (Exception e)
-            {
-                LogUtils.DoErrorLog($"CAN'T DESERIALIZE {typeof(T)}!\nText : {s}\n{e.GetType().Name}: {e.Message}\n{e.StackTrace}");
-                OnException?.Invoke(s, e);
-                throw e;
-            }
-            return default;
         }
 
         public static string DefaultXmlSerialize<T>(T targetObj, bool indent = true)
         {
             var xmlser = new XmlSerializer(targetObj?.GetType() ?? typeof(T));
             var settings = new XmlWriterSettings { Indent = indent, OmitXmlDeclaration = true };
-            using var textWriter = new StringWriter();
-            using var xw = XmlWriter.Create(textWriter, settings);
-            var ns = new XmlSerializerNamespaces();
-            ns.Add("", "");
-            xmlser.Serialize(xw, targetObj, ns);
-            return textWriter.ToString();
+            using (var textWriter = new StringWriter())
+            using (var xw = XmlWriter.Create(textWriter, settings))
+            {
+                var ns = new XmlSerializerNamespaces();
+                ns.Add("", "");
+                xmlser.Serialize(xw, targetObj, ns);
+                return textWriter.ToString();
+            }
         }
 
         public class ListWrapper<T>

@@ -25,7 +25,7 @@ namespace Klyte.Commons.Interfaces
         protected sealed override void OnLevelLoadedInherit(LoadMode mode)
         {
             base.OnLevelLoadedInherit(mode);
-            if (LoadUI)
+            if (LoadUI && IsValidLoadMode(mode))
             {
                 m_modsPanel = UIView.Find<UIPanel>("K45_ModsPanel");
                 if (m_modsPanel == null)

@@ -134,7 +134,7 @@ namespace Klyte.Commons.Utils
         private void RebuildHourTable()
         {
             m_hourTable = new Tuple<TValue, int>[24];
-            m_hourTable[0] = m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == 0).FirstOrDefault() ?? m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == m_items.Max(x => x.HourOfDay)).FirstOrDefault();
+            m_hourTable[0] = m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == 0).FirstOrDefault() ?? m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == m_items.Max(z => z.HourOfDay)).FirstOrDefault();
             for (int i = 1; i < 24; i++)
             {
                 m_hourTable[i] = m_items.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.HourOfDay == i).FirstOrDefault() ?? m_hourTable[i - 1];

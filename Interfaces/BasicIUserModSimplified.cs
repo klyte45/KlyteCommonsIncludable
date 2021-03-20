@@ -95,6 +95,13 @@ namespace Klyte.Commons.Interfaces
                     Controller = m_topObj.AddComponent<C>();
                 }
                 SimulationManager.instance.StartCoroutine(LevelUnloadBinds());
+                ShowVersionInfoPopup();
+                SearchIncompatibilitiesModal();
+            }
+            else
+            {
+                LogUtils.DoWarnLog($"Invalid load mode: {mode}. The mod will not be loaded!");
+                Redirector.UnpatchAll();
             }
         }
 
@@ -239,15 +246,6 @@ namespace Klyte.Commons.Interfaces
             LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
-
-            helper.Self.eventVisibilityChanged += delegate (UIComponent component, bool b)
-            {
-                if (b)
-                {
-                    ShowVersionInfoPopup();
-                }
-            };
-
             TopSettingsUI(helper);
 
             if (UseGroup9)
@@ -255,8 +253,6 @@ namespace Klyte.Commons.Interfaces
                 CreateGroup9(helper);
             }
 
-            ShowVersionInfoPopup();
-            SearchIncompatibilitiesModal();
             LogUtils.DoLog("End Loading Options");
         }
 
@@ -439,8 +435,6 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnViewStart()
         {
-            ShowVersionInfoPopup();
-            SearchIncompatibilitiesModal();
             ExtraOnViewStartActions();
         }
 
