@@ -58,9 +58,9 @@ namespace Klyte.Commons.Utils
         {
             var list = new List<T>();
             uint num = 0u;
-            while (num < (ulong)PrefabCollection<T>.LoadedCount())
+            while (num < (ulong)PrefabCollection<T>.PrefabCount())
             {
-                T prefabInfo = PrefabCollection<T>.GetLoaded(num);
+                T prefabInfo = PrefabCollection<T>.GetPrefab(num);
                 if (prefabInfo != null)
                 {
                     list.Add(prefabInfo);
