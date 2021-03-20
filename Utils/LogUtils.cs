@@ -1,5 +1,4 @@
 ﻿using Harmony;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -54,12 +53,18 @@ namespace Klyte.Commons.Utils
             if (force || CommonProperties.DebugMode)
             {
                 int j = 0;
-                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("X8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
             }
         }
 
+        public static string GetLinesPointingToLabel(IEnumerable<CodeInstruction> inst, Label lbl)
+        {
+            int j = 0;
+            return "\t" + string.Join("\n\t", inst.Select(x => Tuple.New(x, $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}")).Where(x => x.First.operand is Label label && label == lbl).Select(x => x.Second).ToArray());
+        }
 
-        private static string ParseOperand(IEnumerable<CodeInstruction> instr, object operand)
+
+        internal static string ParseOperand(IEnumerable<CodeInstruction> instr, object operand)
         {
             if (operand is null)
             {
@@ -68,11 +73,11 @@ namespace Klyte.Commons.Utils
 
             if (operand is Label lbl)
             {
-                return "LBL: " + instr.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.labels.Contains(lbl)).Select(x => $"{x.Second.ToString("X8")} {x.First.opcode.ToString().PadRight(10)} {ParseOperand(instr, x.First.operand)}").FirstOrDefault();
+                return "LBL: " + instr.Select((x, y) => Tuple.New(x, y)).Where(x => x.First.labels.Contains(lbl)).Select(x => $"{x.Second.ToString("D8")} {x.First.opcode.ToString().PadRight(10)} {ParseOperand(instr, x.First.operand)}").FirstOrDefault();
             }
             else
             {
-                return operand.ToString()+$" (Type={operand.GetType()})";
+                return operand.ToString() + $" (Type={operand.GetType()})";
             }
         }
         #endregion
