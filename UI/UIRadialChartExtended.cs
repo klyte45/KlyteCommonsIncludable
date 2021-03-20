@@ -36,7 +36,8 @@ namespace Klyte.Commons.Utils
         public UIPivotPoint fillOrigin
         {
             get => m_FillOrigin;
-            set {
+            set
+            {
                 if (value != m_FillOrigin)
                 {
                     m_FillOrigin = value;
@@ -118,130 +119,133 @@ namespace Klyte.Commons.Utils
 
         private void BuildMeshData(PoolList<Vector3> vertices, PoolList<int> indices, PoolList<Vector2> uvs, PoolList<Color32> colors, SliceSettingsExtended slice)
         {
-            using var poolList = PoolList<Vector3>.Obtain();
-            poolList.AddRange(kBaseVerts.Select(x => x * slice.sizeMultiplier).ToArray());
-            int num;
-            int index;
-            switch (fillOrigin)
+            using (var poolList = PoolList<Vector3>.Obtain())
             {
-                case UIPivotPoint.TopLeft:
-                    num = 4;
-                    index = 5;
-                    poolList.RemoveAt(6);
-                    poolList.RemoveAt(0);
-                    break;
-                case UIPivotPoint.TopCenter:
-                    num = 6;
-                    index = 0;
-                    break;
-                case UIPivotPoint.TopRight:
-                    num = 4;
-                    index = 0;
-                    poolList.RemoveAt(2);
-                    poolList.RemoveAt(0);
-                    break;
-                case UIPivotPoint.MiddleLeft:
-                    num = 6;
-                    index = 6;
-                    break;
-                case UIPivotPoint.MiddleCenter:
-                    num = 8;
-                    poolList.Add(poolList[0]);
-                    poolList.Insert(0, Vector3.zero);
-                    index = 0;
-                    break;
-                case UIPivotPoint.MiddleRight:
-                    num = 6;
-                    index = 2;
-                    break;
-                case UIPivotPoint.BottomLeft:
-                    num = 4;
-                    index = 4;
-                    poolList.RemoveAt(6);
-                    poolList.RemoveAt(4);
-                    break;
-                case UIPivotPoint.BottomCenter:
-                    num = 6;
-                    index = 4;
-                    break;
-                case UIPivotPoint.BottomRight:
-                    num = 4;
-                    index = 2;
-                    poolList.RemoveAt(4);
-                    poolList.RemoveAt(2);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-            StartClosestToPivot(poolList, index);
-            using var poolList2 = PoolList<int>.Obtain();
-            for (int i = 1; i < poolList.Count - 1; i++)
-            {
-                poolList2.Add(0);
-                poolList2.Add(i);
-                poolList2.Add(i + 1);
-            }
-            float num2 = 1f / num;
-            float num3 = (1f - slice.startValue).Quantize(num2);
-            float num4 = slice.endValue.Quantize(num2);
-            int num5 = Mathf.CeilToInt(num4 / num2) + 1;
-            int num6 = Mathf.CeilToInt(num3 / num2) + 1;
-            for (int j = num5; j < num; j++)
-            {
-                if (base.invertFill)
+                poolList.AddRange(kBaseVerts.Select(x => x * slice.sizeMultiplier).ToArray());
+                int num;
+                int index;
+                switch (fillOrigin)
                 {
-                    poolList2.RemoveRange(0, 3);
+                    case UIPivotPoint.TopLeft:
+                        num = 4;
+                        index = 5;
+                        poolList.RemoveAt(6);
+                        poolList.RemoveAt(0);
+                        break;
+                    case UIPivotPoint.TopCenter:
+                        num = 6;
+                        index = 0;
+                        break;
+                    case UIPivotPoint.TopRight:
+                        num = 4;
+                        index = 0;
+                        poolList.RemoveAt(2);
+                        poolList.RemoveAt(0);
+                        break;
+                    case UIPivotPoint.MiddleLeft:
+                        num = 6;
+                        index = 6;
+                        break;
+                    case UIPivotPoint.MiddleCenter:
+                        num = 8;
+                        poolList.Add(poolList[0]);
+                        poolList.Insert(0, Vector3.zero);
+                        index = 0;
+                        break;
+                    case UIPivotPoint.MiddleRight:
+                        num = 6;
+                        index = 2;
+                        break;
+                    case UIPivotPoint.BottomLeft:
+                        num = 4;
+                        index = 4;
+                        poolList.RemoveAt(6);
+                        poolList.RemoveAt(4);
+                        break;
+                    case UIPivotPoint.BottomCenter:
+                        num = 6;
+                        index = 4;
+                        break;
+                    case UIPivotPoint.BottomRight:
+                        num = 4;
+                        index = 2;
+                        poolList.RemoveAt(4);
+                        poolList.RemoveAt(2);
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
-                else
+                StartClosestToPivot(poolList, index);
+                using (var poolList2 = PoolList<int>.Obtain())
                 {
-                    poolList.RemoveAt(poolList.Count - 1);
-                    poolList2.RemoveRange(poolList2.Count - 3, 3);
+                    for (int i = 1; i < poolList.Count - 1; i++)
+                    {
+                        poolList2.Add(0);
+                        poolList2.Add(i);
+                        poolList2.Add(i + 1);
+                    }
+                    float num2 = 1f / num;
+                    float num3 = (1f - slice.startValue).Quantize(num2);
+                    float num4 = slice.endValue.Quantize(num2);
+                    int num5 = Mathf.CeilToInt(num4 / num2) + 1;
+                    int num6 = Mathf.CeilToInt(num3 / num2) + 1;
+                    for (int j = num5; j < num; j++)
+                    {
+                        if (base.invertFill)
+                        {
+                            poolList2.RemoveRange(0, 3);
+                        }
+                        else
+                        {
+                            poolList.RemoveAt(poolList.Count - 1);
+                            poolList2.RemoveRange(poolList2.Count - 3, 3);
+                        }
+                    }
+                    for (int k = num6; k < num; k++)
+                    {
+                        if (base.invertFill)
+                        {
+                            poolList.RemoveAt(poolList.Count - 1);
+                            poolList2.RemoveRange(poolList2.Count - 3, 3);
+                        }
+                        else
+                        {
+                            poolList2.RemoveRange(0, 3);
+                        }
+                    }
+                    var array = new Vector3[poolList.Count];
+                    poolList.CopyTo(array);
+                    if (slice.startValue > 0f)
+                    {
+                        int num7 = poolList2[base.invertFill ? (poolList2.Count - 2) : 2];
+                        int num8 = poolList2[base.invertFill ? (poolList2.Count - 1) : 1];
+                        float t = (1f - slice.startValue - num3) / num2;
+                        poolList[num8] = Vector3.Lerp(array[num7], array[num8], t);
+                    }
+                    if (slice.endValue < 1f)
+                    {
+                        int num9 = poolList2[base.invertFill ? 2 : (poolList2.Count - 2)];
+                        int num10 = poolList2[base.invertFill ? 1 : (poolList2.Count - 1)];
+                        float t2 = (slice.endValue - num4) / num2;
+                        poolList[num10] = Vector3.Lerp(array[num9], array[num10], t2);
+                    }
+                    BuildUV(uvs, poolList, slice.sizeMultiplier);
+                    float d = base.PixelsToUnits();
+                    Vector3 b = d * base.size;
+                    Vector3 b2 = base.pivot.TransformToCenter(base.size, base.arbitraryPivotOffset) * d;
+                    for (int l = 0; l < poolList.Count; l++)
+                    {
+                        poolList[l] = Vector3.Scale(poolList[l], b) + b2;
+                    }
+                    for (int m = 0; m < poolList2.Count; m++)
+                    {
+                        indices.Add(vertices.Count + poolList2[m]);
+                    }
+                    vertices.AddRange(poolList);
+                    BuildColors(colors, poolList.Count, slice.innerColor, slice.outterColor);
                 }
             }
-            for (int k = num6; k < num; k++)
-            {
-                if (base.invertFill)
-                {
-                    poolList.RemoveAt(poolList.Count - 1);
-                    poolList2.RemoveRange(poolList2.Count - 3, 3);
-                }
-                else
-                {
-                    poolList2.RemoveRange(0, 3);
-                }
-            }
-            var array = new Vector3[poolList.Count];
-            poolList.CopyTo(array);
-            if (slice.startValue > 0f)
-            {
-                int num7 = poolList2[base.invertFill ? (poolList2.Count - 2) : 2];
-                int num8 = poolList2[base.invertFill ? (poolList2.Count - 1) : 1];
-                float t = (1f - slice.startValue - num3) / num2;
-                poolList[num8] = Vector3.Lerp(array[num7], array[num8], t);
-            }
-            if (slice.endValue < 1f)
-            {
-                int num9 = poolList2[base.invertFill ? 2 : (poolList2.Count - 2)];
-                int num10 = poolList2[base.invertFill ? 1 : (poolList2.Count - 1)];
-                float t2 = (slice.endValue - num4) / num2;
-                poolList[num10] = Vector3.Lerp(array[num9], array[num10], t2);
-            }
-            BuildUV(uvs, poolList, slice.sizeMultiplier);
-            float d = base.PixelsToUnits();
-            Vector3 b = d * base.size;
-            Vector3 b2 = base.pivot.TransformToCenter(base.size, base.arbitraryPivotOffset) * d;
-            for (int l = 0; l < poolList.Count; l++)
-            {
-                poolList[l] = Vector3.Scale(poolList[l], b) + b2;
-            }
-            for (int m = 0; m < poolList2.Count; m++)
-            {
-                indices.Add(vertices.Count + poolList2[m]);
-            }
-            vertices.AddRange(poolList);
-            BuildColors(colors, poolList.Count, slice.innerColor, slice.outterColor);
         }
-
         private void StartClosestToPivot(PoolList<Vector3> list, int index)
         {
             if (index == 0)
@@ -320,7 +324,8 @@ namespace Klyte.Commons.Utils
             public float startValue
             {
                 get => m_StartValue;
-                set {
+                set
+                {
                     if (!Mathf.Approximately(value, m_StartValue))
                     {
                         m_StartValue = Mathf.Max(0f, Mathf.Min(m_EndValue, value));
@@ -335,7 +340,8 @@ namespace Klyte.Commons.Utils
             public float endValue
             {
                 get => m_EndValue;
-                set {
+                set
+                {
                     if (!Mathf.Approximately(value, m_EndValue))
                     {
                         m_EndValue = Mathf.Max(m_StartValue, Mathf.Min(1f, value));
@@ -350,7 +356,8 @@ namespace Klyte.Commons.Utils
             public Color32 innerColor
             {
                 get => m_InnerColor;
-                set {
+                set
+                {
                     if (!m_InnerColor.Equals(value))
                     {
                         m_InnerColor = value;
@@ -365,7 +372,8 @@ namespace Klyte.Commons.Utils
             public Color32 outterColor
             {
                 get => m_OutterColor;
-                set {
+                set
+                {
                     if (!m_OutterColor.Equals(value))
                     {
                         m_OutterColor = value;
@@ -379,7 +387,8 @@ namespace Klyte.Commons.Utils
             public float sizeMultiplier
             {
                 get => m_SizeMultiplier;
-                set {
+                set
+                {
                     if (!m_SizeMultiplier.Equals(value))
                     {
                         m_SizeMultiplier = Mathf.Max(0, Mathf.Min(1, value));

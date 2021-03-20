@@ -90,7 +90,7 @@ namespace Klyte.Commons.Utils
     }
     public interface IKeyGetter<TKey>
     {
-        public TKey GetKeyString();
+         TKey GetKeyString();
     }
 
 }

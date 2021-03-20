@@ -56,7 +56,7 @@ namespace Klyte.Commons.Extensors
                     weight = i
                 }, (x, y) =>
                 {
-                    (x.objectUserData as IdAndWeight).weight = m_parent.components.Where(x => (x as UICheckBox).isChecked).Count() - 1;
+                    (x.objectUserData as IdAndWeight).weight = m_parent.components.Where(z => (z as UICheckBox).isChecked).Count() - 1;
                     Reordenate();
                     EventOnValueChanged?.Invoke(GetSelectionOrder());
                 });
@@ -118,7 +118,7 @@ namespace Klyte.Commons.Extensors
 
     public interface ICheckable
     {
-        public bool IsChecked { get; set; }
+         bool IsChecked { get; set; }
     }
 }
 

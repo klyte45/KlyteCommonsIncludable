@@ -28,7 +28,7 @@ namespace Klyte.Commons.Utils
         {
             name = $"{Prefix}.{name}";
 
-            var stream = (UnmanagedMemoryStream) Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
+            var stream = (UnmanagedMemoryStream)Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
             if (stream == null)
             {
                 LogUtils.DoLog("Could not find resource: " + name);
@@ -36,14 +36,14 @@ namespace Klyte.Commons.Utils
             }
 
             var read = new BinaryReader(stream);
-            return read.ReadBytes((int) stream.Length);
+            return read.ReadBytes((int)stream.Length);
         }
 
         public static string LoadResourceString(string name)
         {
             name = $"{Prefix}.{name}";
 
-            var stream = (UnmanagedMemoryStream) Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
+            var stream = (UnmanagedMemoryStream)Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
             if (stream == null)
             {
                 LogUtils.DoLog("Could not find resource: " + name);
@@ -57,18 +57,22 @@ namespace Klyte.Commons.Utils
         {
             name = $"{Prefix}.{name}";
 
-            using var stream = (UnmanagedMemoryStream) Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
-            if (stream == null)
+            using (var stream = (UnmanagedMemoryStream)Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
             {
-                LogUtils.DoLog("Could not find resource: " + name);
-                yield break;
-            }
+                if (stream == null)
+                {
+                    LogUtils.DoLog("Could not find resource: " + name);
+                    yield break;
+                }
 
-            using var reader = new StreamReader(stream);
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                yield return line;
+                using (var reader = new StreamReader(stream))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        yield return line;
+                    }
+                }
             }
         }
 
