@@ -56,7 +56,7 @@ namespace Klyte.Commons.Extensors
                 {
                     eventCallback();
                 };
-                uIButton.forceZOrder = -1;
+                uIButton.forceZOrder = 999999999;
                 uIButton.canFocus = false;
                 return uIButton;
             }
@@ -231,7 +231,7 @@ namespace Klyte.Commons.Extensors
             if (eventCallback != null)
             {
                 UIDropDown uIDropDown = GameObject.Instantiate(UITemplateManager.GetAsGameObject(kDropdownTemplate).GetComponentInChildren<UIDropDown>().gameObject, parent.transform).GetComponent<UIDropDown>();
-                uIDropDown.forceZOrder = -1;
+                uIDropDown.forceZOrder = 999999999;
                 uIDropDown.items = options;
                 uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
                 {
