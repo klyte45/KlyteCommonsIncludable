@@ -385,12 +385,12 @@ namespace Klyte.Commons.Utils
                         {
                             Vector3 b2 = kOutlineOffsets[j] * 3;
                             Vector3 targetOffset = vector4 + b2;
-                            MergeTextures(tex, colors.Select(x => new Color(outlineColor.r, outlineColor.g, outlineColor.b, x.a)).ToArray(), Mathf.RoundToInt(targetOffset.x), Mathf.RoundToInt(targetOffset.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped, true);
+                            MergeTextures(tex, colors.Select(z => new Color(outlineColor.r, outlineColor.g, outlineColor.b, z.a)).ToArray(), Mathf.RoundToInt(targetOffset.x), Mathf.RoundToInt(targetOffset.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped, true);
                         }
                     }
 
 
-                    MergeTextures(tex, colors.Select(x => new Color(textColor.r, textColor.g, textColor.b, x.a)).ToArray(), Mathf.RoundToInt(vector4.x), Mathf.RoundToInt(vector4.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped);
+                    MergeTextures(tex, colors.Select(z => new Color(textColor.r, textColor.g, textColor.b, z.a)).ToArray(), Mathf.RoundToInt(vector4.x), Mathf.RoundToInt(vector4.y), glyph.glyphWidth, glyph.glyphHeight, glyph.flipped, !glyph.flipped, glyph.flipped);
                     x += glyph.maxX;
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Globalization;
+using ColossalFramework.Packaging;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
@@ -94,6 +95,13 @@ namespace Klyte.Commons.Interfaces
                     Controller = m_topObj.AddComponent<C>();
                 }
                 SimulationManager.instance.StartCoroutine(LevelUnloadBinds());
+                ShowVersionInfoPopup();
+                SearchIncompatibilitiesModal();
+            }
+            else
+            {
+                LogUtils.DoWarnLog($"Invalid load mode: {mode}. The mod will not be loaded!");
+                Redirector.UnpatchAll();
             }
         }
 
@@ -238,15 +246,6 @@ namespace Klyte.Commons.Interfaces
             LogUtils.DoLog($"ADDING {newSprites.Count} sprites!");
             TextureAtlasUtils.RegenerateDefaultTextureAtlas(newSprites);
 
-
-            helper.Self.eventVisibilityChanged += delegate (UIComponent component, bool b)
-            {
-                if (b)
-                {
-                    ShowVersionInfoPopup();
-                }
-            };
-
             TopSettingsUI(helper);
 
             if (UseGroup9)
@@ -254,8 +253,6 @@ namespace Klyte.Commons.Interfaces
                 CreateGroup9(helper);
             }
 
-            ShowVersionInfoPopup();
-            SearchIncompatibilitiesModal();
             LogUtils.DoLog("End Loading Options");
         }
 
@@ -321,17 +318,25 @@ namespace Klyte.Commons.Interfaces
 
         public bool ShowVersionInfoPopup(bool force = false)
         {
-            if (needShowPopup || force)
+            if ((needShowPopup &&
+                (SimulationManager.instance.m_metaData?.m_updateMode == SimulationManager.UpdateMode.LoadGame
+                || SimulationManager.instance.m_metaData?.m_updateMode == SimulationManager.UpdateMode.NewGameFromMap
+                || SimulationManager.instance.m_metaData?.m_updateMode == SimulationManager.UpdateMode.NewGameFromScenario
+                || PackageManager.noWorkshop
+                ))
+                || force)
             {
                 try
                 {
                     string title = $"{SimpleName} v{Version}";
                     string notes = KlyteResourceLoader.LoadResourceString("UI.VersionNotes.txt");
-                    string text = $"{SimpleName} was updated! Release notes:\n\n{notes}\n\n<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Current Version: <color #FFFF00>{FullVersion}</color>";
-                    if (!force)
+                    var fullWidth = notes.StartsWith("<extended>");
+                    if (fullWidth)
                     {
-                        text += "\n\n<Color #FF0000>REMEMBER!</Color> If you just activated the mod in the mod list, restart the game before playing by the first time!\nIf you just reading this on the main menu when opened the game, just go ahead and enjoy the game. =V";
+                        notes = notes.Substring("<extended>".Length);
                     }
+                    string text = $"{SimpleName} was updated! Release notes:\n\n{notes}\n\n<sprite K45_K45Button> Current Version: <color #FFFF00>{FullVersion}</color>";
+
                     ShowModal(new BindProperties()
                     {
                         icon = IconName,
@@ -347,6 +352,7 @@ namespace Klyte.Commons.Interfaces
                         showButton5 = true,
                         textButton5 = "Subscribe to Klyte45 channel on YouTube!",
                         messageAlign = UIHorizontalAlignment.Left,
+                        useFullWindowWidth = fullWidth,
                         title = title,
                         message = text,
                     }, (x) =>
@@ -429,8 +435,6 @@ namespace Klyte.Commons.Interfaces
         }
         public void OnViewStart()
         {
-            ShowVersionInfoPopup();
-            SearchIncompatibilitiesModal();
             ExtraOnViewStartActions();
         }
 

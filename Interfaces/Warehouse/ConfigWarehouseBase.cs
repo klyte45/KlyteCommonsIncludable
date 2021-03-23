@@ -270,9 +270,11 @@ namespace Klyte.Commons.Interfaces
             {
                 return;
             }
-            using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(ID));
-            byte[] storage = memoryStream.ToArray();
-            loadedCities[CurrentCityId] = Deserialize(System.Text.Encoding.UTF8.GetString(storage));
+            using (var memoryStream = new MemoryStream(SerializableDataManager.LoadData(ID)))
+            {
+                byte[] storage = memoryStream.ToArray();
+                loadedCities[CurrentCityId] = Deserialize(System.Text.Encoding.UTF8.GetString(storage));
+            }
         }
 
         // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220

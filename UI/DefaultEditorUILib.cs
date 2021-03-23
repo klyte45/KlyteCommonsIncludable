@@ -53,8 +53,9 @@ namespace Klyte.Commons.UI
             labelValue.textAlignment = UIHorizontalAlignment.Center;
             labelValue.padding = new RectOffset(4, 4, 0, 0);
             KlyteMonoUtils.LimitWidthAndBox(labelValue, (parentHelper.Self.width / 2) - slider.width, true);
+            labelValue.text = valueLabelFunc(slider.value);
         }
-        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false)
+        public static void AddVector2Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector2> onChange, bool addRollEvent = true, bool integerOnly = false, bool allowNegative = true)
         {
             fieldArray = parentHelper.AddVector2Field(label, Vector3.zero, onChange, integerOnly);
             KlyteMonoUtils.LimitWidthAndBox(fieldArray[0].parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
@@ -79,6 +80,8 @@ namespace Klyte.Commons.UI
             {
                 fieldArray.ForEach(x => x.allowFloats = false);
             }
+            fieldArray.ForEach(x => x.allowNegative = allowNegative);
+
         }
 
         public static void AddVector3Field(string label, out UITextField[] fieldArray, UIHelperExtension parentHelper, Action<Vector3> onChange)
@@ -121,6 +124,7 @@ namespace Klyte.Commons.UI
                 bool altPressed = Event.current.alt;
                 tf.text = Mathf.Max(tf.allowNegative ? float.MinValue : 0, currentValue + 0.0003f + (eventParam.wheelDelta * (altPressed && ctrlPressed ? 0.001f : ctrlPressed ? 0.1f : altPressed ? 0.01f : shiftPressed ? 10 : 1))).ToString("F3");
                 m_submitField.Invoke(tf, new object[0]);
+                eventParam.Use();
             }
         }
         public static void RollInteger(UIComponent component, UIMouseEventParameter eventParam)
@@ -130,6 +134,7 @@ namespace Klyte.Commons.UI
                 bool shiftPressed = Event.current.shift;
                 tf.text = Mathf.Max(tf.allowNegative ? float.MinValue : 0, currentValue + 0.0003f + (eventParam.wheelDelta * (shiftPressed ? 10 : 1))).ToString("F0");
                 m_submitField.Invoke(tf, new object[0]);
+                eventParam.Use();
             }
         }
         public static void AddFloatField(string label, out UITextField field, UIHelperExtension parentHelper, Action<float> onChange, bool acceptNegative)
@@ -197,16 +202,18 @@ namespace Klyte.Commons.UI
             return popup;
         }
 
-        public static void AddLabel(string text, UIHelperExtension parentHelper, out UILabel label, out UIPanel cbPanel)
+        public static void AddLabel(string text, UIHelperExtension parentHelper, out UILabel label, out UIPanel cbPanel, bool autoSize = true)
         {
             label = parentHelper.AddLabel(text);
+            label.autoSize = autoSize;
             KlyteMonoUtils.CreateUIElement(out cbPanel, parentHelper.Self.transform);
             cbPanel.autoLayoutDirection = LayoutDirection.Horizontal;
             cbPanel.wrapLayout = false;
             cbPanel.autoLayout = true;
             cbPanel.autoFitChildrenHorizontally = true;
             cbPanel.autoFitChildrenVertically = true;
-
+            cbPanel.width = parentHelper.Self.width;
+            label.width = parentHelper.Self.width - 10;
             cbPanel.AttachUIComponent(label.gameObject);
         }
 
@@ -349,7 +356,24 @@ namespace Klyte.Commons.UI
                 component.minimumSize -= new Vector2(0, width);
                 component.width -= width;
             }
-            return ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
+            var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
+            result.zOrder = component.zOrder + 1;
+            result.canFocus = false;
+            return result;
+        }
+        public static UISprite AddSpriteInEditorRow(UIComponent component, bool reduceSize = true, float width = 40)
+        {
+            if (reduceSize)
+            {
+                component.minimumSize -= new Vector2(0, width);
+                component.width -= width;
+            }
+            var sprite = component.GetComponentInParent<UIPanel>().AddUIComponent<UISprite>();
+            sprite.width = width;
+            sprite.height = component.height;
+            sprite.zOrder = component.zOrder + 1;
+            return sprite;
+
         }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
@@ -376,7 +400,7 @@ namespace Klyte.Commons.UI
             }
         }
 
-        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string, string[]> FilterFunc, Func<int, string[], string> OnSelectItem, Func<string> GetCurrentSelectionName)
+        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string, string[]> FilterFunc, Func<string, int, string[], string> OnSelectItem)
         {
             var selectorPanel = textField.parent as UIPanel;
             selectorPanel.autoLayout = true;
@@ -391,25 +415,33 @@ namespace Klyte.Commons.UI
             result.isVisible = false;
             textField.eventGotFocus += (x, t) =>
             {
-                result.isVisible = true;
-                result.items = FilterFunc(textField.text);
-                result.selectedIndex = Array.IndexOf(result.items, textField.text);
-                result.EnsureVisible(result.selectedIndex);
-                textField.SelectAll();
+                var items = FilterFunc(textField.text);
+                if (items == null)
+                {
+                    result.isVisible = false;
+                }
+                else
+                {
+                    result.isVisible = true;
+                    result.items = items;
+                    result.selectedIndex = Array.IndexOf(result.items, textField.text);
+                    result.EnsureVisible(result.selectedIndex);
+                    textField.SelectAll();
+                }
             };
             textField.eventLostFocus += (x, t) =>
             {
                 if (result.selectedIndex >= 0)
                 {
-                    textField.text = OnSelectItem(result.selectedIndex, result.items);
+                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
                 }
                 else if (result.items.Contains(textField.text))
                 {
-                    OnSelectItem(Array.IndexOf(result.items, textField.text), result.items);
+                    textField.text = OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? "";
                 }
                 else
                 {
-                    textField.text = GetCurrentSelectionName();
+                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
                 }
                 result.isVisible = false;
             };
@@ -417,35 +449,40 @@ namespace Klyte.Commons.UI
             {
                 if (textField.hasFocus)
                 {
-                    result.items = FilterFunc(textField.text);
-                    result.Invalidate();
-                }
-            };
-            result.eventSelectedIndexChanged += (x, y) =>
-            {
-                if (!textField.hasFocus)
-                {
-                    if (result.selectedIndex >= 0)
+                    var items = FilterFunc(textField.text);
+                    if (items == null)
                     {
-                        textField.text = OnSelectItem(result.selectedIndex, result.items);
+                        result.isVisible = false;
                     }
                     else
                     {
-                        textField.text = "";
+                        result.isVisible = true;
+                        result.items = items;
+                        result.Invalidate();
                     }
                 }
             };
+            result.eventItemMouseUp += (x, y) =>
+            {
+                textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                result.isVisible = false;
+            };
+            result.eventMouseWheel += (x, y) => y.Use();
             return result;
         }
 
-        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string> GetCurrentValue, Func<int, string[], string> OnValueChanged)
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight =290)
         {
             AddTextField(name, out inputField, helper, null);
+            inputField.submitOnFocusLost = true;
 
             KlyteMonoUtils.UiTextFieldDefaultsForm(inputField);
-            listPopup = ConfigureListSelectionPopupForUITextField(inputField, OnFilterChanged, OnValueChanged, GetCurrentValue);
-            listPopup.height = 290;
+            listPopup = ConfigureListSelectionPopupForUITextField(inputField, OnFilterChanged, OnValueChanged);
+            listPopup.height = popupHeight;
             listPopup.width -= 20;
+            listPopup.itemHeight = 15;
+            listPopup.textScale = 0.7f;
+            listPopup.itemPadding = new RectOffset(5, 5, 1, 1);
         }
 
 

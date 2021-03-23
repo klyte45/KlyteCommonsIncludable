@@ -25,22 +25,23 @@ namespace Klyte.Commons.Interfaces
 
         public IDataExtensor Deserialize(Type type, byte[] data)
         {
-            string content;
-            if (data[0] == '<')
-            {
-                content = Encoding.UTF8.GetString(data);
-            }
-            else
-            {
-                content = ZipUtils.Unzip(data);
-            }
-
-            return XmlUtils.DefaultXmlDeserialize<U>(content);
+            string content = data[0] == '<' ? Encoding.UTF8.GetString(data) : ZipUtils.Unzip(data);
+            if (CommonProperties.DebugMode) LogUtils.DoLog($"Deserializing {typeof(U)}:\n{content}");
+            var result = XmlUtils.DefaultXmlDeserialize<U>(content);
+            AfterDeserialize(result);
+            return result;
         }
 
-        public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((U)this, false));
+        public byte[] Serialize()
+        {
+            var xml = XmlUtils.DefaultXmlSerialize((U)this, CommonProperties.DebugMode);
+            if (CommonProperties.DebugMode) LogUtils.DoLog($"Serializing  {typeof(U)}:\n{xml}");
+            return ZipUtils.Zip(xml);
+        }
+
         public virtual void OnReleased() { }
 
         public virtual void LoadDefaults() { }
+        public virtual void AfterDeserialize(U loadedData) { }
     }
 }

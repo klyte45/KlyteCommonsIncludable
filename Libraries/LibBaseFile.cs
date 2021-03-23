@@ -12,7 +12,8 @@ namespace Klyte.Commons.Libraries
         private static LIB m_instance;
         public static LIB Instance
         {
-            get {
+            get
+            {
                 if (m_instance == null)
                 {
                     m_instance = LoadInstance();
@@ -30,9 +31,8 @@ namespace Klyte.Commons.Libraries
         protected static LIB LoadInstance()
         {
             var newVal = new LIB();
-            if (File.Exists(newVal.DefaultXmlFileBaseFullPath))
-            {
-                return XmlUtils.DefaultXmlDeserialize<LIB>(File.ReadAllText(newVal.DefaultXmlFileBaseFullPath), (x, y) =>
+            return File.Exists(newVal.DefaultXmlFileBaseFullPath)
+                ? XmlUtils.DefaultXmlDeserialize<LIB>(File.ReadAllText(newVal.DefaultXmlFileBaseFullPath), (x, y) =>
                 {
                     K45DialogControl.ShowModal(new K45DialogControl.BindProperties
                     {
@@ -44,22 +44,21 @@ namespace Klyte.Commons.Libraries
                         textButton2 = Locale.Get("K45_CMNS_LIB_ANERROROCURREDWHILELOADING_OPT_GOTOFILE"),
                         showButton3 = true,
                         textButton3 = Locale.Get("EXCEPTION_OK"),
-                    }, (x) =>
+                    }, (z) =>
                      {
-                         if (x == 1)
+                         if (z == 1)
                          {
                              File.Delete(newVal.DefaultXmlFileBaseFullPath);
                          }
-                         if (x == 2)
+                         if (z == 2)
                          {
                              ColossalFramework.Utils.OpenInFileBrowser(newVal.DefaultXmlFileBaseFullPath);
                              return false;
                          }
                          return true;
                      });
-                });
-            }
-            return newVal;
+                })
+                : newVal;
         }
     }
 }

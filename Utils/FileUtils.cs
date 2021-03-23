@@ -36,13 +36,10 @@ namespace Klyte.Commons.Utils
             })[0], out workshopId);
         }
 
-        public static void ScanPrefabsFolders<T>(string filenameToSearch, Action<FileStream, T> action) where T : PrefabInfo
+        public static void ScanPrefabsFolders<T>(string filenameToSearch, Action<FileStream, T> action) where T : PrefabInfo => ScanPrefabsFolders(new Dictionary<string, Action<FileStream, T>>
         {
-            ScanPrefabsFolders(new Dictionary<string, Action<FileStream, T>>
-            {
-                [filenameToSearch] = action
-            });
-        }
+            [filenameToSearch] = action
+        });
 
         public static void ScanPrefabsFolders<T>(Dictionary<string, Action<FileStream, T>> actions) where T : PrefabInfo
         {
@@ -63,8 +60,10 @@ namespace Klyte.Commons.Utils
                                 list.Add(filePath);
                                 if (File.Exists(filePath))
                                 {
-                                    using FileStream stream = File.OpenRead(filePath);
-                                    actions[filenameToSearch](stream, loaded);
+                                    using (FileStream stream = File.OpenRead(filePath))
+                                    {
+                                        actions[filenameToSearch](stream, loaded);
+                                    }
                                 }
                             }
                         }
@@ -146,8 +145,10 @@ namespace Klyte.Commons.Utils
                         list.Add(filePath);
                         if (File.Exists(filePath))
                         {
-                            using FileStream stream = File.OpenRead(filePath);
-                            action(stream, package, asset);
+                            using (FileStream stream = File.OpenRead(filePath))
+                            {
+                                action(stream, package, asset);
+                            }
                         }
                     }
                 }
