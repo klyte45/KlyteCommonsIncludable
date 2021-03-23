@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Klyte.Commons.Interfaces
 {
-    public sealed class ExtensorContainer : Singleton<ExtensorContainer>, ISerializableDataExtension
+    public sealed class ExtensorContainer : SingletonLite<ExtensorContainer>, ISerializableDataExtension
     {
         public static event Action OnDataLoaded;
 
@@ -118,7 +118,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 if (data.Length == 0)
                 {
-                    return;
+                    continue;
                 }
                 try
                 {
@@ -137,6 +137,7 @@ namespace Klyte.Commons.Interfaces
             {
                 item.OnReleased();
             }
+            instance.Instances = null;
         }
         #endregion
     }
