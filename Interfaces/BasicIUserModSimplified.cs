@@ -257,7 +257,7 @@ namespace Klyte.Commons.Interfaces
 
 
 
-        protected void CreateGroup9(UIHelperExtension helper)
+        protected virtual void CreateGroup9(UIHelperExtension helper)
         {
             UIHelperExtension group9 = helper.AddGroupExtended(Locale.Get("K45_BETAS_EXTRA_INFO"));
             Group9SettingsUI(group9);
