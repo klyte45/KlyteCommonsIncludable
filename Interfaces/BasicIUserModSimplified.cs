@@ -38,7 +38,8 @@ namespace Klyte.Commons.Interfaces
 
         public static ulong ModId
         {
-            get {
+            get
+            {
                 if (m_modId == 0)
                 {
                     m_modId = Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
@@ -55,7 +56,8 @@ namespace Klyte.Commons.Interfaces
 
         public static string RootFolder
         {
-            get {
+            get
+            {
                 if (m_rootFolder == null)
                 {
                     m_rootFolder = Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
@@ -136,11 +138,7 @@ namespace Klyte.Commons.Interfaces
             Redirector.UnpatchAll();
             PatchesApply();
         }
-        public virtual void OnReleased()
-        {
-
-            PluginManager.instance.eventPluginsStateChanged -= SearchIncompatibilitiesModal;
-        }
+        public virtual void OnReleased() => PluginManager.instance.eventPluginsStateChanged -= SearchIncompatibilitiesModal;
 
         protected void PatchesApply()
         {
@@ -167,7 +165,8 @@ namespace Klyte.Commons.Interfaces
         public static string FullVersion => MinorVersion + " r" + typeof(U).Assembly.GetName().Version.Revision;
         public static string Version
         {
-            get {
+            get
+            {
                 if (typeof(U).Assembly.GetName().Version.Minor == 0 && typeof(U).Assembly.GetName().Version.Build == 0)
                 {
                     return typeof(U).Assembly.GetName().Version.Major.ToString();
@@ -200,12 +199,12 @@ namespace Klyte.Commons.Interfaces
 
             m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
 
-            if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK" || Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
+            if (!Locale.Exists(KlyteLocaleManager.m_defaultTestKey) || Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
             {
                 if (Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) != CommonProperties.ModName)
                 {
                     KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
-                    if (Locale.Get(KlyteLocaleManager.m_defaultTestKey) != "OK")
+                    if (!Locale.Exists(KlyteLocaleManager.m_defaultTestKey))
                     {
                         LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
                     }
@@ -433,10 +432,7 @@ namespace Klyte.Commons.Interfaces
                 return PluginUtils.VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
             }
         }
-        public void OnViewStart()
-        {
-            ExtraOnViewStartActions();
-        }
+        public void OnViewStart() => ExtraOnViewStartActions();
 
         protected virtual void ExtraOnViewStartActions() { }
 

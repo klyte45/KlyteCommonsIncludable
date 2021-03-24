@@ -357,7 +357,7 @@ namespace Klyte.Commons.UI
                 component.width -= width;
             }
             var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
-            result.zOrder = component.zOrder + 1;
+            result.forceZOrder = component.zOrder + 1;
             result.canFocus = false;
             return result;
         }
