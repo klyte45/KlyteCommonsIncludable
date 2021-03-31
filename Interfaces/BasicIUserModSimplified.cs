@@ -315,6 +315,8 @@ namespace Klyte.Commons.Interfaces
 
         public virtual void Group9SettingsUI(UIHelperExtension group9) { }
 
+        protected virtual Tuple<string, string> GetButtonLink() => null;
+
         public bool ShowVersionInfoPopup(bool force = false)
         {
             if ((needShowPopup &&
@@ -335,7 +337,7 @@ namespace Klyte.Commons.Interfaces
                         notes = notes.Substring("<extended>".Length);
                     }
                     string text = $"{SimpleName} was updated! Release notes:\n\n{notes}\n\n<sprite K45_K45Button> Current Version: <color #FFFF00>{FullVersion}</color>";
-
+                    var targetUrl = GetButtonLink();
                     ShowModal(new BindProperties()
                     {
                         icon = IconName,
@@ -344,10 +346,10 @@ namespace Klyte.Commons.Interfaces
                         textButton1 = "Okay!",
                         showButton2 = true,
                         textButton2 = "See the news on the mod page at Workshop!",
-                        showButton3 = true,
-                        textButton3 = "Follow Klyte45 on Twitter!",
+                        showButton3 = !(targetUrl is null),
+                        textButton3 = targetUrl?.First ?? "",
                         showButton4 = true,
-                        textButton4 = "Follow Klyte45 on Facebook!",
+                        textButton4 = "Follow Klyte45 on Twitter!",
                         showButton5 = true,
                         textButton5 = "Subscribe to Klyte45 channel on YouTube!",
                         messageAlign = UIHorizontalAlignment.Left,
@@ -367,10 +369,13 @@ namespace Klyte.Commons.Interfaces
                                 ColossalFramework.Utils.OpenUrlThreaded("https://steamcommunity.com/sharedfiles/filedetails/?id=" + ModId);
                                 break;
                             case 3:
-                                ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
+                                if (!(targetUrl is null))
+                                {
+                                    ColossalFramework.Utils.OpenUrlThreaded(targetUrl.Second);
+                                }
                                 break;
                             case 4:
-                                ColossalFramework.Utils.OpenUrlThreaded("https://fb.com/klyte45");
+                                ColossalFramework.Utils.OpenUrlThreaded("https://twitter.com/klyte45");
                                 break;
                             case 5:
                                 ColossalFramework.Utils.OpenUrlThreaded("https://youtube.com/klyte45");
