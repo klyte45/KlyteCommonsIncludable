@@ -19,12 +19,14 @@ namespace Klyte.Commons.UI
     internal static class DefaultEditorUILib
     {
         #region UI Utils
-        public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, PropertyChangedEventHandler<Color> onSelectedColorChanged)
+
+        public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, OnColorChanged onSelectedColorChanged, out UILabel label)
         {
-            m_colorEditor = helper.AddColorPicker(text, Color.white, (x) => { });
-            KlyteMonoUtils.LimitWidthAndBox(m_colorEditor.parent.GetComponentInChildren<UILabel>(), helper.Self.width / 2, true);
-            m_colorEditor.eventSelectedColorChanged += onSelectedColorChanged;
+            m_colorEditor = helper.AddColorPicker(text, Color.white, onSelectedColorChanged);
+            label = m_colorEditor.parent.GetComponentInChildren<UILabel>();
+            KlyteMonoUtils.LimitWidthAndBox(label, helper.Self.width / 2, true);
         }
+        public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, OnColorChanged onSelectedColorChanged) => AddColorField(helper, text, out m_colorEditor, onSelectedColorChanged, out _);
         public static void AddIntField(string label, out UITextField field, UIHelperExtension parentHelper, Action<int> onChange, bool acceptNegative)
         {
             field = parentHelper.AddIntField(label, 0, onChange, acceptNegative);
@@ -349,14 +351,14 @@ namespace Klyte.Commons.UI
             icon.color = color;
         }
 
-        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true, int width = 40)
+        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltipLocale = null, bool reduceSize = true, int width = 40)
         {
             if (reduceSize)
             {
                 component.minimumSize -= new Vector2(0, width);
                 component.width -= width;
             }
-            var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
+            var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltipLocale, width);
             result.forceZOrder = component.zOrder + 1;
             result.canFocus = false;
             return result;
@@ -471,7 +473,7 @@ namespace Klyte.Commons.UI
             return result;
         }
 
-        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight =290)
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
         {
             AddTextField(name, out inputField, helper, null);
             inputField.submitOnFocusLost = true;

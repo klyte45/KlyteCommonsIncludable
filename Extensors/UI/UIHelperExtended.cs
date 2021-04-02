@@ -654,7 +654,7 @@ namespace Klyte.Commons.Extensors
                 UIColorField colorField = KlyteMonoUtils.CreateColorField(container);
                 colorField.selectedColor = defaultValue;
 
-                colorField.eventSelectedColorReleased += (cp, value) => eventCallback(value);
+                colorField.eventSelectedColorChanged += (cp, value) => eventCallback(value);
 
                 return colorField;
             }
