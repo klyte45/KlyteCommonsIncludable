@@ -239,22 +239,43 @@ namespace Klyte.Commons.Utils
             {
                 return false;
             }
-            if (requireSameDirection)
+            ref NetSegment seg1 = ref nm.m_segments.m_buffer[segment1];
+            ref NetSegment seg2 = ref nm.m_segments.m_buffer[segment2];
+            if (!(seg1.Info.m_hasBackwardVehicleLanes && seg1.Info.m_hasForwardVehicleLanes) || !(seg2.Info.m_hasBackwardVehicleLanes && seg2.Info.m_hasForwardVehicleLanes))
             {
-                NetSegment seg1 = nm.m_segments.m_buffer[segment1];
-                NetSegment seg2 = nm.m_segments.m_buffer[segment2];
-                if (!(seg1.Info.m_hasBackwardVehicleLanes && seg1.Info.m_hasForwardVehicleLanes) || !(seg2.Info.m_hasBackwardVehicleLanes && seg2.Info.m_hasForwardVehicleLanes))
+                if ((seg1.m_endNode == seg2.m_endNode || seg1.m_startNode == seg2.m_startNode))
                 {
-                    if ((seg1.m_endNode == seg2.m_endNode || seg1.m_startNode == seg2.m_startNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) == (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                    if (seg1.m_endNode == seg2.m_endNode && Mathf.Abs(seg1.m_endDirection.GetAngleXZ() - seg2.m_endDirection.GetAngleXZ()) < 90)
                     {
                         return false;
                     }
-                    if ((seg1.m_endNode == seg2.m_startNode || seg1.m_startNode == seg2.m_endNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                    if (seg1.m_startNode == seg2.m_startNode && Mathf.Abs(seg1.m_startDirection.GetAngleXZ() - seg2.m_startDirection.GetAngleXZ()) < 90)
+                    {
+                        return false;
+                    }
+
+                    if ((nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) == (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert) && requireSameDirection)
+                    {
+                        return false;
+                    }
+                }
+                if ((seg1.m_endNode == seg2.m_startNode || seg1.m_startNode == seg2.m_endNode))
+                {
+                    if (seg1.m_endNode == seg2.m_startNode && Mathf.Abs(seg1.m_endDirection.GetAngleXZ() - seg2.m_startDirection.GetAngleXZ()) < 90)
+                    {
+                        return false;
+                    }
+                    if (seg1.m_startNode == seg2.m_endNode && Mathf.Abs(seg1.m_startDirection.GetAngleXZ() - seg2.m_endDirection.GetAngleXZ()) < 90)
+                    {
+                        return false;
+                    }
+                    if ((nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert) && requireSameDirection)
                     {
                         return false;
                     }
                 }
             }
+
 
             if (requireSameSize)
             {
