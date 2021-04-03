@@ -157,10 +157,10 @@ namespace Klyte.Commons.UI
             KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
             label.padding.top = 10;
         }
-        public static void AddTextField(string title, out UITextField textField, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, OnTextChanged onChanged = null) => AddTextField(title, out textField, out UILabel label, parentHelper, onSubmit, onChanged);
-        public static void AddTextField(string title, out UITextField textField, out UILabel label, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, OnTextChanged onChanged = null)
+        public static void AddTextField(string title, out UITextField textField, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null) => AddTextField(title, out textField, out UILabel label, parentHelper, onSubmit, defaultValue, onChanged);
+        public static void AddTextField(string title, out UITextField textField, out UILabel label, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null)
         {
-            textField = parentHelper.AddTextField(title, onChanged, "", onSubmit);
+            textField = parentHelper.AddTextField(title, onChanged, defaultValue ?? "", onSubmit);
             textField.width = (parentHelper.Self.width / 2) - 10;
             textField.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
             textField.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
@@ -378,10 +378,25 @@ namespace Klyte.Commons.UI
 
         }
 
-        public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
+        public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, bool defaultState = false)
         {
-            checkbox = helper.AddCheckboxLocale(localeId, false, onCheckChanged);
+            checkbox = helper.AddCheckboxLocale(localeId, defaultState, onCheckChanged);
             KlyteMonoUtils.LimitWidthAndBox(checkbox.label, helper.Self.width - 50);
+        }
+
+
+
+        public static void AddIconCheckbox(string icon, string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, Vector2 size, bool defaultState = false)
+        {
+            checkbox = helper.AddCheckboxLocale(localeId, defaultState, onCheckChanged);
+            GameObject.Destroy(checkbox.label);
+            checkbox.tooltipLocaleID = localeId;
+            checkbox.size = size;
+            ((UISprite)checkbox.checkedBoxObject).spriteName = icon;
+            ((UISprite)checkbox.checkedBoxObject).size = size;
+            ((UISprite)checkbox.components[0]).spriteName = icon;
+            ((UISprite)checkbox.components[0]).size = size;
+            ((UISprite)checkbox.components[0]).color = new Color(0.2f, 0.2f, 0.2f, 1);
         }
 
         public static void InitTabButton(UIComponent parent, out UIButton tabTemplate, string text, Vector2 size, MouseEventHandler onClicked)
