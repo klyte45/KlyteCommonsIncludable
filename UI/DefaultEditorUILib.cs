@@ -165,6 +165,8 @@ namespace Klyte.Commons.UI
             textField.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
             textField.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
             label = textField.parent.GetComponentInChildren<UILabel>();
+            label.padding.top = 4;
+            label.padding.right = 8;
             KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10, true);
         }
         public static UIListBox CreatePopup(UIPanel rootContainer)
@@ -216,6 +218,7 @@ namespace Klyte.Commons.UI
             cbPanel.autoFitChildrenVertically = true;
             cbPanel.width = parentHelper.Self.width;
             label.width = parentHelper.Self.width - 10;
+            label.autoHeight = !autoSize;
             cbPanel.AttachUIComponent(label.gameObject);
         }
 
