@@ -10,7 +10,7 @@ using System;
 using System.Linq;
 using Klyte.Commons.Utils;
 
-namespace Klyte.Commons.Extensors
+namespace Klyte.Commons.Extensions
 {
     public class UITabstripAutoResize : UITabstrip
     {

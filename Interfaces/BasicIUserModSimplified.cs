@@ -4,7 +4,7 @@ using ColossalFramework.Packaging;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.i18n;
 using Klyte.Commons.Utils;
 using System;

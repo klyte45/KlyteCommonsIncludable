@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ExtensionInterfaceDictionaryStructValSimplImpl<U, T, D> : DataExtensorBase<U>
+    public abstract class ExtensionInterfaceDictionaryStructValSimplImpl<U, T, D> : DataExtensionBase<U>
         where U : ExtensionInterfaceDictionaryStructValSimplImpl<U, T, D>, new()
         where T : class
         where D : struct

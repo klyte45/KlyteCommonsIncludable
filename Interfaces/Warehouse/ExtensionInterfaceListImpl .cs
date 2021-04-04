@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ExtensionInterfaceListImpl<T, U> : DataExtensorBase<U> where T : Enum, IConvertible where U : ExtensionInterfaceListImpl<T, U>, new()
+    public abstract class ExtensionInterfaceListImpl<T, U> : DataExtensionBase<U> where T : Enum, IConvertible where U : ExtensionInterfaceListImpl<T, U>, new()
     {
         public abstract bool AllowGlobal { get; }
 
