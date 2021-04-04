@@ -2,7 +2,7 @@
 using ColossalFramework.Math;
 using ColossalFramework.UI;
 using Harmony;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.Utils;
 using System.Collections.Generic;
 using System.Linq;

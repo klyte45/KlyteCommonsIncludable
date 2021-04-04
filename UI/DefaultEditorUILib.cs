@@ -2,7 +2,7 @@
 using ColossalFramework.Globalization;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.Interfaces;
 using Klyte.Commons.Libraries;
 using Klyte.Commons.UI.SpriteNames;
@@ -19,12 +19,14 @@ namespace Klyte.Commons.UI
     internal static class DefaultEditorUILib
     {
         #region UI Utils
-        public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, PropertyChangedEventHandler<Color> onSelectedColorChanged)
+
+        public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, OnColorChanged onSelectedColorChanged, out UILabel label)
         {
-            m_colorEditor = helper.AddColorPicker(text, Color.white, (x) => { });
-            KlyteMonoUtils.LimitWidthAndBox(m_colorEditor.parent.GetComponentInChildren<UILabel>(), helper.Self.width / 2, true);
-            m_colorEditor.eventSelectedColorChanged += onSelectedColorChanged;
+            m_colorEditor = helper.AddColorPicker(text, Color.white, onSelectedColorChanged);
+            label = m_colorEditor.parent.GetComponentInChildren<UILabel>();
+            KlyteMonoUtils.LimitWidthAndBox(label, helper.Self.width / 2, true);
         }
+        public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, OnColorChanged onSelectedColorChanged) => AddColorField(helper, text, out m_colorEditor, onSelectedColorChanged, out _);
         public static void AddIntField(string label, out UITextField field, UIHelperExtension parentHelper, Action<int> onChange, bool acceptNegative)
         {
             field = parentHelper.AddIntField(label, 0, onChange, acceptNegative);
@@ -155,10 +157,10 @@ namespace Klyte.Commons.UI
             KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
             label.padding.top = 10;
         }
-        public static void AddTextField(string title, out UITextField textField, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, OnTextChanged onChanged = null) => AddTextField(title, out textField, out UILabel label, parentHelper, onSubmit, onChanged);
-        public static void AddTextField(string title, out UITextField textField, out UILabel label, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, OnTextChanged onChanged = null)
+        public static void AddTextField(string title, out UITextField textField, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null) => AddTextField(title, out textField, out UILabel label, parentHelper, onSubmit, defaultValue, onChanged);
+        public static void AddTextField(string title, out UITextField textField, out UILabel label, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null)
         {
-            textField = parentHelper.AddTextField(title, onChanged, "", onSubmit);
+            textField = parentHelper.AddTextField(title, onChanged, defaultValue ?? "", onSubmit);
             textField.width = (parentHelper.Self.width / 2) - 10;
             textField.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
             textField.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
@@ -349,14 +351,14 @@ namespace Klyte.Commons.UI
             icon.color = color;
         }
 
-        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltip = null, bool reduceSize = true, int width = 40)
+        public static UIButton AddButtonInEditorRow(UIComponent component, CommonsSpriteNames icon, Action onClick, string tooltipLocale = null, bool reduceSize = true, int width = 40)
         {
             if (reduceSize)
             {
                 component.minimumSize -= new Vector2(0, width);
                 component.width -= width;
             }
-            var result = ConfigureActionButton(component.GetComponentInParent<UIPanel>(), icon, (x, y) => onClick(), tooltip, width);
+            var result = ConfigureActionButton(component.parent, icon, (x, y) => onClick(), tooltipLocale, width);
             result.forceZOrder = component.zOrder + 1;
             result.canFocus = false;
             return result;
@@ -376,10 +378,25 @@ namespace Klyte.Commons.UI
 
         }
 
-        public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged)
+        public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, bool defaultState = false)
         {
-            checkbox = helper.AddCheckboxLocale(localeId, false, onCheckChanged);
+            checkbox = helper.AddCheckboxLocale(localeId, defaultState, onCheckChanged);
             KlyteMonoUtils.LimitWidthAndBox(checkbox.label, helper.Self.width - 50);
+        }
+
+
+
+        public static void AddIconCheckbox(string icon, string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, Vector2 size, bool defaultState = false)
+        {
+            checkbox = helper.AddCheckboxLocale(localeId, defaultState, onCheckChanged);
+            GameObject.Destroy(checkbox.label);
+            checkbox.tooltipLocaleID = localeId;
+            checkbox.size = size;
+            ((UISprite)checkbox.checkedBoxObject).spriteName = icon;
+            ((UISprite)checkbox.checkedBoxObject).size = size;
+            ((UISprite)checkbox.components[0]).spriteName = icon;
+            ((UISprite)checkbox.components[0]).size = size;
+            ((UISprite)checkbox.components[0]).color = new Color(0.2f, 0.2f, 0.2f, 1);
         }
 
         public static void InitTabButton(UIComponent parent, out UIButton tabTemplate, string text, Vector2 size, MouseEventHandler onClicked)
@@ -471,7 +488,7 @@ namespace Klyte.Commons.UI
             return result;
         }
 
-        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight =290)
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
         {
             AddTextField(name, out inputField, helper, null);
             inputField.submitOnFocusLost = true;

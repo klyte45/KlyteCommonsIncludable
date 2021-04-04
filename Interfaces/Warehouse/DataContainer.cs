@@ -9,11 +9,11 @@ using System.Linq;
 
 namespace Klyte.Commons.Interfaces
 {
-    public sealed class ExtensorContainer : SingletonLite<ExtensorContainer>, ISerializableDataExtension
+    public sealed class DataContainer : SingletonLite<DataContainer>, ISerializableDataExtension
     {
         public static event Action OnDataLoaded;
 
-        public Dictionary<Type, IDataExtensor> Instances { get; private set; } = new Dictionary<Type, IDataExtensor>();
+        public Dictionary<Type, IDataExtension> Instances { get; private set; } = new Dictionary<Type, IDataExtension>();
 
         #region Serialization
         public IManagers Managers => SerializableDataManager?.managers;
@@ -24,9 +24,9 @@ namespace Klyte.Commons.Interfaces
         public void OnLoadData()
         {
             LogUtils.DoLog($"LOADING DATA {GetType()}");
-            instance.Instances = new Dictionary<Type, IDataExtensor>();
-            List<Type> instancesExt = ReflectionUtils.GetInterfaceImplementations(typeof(IDataExtensor), GetType());
-            var instancesLegacies = ReflectionUtils.GetSubtypesRecursive(typeof(DataExtensorLegacyBase<>), GetType()).ToDictionary(x => x.BaseType.GetGenericArguments()[0], x => x);
+            instance.Instances = new Dictionary<Type, IDataExtension>();
+            List<Type> instancesExt = ReflectionUtils.GetInterfaceImplementations(typeof(IDataExtension), GetType());
+            var instancesLegacies = ReflectionUtils.GetSubtypesRecursive(typeof(DataExtensionLegacyBase<>), GetType()).ToDictionary(x => x.BaseType.GetGenericArguments()[0], x => x);
             LogUtils.DoLog($"SUBTYPE COUNT: {instancesExt.Count}; LEGACY COUNT: {instancesLegacies.Count}");
             foreach (Type type in instancesExt)
             {
@@ -40,7 +40,7 @@ namespace Klyte.Commons.Interfaces
                         foreach (var param in targetParameters)
                         {
                             var targetType = type.MakeGenericType(param);
-                            ProcessExtensor(instancesLegacies, targetType);
+                            ProcessExtension(instancesLegacies, targetType);
                         }
                     }
                     catch (Exception e)
@@ -50,7 +50,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 else
                 {
-                    ProcessExtensor(instancesLegacies, type);
+                    ProcessExtension(instancesLegacies, type);
                 }
             }
 
@@ -61,15 +61,15 @@ namespace Klyte.Commons.Interfaces
             });
         }
 
-        private void ProcessExtensor(Dictionary<Type, Type> instancesLegacies, Type type)
+        private void ProcessExtension(Dictionary<Type, Type> instancesLegacies, Type type)
         {
-            var basicInstance = (IDataExtensor)Activator.CreateInstance(type);
+            var basicInstance = (IDataExtension)Activator.CreateInstance(type);
             if (!SerializableDataManager.EnumerateData().Contains(basicInstance.SaveId))
             {
                 LogUtils.DoLog($"SEARCHING FOR LEGACY {type}");
                 if (instancesLegacies.ContainsKey(type))
                 {
-                    var basicInstanceLegacy = (IDataExtensorLegacy)instancesLegacies[type].GetConstructor(new Type[0]).Invoke(new Type[0]);
+                    var basicInstanceLegacy = (IDataExtensionLegacy)instancesLegacies[type].GetConstructor(new Type[0]).Invoke(new Type[0]);
                     if (!SerializableDataManager.EnumerateData().Contains(basicInstanceLegacy.SaveId))
                     {
                         byte[] storage2 = MemoryStreamToArray(basicInstanceLegacy.SaveId);
@@ -161,7 +161,7 @@ namespace Klyte.Commons.Interfaces
 
         public void OnReleased()
         {
-            foreach (IDataExtensor item in instance.Instances.Values)
+            foreach (IDataExtension item in instance.Instances.Values)
             {
                 item.OnReleased();
             }

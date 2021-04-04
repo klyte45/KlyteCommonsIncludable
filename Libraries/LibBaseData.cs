@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Klyte.Commons.Libraries
 {
-    public abstract class LibBaseData<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtensor
+    public abstract class LibBaseData<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
         where LIB : LibBaseData<LIB, DESC>, new()
         where DESC : ILibable
     {
@@ -13,16 +13,16 @@ namespace Klyte.Commons.Libraries
         public static LIB Instance
         {
             get {
-                if (!ExtensorContainer.instance.Instances.TryGetValue(typeof(LIB), out IDataExtensor result) || result == null)
+                if (!DataContainer.instance.Instances.TryGetValue(typeof(LIB), out IDataExtension result) || result == null)
                 {
-                    ExtensorContainer.instance.Instances[typeof(LIB)] = new LIB();
+                    DataContainer.instance.Instances[typeof(LIB)] = new LIB();
                 }
-                return ExtensorContainer.instance.Instances[typeof(LIB)] as LIB;
+                return DataContainer.instance.Instances[typeof(LIB)] as LIB;
             }
         }
 
 
-        public IDataExtensor Deserialize(Type type, byte[] data)
+        public IDataExtension Deserialize(Type type, byte[] data)
         {
             string content;
             if (data[0] == '<')
