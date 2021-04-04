@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ExtensionInterfaceDictionaryByEnumImpl<T, U, D> : DataExtensorBase<U> where T : Enum, IConvertible where U : ExtensionInterfaceDictionaryByEnumImpl<T, U, D>, new() where D : class
+    public abstract class ExtensionInterfaceDictionaryByEnumImpl<T, U, D> : DataExtensionBase<U> where T : Enum, IConvertible where U : ExtensionInterfaceDictionaryByEnumImpl<T, U, D>, new() where D : class
     {
 
         [XmlElement("DictData")]

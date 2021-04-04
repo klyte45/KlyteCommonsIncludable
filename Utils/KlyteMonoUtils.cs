@@ -1,7 +1,7 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.UI.SpriteNames;
 using System;
 using UnityEngine;
@@ -425,39 +425,55 @@ namespace Klyte.Commons.Utils
         }
         public static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
         {
-            UIPanel panel = popup.GetComponent<UIPanel>();
-            overridden = true;
-            panel.height = 250;
-            CreateUIElement<UITextField>(out UITextField textField, panel.transform, "ColorText", new Vector4(15, 225, 200, 20));
-            UiTextFieldDefaults(textField);
-            textField.normalBgSprite = "TextFieldPanel";
-            textField.maxLength = 6;
-            textField.eventTextChanged += (x, y) =>
+            if (!overridden)
             {
-                if (popup && textField.text.Length == 6)
+                UIPanel panel = popup.GetComponent<UIPanel>();
+                overridden = true;
+                panel.height = 250;
+                CreateUIElement(out UITextField textField, panel.transform, "ColorText", new Vector4(15, 225, 200, 20));
+                UiTextFieldDefaults(textField);
+                textField.normalBgSprite = "TextFieldPanel";
+                textField.maxLength = 6;
+                textField.eventKeyUp += (x, y) =>
                 {
-                    try
+                    if (popup && textField.text.Length == 6)
                     {
-                        Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
-                        colorField.selectedColor = targetColor;
-                        ((UITextField)x).textColor = Color.white;
-                        ((UITextField)x).text = targetColor.ToRGB();
+                        try
+                        {
+                            Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
+                            if (popup.color != targetColor)
+                            {
+                                popup.color = targetColor;
+                                var selStart = ((UITextField)x).selectionStart;
+                                var selEnd = ((UITextField)x).selectionEnd;
+                                colorField.selectedColor = targetColor;
+                                ((UITextField)x).textColor = Color.white;
+                                ((UITextField)x).text = targetColor.ToRGB();
+                                colorField.GetType().GetMethod("OnSelectedColorChanged", RedirectorUtils.allFlags).Invoke(colorField, new object[0]);
+                                ((UITextField)x).selectionStart = selStart;
+                                ((UITextField)x).selectionEnd = selEnd;
+                            }
+                        }
+                        catch
+                        {
+                            ((UITextField)x).textColor = Color.red;
+                        }
                     }
-                    catch
+                    else
                     {
                         ((UITextField)x).textColor = Color.red;
                     }
-                }
-            };
-            popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();
-            textField.text = ((Color32)popup.color).ToRGB();
-            InitCircledButton(panel, out UIButton clearButton, "Niet", (x, y) =>
-            {
-                colorField.selectedColor = Color.clear;
-                textField.text = "";
-            }, null, 20);
-            clearButton.relativePosition = new Vector3(220, 225);
-            clearButton.color = Color.red;
+                };
+                popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();
+                textField.text = ((Color32)popup.color).ToRGB();
+                InitCircledButton(panel, out UIButton clearButton, "Niet", (x, y) =>
+                {
+                    colorField.selectedColor = Color.clear;
+                    textField.text = "";
+                }, null, 20);
+                clearButton.relativePosition = new Vector3(220, 225);
+                clearButton.color = Color.red;
+            }
         }
 
         #endregion

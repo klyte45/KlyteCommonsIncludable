@@ -6,24 +6,24 @@ using System.Xml.Serialization;
 namespace Klyte.Commons.Interfaces
 {
 
-    [XmlRoot("DataExtensor")]
-    public abstract class DataExtensorBase<U> : IDataExtensor where U : DataExtensorBase<U>, new()
+    [XmlRoot("DataExtension")]
+    public abstract class DataExtensionBase<U> : IDataExtension where U : DataExtensionBase<U>, new()
     {
         public abstract string SaveId { get; }
 
         public static U Instance
         {
             get {
-                if (!ExtensorContainer.instance.Instances.TryGetValue(typeof(U), out IDataExtensor result) || result == null)
+                if (!DataContainer.instance.Instances.TryGetValue(typeof(U), out IDataExtension result) || result == null)
                 {
-                    ExtensorContainer.instance.Instances[typeof(U)] = new U();
+                    DataContainer.instance.Instances[typeof(U)] = new U();
                 }
-                return ExtensorContainer.instance.Instances[typeof(U)] as U;
+                return DataContainer.instance.Instances[typeof(U)] as U;
             }
         }
 
 
-        public IDataExtensor Deserialize(Type type, byte[] data)
+        public IDataExtension Deserialize(Type type, byte[] data)
         {
             string content = data[0] == '<' ? Encoding.UTF8.GetString(data) : ZipUtils.Unzip(data);
             if (CommonProperties.DebugMode) LogUtils.DoLog($"Deserializing {typeof(U)}:\n{content}");

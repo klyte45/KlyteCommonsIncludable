@@ -469,7 +469,7 @@ namespace Klyte.Commons.Utils
             }
             Invalidate();
         }
-        public void SetValuesStarts(int[] starts)
+        public void SetValuesStarts(float[] starts)
         {
             if (starts.Length != sliceCount)
             {
