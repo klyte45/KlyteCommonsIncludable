@@ -1,7 +1,7 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.Threading;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;

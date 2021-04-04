@@ -2,7 +2,7 @@
 using ColossalFramework.Globalization;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.Interfaces;
 using Klyte.Commons.Libraries;
 using Klyte.Commons.UI.SpriteNames;

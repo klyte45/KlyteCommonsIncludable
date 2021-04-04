@@ -2,12 +2,12 @@
 
 namespace Klyte.Commons.Interfaces
 {
-    public interface IDataExtensor
+    public interface IDataExtension
     {
         string SaveId { get; }
 
         void LoadDefaults();
-        IDataExtensor Deserialize(Type type, byte[] data);
+        IDataExtension Deserialize(Type type, byte[] data);
         byte[] Serialize();
         void OnReleased();
     }

@@ -3,7 +3,7 @@ using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
 using ColossalFramework.Threading;
 using ColossalFramework.UI;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.i18n;
 using System;
 using System.Collections;

@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ExtensionInterface2LevelIntImpl<U, D> : DataExtensorBase<U> where U : ExtensionInterface2LevelIntImpl<U, D>, new()
+    public abstract class ExtensionInterface2LevelIntImpl<U, D> : DataExtensionBase<U> where U : ExtensionInterface2LevelIntImpl<U, D>, new()
     {
 
         [XmlElement("DictData")]
