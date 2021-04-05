@@ -36,7 +36,7 @@ namespace Klyte.Commons.Utils
                     continue;
                 }
 
-                var value = (TValue) valueSerializer.Deserialize(reader);
+                var value = (TValue)valueSerializer.Deserialize(reader);
                 if (value.Id == null)
                 {
                     continue;
@@ -75,7 +75,8 @@ namespace Klyte.Commons.Utils
         public new TValue this[long key]
         {
             get => base[key];
-            set {
+            set
+            {
                 Remove(key);
                 if (value.Id == null)
                 {
@@ -95,6 +96,23 @@ namespace Klyte.Commons.Utils
             base.Add(value.Id.Value, value);
         }
 
+        public static NonSequentialList<TValue> operator +(NonSequentialList<TValue> left, TValue right)
+        {
+            if (!(right.Id is null))
+            {
+                left[right.Id ?? 0] = right;
+            }
+            return left;
+        }
+
+        public static NonSequentialList<TValue> operator -(NonSequentialList<TValue> left, TValue right)
+        {
+            if (!(right.Id is null))
+            {
+                left.Remove(right.Id ?? 0);
+            }
+            return left;
+        }
 
 
         #endregion
