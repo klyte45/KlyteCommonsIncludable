@@ -239,7 +239,7 @@ namespace Klyte.Commons.UI
             Action actionCopy, out UIButton pasteButton,
             Action actionPaste, out UIButton deleteButton,
             Action actionDelete, Action<string> onLoad,
-            Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
+            Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : class, ILibable
 
         {
             AddLibBox<LIB, DESC>(parentHelper,
@@ -258,7 +258,7 @@ namespace Klyte.Commons.UI
             out UIButton deleteButton, Action actionDelete,
             out UIDropDown libFilesDD, out UIButton libLoadButton, out UIButton libDeleteButton,
             out UITextField libSaveNameField, out UIButton libSaveButton, out UIButton goToFileButton,
-            Action<string> onLoad, Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : ILibable
+            Action<string> onLoad, Func<string> getContentToSave) where LIB : LibBaseFile<LIB, DESC>, new() where DESC : class, ILibable
         {
             KlyteMonoUtils.CreateUIElement(out UIPanel cbPanel, parentHelper.Self.transform);
             UILabel label = UIHelperExtension.AddLabel(cbPanel, Locale.Get("K45_CMNS_CLIPBOARD_TITLE"), parentHelper.Self.width / 2);

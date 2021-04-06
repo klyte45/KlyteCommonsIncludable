@@ -7,7 +7,7 @@ namespace Klyte.Commons.Libraries
 {
     public abstract class LibBaseData<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
         where LIB : LibBaseData<LIB, DESC>, new()
-        where DESC : ILibable
+        where DESC : class,ILibable
     {
         public abstract string SaveId { get; }
         public static LIB Instance
