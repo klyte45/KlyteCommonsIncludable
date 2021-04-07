@@ -94,6 +94,8 @@ namespace Klyte.Commons.Extensions
                 var uICheckBox = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
                 uICheckBox.label.isLocalized = true;
                 uICheckBox.label.localeID = text;
+                uICheckBox.label.disabledTextColor = Color.gray;
+                uICheckBox.disabledColor = Color.gray;
                 uICheckBox.isChecked = defaultValue;
                 if (eventCallback != null)
                 {

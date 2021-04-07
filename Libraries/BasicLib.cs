@@ -1,5 +1,4 @@
 ﻿using Klyte.Commons.Interfaces;
-using Klyte.Commons.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,68 +9,45 @@ namespace Klyte.Commons.Libraries
 {
     public abstract class BasicLib<LIB, DESC>
         where LIB : BasicLib<LIB, DESC>, new()
-        where DESC : ILibable
+        where DESC : class, ILibable
     {
 
         [XmlElement("descriptorsData")]
         public virtual ListWrapper<DESC> SavedDescriptorsSerialized
         {
-            get => new ListWrapper<DESC>() { listVal = m_savedDescriptorsSerialized.ToList() };
-            set {
-                m_savedDescriptorsSerialized = value.listVal.ToArray();
-                UpdateIndex();
-            }
+            get => new ListWrapper<DESC>() { listVal = m_savedDescriptorsSerialized.Values.ToList() };
+            set => m_savedDescriptorsSerialized = value.listVal.ToDictionary(x => x.SaveName, x => x);
         }
 
-        protected void UpdateIndex() => m_indexes = m_savedDescriptorsSerialized.Select((x, y) => Tuple.New(x.SaveName, y)).ToDictionary(x => x.First, (x) => x.Second);
-
         [XmlIgnore]
-        protected Dictionary<string, int> m_indexes = new Dictionary<string, int>();
+        protected Dictionary<string, DESC> m_savedDescriptorsSerialized = new Dictionary<string, DESC>();
 
-        protected DESC[] m_savedDescriptorsSerialized = new DESC[0];
 
         public void Add(string indexName, ref DESC descriptor)
         {
             descriptor.SaveName = indexName;
-            if (!m_indexes.TryGetValue(indexName, out int idxArray))
-            {
-                m_savedDescriptorsSerialized = (m_savedDescriptorsSerialized ?? new DESC[0]).Union(new DESC[] { descriptor }).ToArray();
-            }
-            else
-            {
-                m_savedDescriptorsSerialized[idxArray] = descriptor;
+            m_savedDescriptorsSerialized[indexName] = descriptor;
 
-            }
-            UpdateIndex();
+
             Save();
         }
 
-        private DESC m_nullDesc = default;
 
-        public ref DESC Get(string indexName)
+        public DESC Get(string indexName)
         {
-            if (m_indexes.TryGetValue(indexName ?? "", out int idxArray))
-            {
-                return ref m_savedDescriptorsSerialized[idxArray];
-            }
-            else
-            {
-                m_nullDesc = default;
-                return ref m_nullDesc;
-            }
+            return m_savedDescriptorsSerialized.TryGetValue(indexName ?? "", out DESC val) ? val : null;
         }
 
-        public IEnumerable<string> List() => m_indexes.Keys;
-        public IEnumerable<string> ListWhere(Func<DESC, bool> filter) => m_savedDescriptorsSerialized.Where(x => filter(x)).Select(x => x.SaveName);
+        public IEnumerable<string> List() => m_savedDescriptorsSerialized.Keys;
+        public IEnumerable<string> ListWhere(Func<DESC, bool> filter) => m_savedDescriptorsSerialized.Where(x => filter(x.Value)).Select(x => x.Key);
 
         public void Remove(string indexName)
         {
             if (indexName != null)
             {
-                if (m_indexes.TryGetValue(indexName, out int idxArray))
+                if (m_savedDescriptorsSerialized.ContainsKey(indexName))
                 {
-                    m_savedDescriptorsSerialized = m_savedDescriptorsSerialized.Where(x => x.SaveName != indexName).ToArray();
-                    UpdateIndex();
+                    m_savedDescriptorsSerialized.Remove(indexName);
                     Save();
                 }
             }

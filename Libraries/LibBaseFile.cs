@@ -7,7 +7,7 @@ namespace Klyte.Commons.Libraries
 {
     public abstract class LibBaseFile<LIB, DESC> : BasicLib<LIB, DESC>
     where LIB : LibBaseFile<LIB, DESC>, new()
-    where DESC : ILibable
+    where DESC : class,ILibable
     {
         private static LIB m_instance;
         public static LIB Instance

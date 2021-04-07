@@ -7,7 +7,7 @@ namespace Klyte.Commons.Interfaces
 {
     public abstract class DataExtensionLibBase<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
         where LIB : DataExtensionLibBase<LIB, DESC>, new()
-        where DESC : ILibable
+        where DESC : class,ILibable
     {
         public abstract string SaveId { get; }
         public static LIB Instance
@@ -16,7 +16,9 @@ namespace Klyte.Commons.Interfaces
             {
                 if (!DataContainer.instance.Instances.TryGetValue(typeof(LIB), out IDataExtension result) || result is null)
                 {
-                    DataContainer.instance.Instances[typeof(LIB)] = new LIB();
+                    var newItem = new LIB();
+                    newItem.AfterDeserialize(newItem);
+                    DataContainer.instance.Instances[typeof(LIB)] = newItem;
                 }
                 return DataContainer.instance.Instances[typeof(LIB)] as LIB;
             }
@@ -35,12 +37,14 @@ namespace Klyte.Commons.Interfaces
                 content = ZipUtils.Unzip(data);
             }
 
-            return XmlUtils.DefaultXmlDeserialize<LIB>(content);
+            var result = XmlUtils.DefaultXmlDeserialize<LIB>(content);
+            AfterDeserialize(result);
+            return result;
         }
 
         public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((LIB)this, false));
         public virtual void OnReleased() { }
-
+        public virtual void AfterDeserialize(LIB instance) { }
         public virtual void LoadDefaults() { }
 
         public event Action EventDataChanged;
