@@ -142,7 +142,7 @@ namespace Klyte.Commons.Interfaces
         protected override void CreateGroup9(UIHelperExtension helper)
         {
             base.CreateGroup9(helper);
-            var chk_lowSat = helper.AddCheckboxLocale("K45_CMNS_USE_LOW_SATURATED_BUTTON", UseLowSaturationButton);
+            var chk_lowSat = helper.AddCheckboxLocale("K45_CMNS_USE_LOW_BRIGHT_BUTTON", UseLowSaturationButton);
             helper.Self.eventVisibilityChanged += (x, y) =>
             {
                 if (y)
