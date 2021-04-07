@@ -556,7 +556,7 @@ namespace Klyte.Commons.Utils
 
         #endregion
         #region Streets Addressing
-        private static readonly ushort[] m_closestSegsFind = new ushort[16];
+        private static readonly ushort[] m_closestSegsFind = new ushort[64];
         public static bool GetBasicAddressStreetAndNumber(Vector3 sidewalk, Vector3 midPosBuilding, out int number, out string streetName)
         {
             GetNearestSegment(sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId);
