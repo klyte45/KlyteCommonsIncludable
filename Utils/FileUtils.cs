@@ -85,7 +85,7 @@ namespace Klyte.Commons.Utils
                 }
             }
         }
-        public static void ScanPrefabsFoldersDirectory<T>(string directoryToFind, Action<string, T> action) where T : PrefabInfo
+        public static void ScanPrefabsFoldersDirectory<T>(string directoryToFind, Action<ulong, string, T> action) where T : PrefabInfo
         {
             var list = new List<string>();
             ForEachLoadedPrefab<T>((loaded) =>
@@ -103,7 +103,7 @@ namespace Klyte.Commons.Utils
                             LogUtils.DoLog("DIRECTORY TO FIND: " + filePath);
                             if (Directory.Exists(filePath))
                             {
-                                action(filePath, loaded);
+                                action(asset.package.GetPublishedFileID().AsUInt64, filePath, loaded);
                             }
                         }
                     }
