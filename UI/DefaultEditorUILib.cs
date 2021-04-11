@@ -429,7 +429,34 @@ namespace Klyte.Commons.UI
 
             UIListBox result = CreatePopup(selectorPanel);
 
+            void OnSubmit()
+            {
+                if (result.selectedIndex >= 0)
+                {
+                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                }
+                else if (result.items.Contains(textField.text))
+                {
+                    textField.text = OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? "";
+                }
+                else
+                {
+                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                }
+                result.isVisible = false;
+            }
+
             result.isVisible = false;
+            result.eventLostFocus += (x, t) =>
+            {
+                if (textField.hasFocus)
+                {
+                    return;
+                }
+
+                OnSubmit();
+            };
+            result.eventItemDoubleClicked += (x, t) => OnSubmit();
             textField.eventGotFocus += (x, t) =>
             {
                 var items = FilterFunc(textField.text);
@@ -448,25 +475,18 @@ namespace Klyte.Commons.UI
             };
             textField.eventLostFocus += (x, t) =>
             {
-                if (result.selectedIndex >= 0)
+                if (result.hasFocus)
                 {
-                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                    return;
                 }
-                else if (result.items.Contains(textField.text))
-                {
-                    textField.text = OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? "";
-                }
-                else
-                {
-                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
-                }
-                result.isVisible = false;
+
+                OnSubmit();
             };
-            textField.eventKeyUp += (x, y) =>
+            textField.eventTextChanged += (x, y) =>
             {
-                if (textField.hasFocus)
+                if (Event.current.isKey && textField.hasFocus)
                 {
-                    var items = FilterFunc(textField.text);
+                    var items = FilterFunc(y);
                     if (items == null)
                     {
                         result.isVisible = false;
@@ -489,8 +509,10 @@ namespace Klyte.Commons.UI
         }
 
         public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
+            => AddFilterableInput(name, helper, out inputField, out _, out listPopup, OnFilterChanged, OnValueChanged, popupHeight);
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UILabel lbl, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
         {
-            AddTextField(name, out inputField, helper, null);
+            AddTextField(name, out inputField, out lbl, helper, null);
             inputField.submitOnFocusLost = true;
 
             KlyteMonoUtils.UiTextFieldDefaultsForm(inputField);
