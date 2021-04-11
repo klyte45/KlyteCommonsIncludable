@@ -131,7 +131,7 @@ namespace Klyte.Commons.Interfaces
                     }
                     catch (Exception e)
                     {
-                        LogUtils.DoLog($"{typeof(I)} CORRUPTED DATA! => Data:\n{text}\nException: {e.Message}\n{e.StackTrace}");
+                        LogUtils.DoErrorLog($"{typeof(I)} CORRUPTED DATA! => Data:\n{text}\nException: {e.Message}\n{e.StackTrace}");
                         result = new I
                         {
                             cityId = cityId,
