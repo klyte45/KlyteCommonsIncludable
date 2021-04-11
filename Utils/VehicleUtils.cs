@@ -48,7 +48,7 @@ namespace Klyte.Commons.Utils
                 int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>(fieldInfo)(ai);
                 try
                 {
-                    if (!noLoop)
+                    if (!noLoop && !(info.m_trailers is null))
                     {
                         foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                         {
@@ -121,15 +121,17 @@ namespace Klyte.Commons.Utils
             {
                 try
                 {
-                    foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
+                    if (!(info.m_trailers is null))
                     {
-                        if (trailer.m_info != null)
+                        foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                         {
-                            GetCapacityRelative(trailer.m_info, trailer.m_info.m_vehicleAI, ref relativeParts, out int capacity, true);
-                            totalCapacity += capacity;
+                            if (trailer.m_info != null)
+                            {
+                                GetCapacityRelative(trailer.m_info, trailer.m_info.m_vehicleAI, ref relativeParts, out int capacity, true);
+                                totalCapacity += capacity;
+                            }
                         }
                     }
-
                     for (int i = 0; i < relativeParts.Keys.Count; i++)
                     {
                         relativeParts[relativeParts.Keys.ElementAt(i)] /= totalCapacity;

@@ -34,6 +34,7 @@ namespace Klyte.Commons.Interfaces
 
         public byte[] Serialize()
         {
+            BeforeSerialize();
             var xml = XmlUtils.DefaultXmlSerialize((U)this, CommonProperties.DebugMode);
             if (CommonProperties.DebugMode) LogUtils.DoLog($"Serializing  {typeof(U)}:\n{xml}");
             return ZipUtils.Zip(xml);
@@ -42,6 +43,7 @@ namespace Klyte.Commons.Interfaces
         public virtual void OnReleased() { }
 
         public virtual void LoadDefaults() { }
+        public virtual void BeforeSerialize() { }
         public virtual void AfterDeserialize(U loadedData) { }
     }
 }
