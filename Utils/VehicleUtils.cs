@@ -1,5 +1,4 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Math;
 using ColossalFramework.Threading;
 using Klyte.Commons.Extensions;
 using System;
@@ -14,7 +13,7 @@ namespace Klyte.Commons.Utils
     public class VehicleUtils
     {
         #region Vehicle Utils
-        public static VehicleInfo GetRandomModel(ref Randomizer r, IEnumerable<string> assetList, out string selectedModel)
+        public static VehicleInfo GetRandomModel(IEnumerable<string> assetList, out string selectedModel)
         {
             selectedModel = null;
             if (assetList.Count() == 0)
@@ -22,7 +21,7 @@ namespace Klyte.Commons.Utils
                 return null;
             }
 
-            selectedModel = assetList.ElementAt(r.Int32(0, assetList.Count() - 1));
+            selectedModel = assetList.ElementAt(new System.Random().Next(0, assetList.Count() - 1));
 
             VehicleInfo saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel);
             if (saida == null)

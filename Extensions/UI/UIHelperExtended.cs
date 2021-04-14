@@ -674,7 +674,7 @@ namespace Klyte.Commons.Extensions
 
                 if (eventCallback != null)
                 {
-                    colorField.eventSelectedColorReleased += (cp, value) => eventCallback(value);
+                    colorField.eventSelectedColorChanged += (cp, value) => eventCallback(value);
                 }
 
                 colorField.selectedColor = defaultValue;
