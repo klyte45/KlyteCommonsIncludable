@@ -485,21 +485,34 @@ namespace Klyte.Commons.UI
 
                 OnSubmit();
             };
+            bool alreadyCalling = false;
             textField.eventTextChanged += (x, y) =>
             {
-                if (Event.current.isKey && textField.hasFocus)
+                if (alreadyCalling)
                 {
-                    var items = FilterFunc(y);
-                    if (items == null)
+                    LogUtils.DoErrorLog($"ConfigureListSelectionPopupForUITextField: Recursive eventTextChanged call! {Environment.StackTrace}");
+                }
+                alreadyCalling = true;
+                try
+                {
+                    if (Event.current.isKey && textField.hasFocus)
                     {
-                        result.isVisible = false;
+                        var items = FilterFunc(y);
+                        if (items == null)
+                        {
+                            result.isVisible = false;
+                        }
+                        else
+                        {
+                            result.isVisible = true;
+                            result.items = items;
+                            result.Invalidate();
+                        }
                     }
-                    else
-                    {
-                        result.isVisible = true;
-                        result.items = items;
-                        result.Invalidate();
-                    }
+                }
+                finally
+                {
+                    alreadyCalling = false;
                 }
             };
             result.eventItemMouseUp += (x, y) =>

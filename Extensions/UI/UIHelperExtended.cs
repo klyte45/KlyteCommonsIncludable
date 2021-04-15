@@ -379,9 +379,22 @@ namespace Klyte.Commons.Extensions
                 UITextField uITextField = AddTextfield(m_root, text, defaultContent, out _, out _);
                 if (eventChangedCallback != null)
                 {
+                    bool alreadyCalling = false;
                     uITextField.eventTextChanged += delegate (UIComponent c, string sel)
                 {
-                    eventChangedCallback?.Invoke(sel);
+                    if (alreadyCalling)
+                    {
+                        LogUtils.DoErrorLog($"Recursive eventTextChanged call! {Environment.StackTrace}");
+                    }
+                    alreadyCalling = true;
+                    try
+                    {
+                        eventChangedCallback?.Invoke(sel);
+                    }
+                    finally
+                    {
+                        alreadyCalling = false;
+                    }
                 };
                 }
                 if (eventSubmittedCallback != null)
