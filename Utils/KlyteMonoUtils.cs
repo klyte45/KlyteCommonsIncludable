@@ -264,6 +264,7 @@ namespace Klyte.Commons.Utils
             {
                 boxContainer.minimumSize = new Vector2(maxWidth, 0);
             }
+            label.parent.RemoveUIComponent(label);
             label.transform.SetParent(boxContainer.transform);
             boxContainer.relativePosition = currentRelPos;
             return LimitWidthPrivate(label, maxWidth, alsoMinSize);

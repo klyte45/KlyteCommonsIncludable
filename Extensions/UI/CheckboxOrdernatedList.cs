@@ -79,6 +79,8 @@ namespace Klyte.Commons.Extensions
         private UICheckBox AddCheckboxLocale(string text, bool defaultValue, IdAndWeight idAndWeight, Action<UICheckBox, bool> eventCallback = null)
         {
             var uICheckBox = m_parent.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kCheckBoxTemplate)) as UICheckBox;
+
+            uICheckBox.transform.localScale = Vector3.one;
             uICheckBox.isChecked = defaultValue;
             uICheckBox.label.text = text;
             if (eventCallback != null)

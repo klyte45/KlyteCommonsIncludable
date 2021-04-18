@@ -219,7 +219,7 @@ namespace Klyte.Commons.UI
             cbPanel.width = parentHelper.Self.width;
             label.width = parentHelper.Self.width - 10;
             label.autoHeight = !autoSize;
-            cbPanel.AttachUIComponent(label.gameObject);
+            cbPanel.AttachUIComponent(label.gameObject).transform.localScale = Vector3.one;            
         }
 
         private static Vector2 CalculatePopupSize(UIPanel root, int itemCount, float itemHeight, float listPaddingVertical)
@@ -384,6 +384,11 @@ namespace Klyte.Commons.UI
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, bool defaultState = false)
         {
             checkbox = helper.AddCheckboxLocale(localeId, defaultState, onCheckChanged);
+            KlyteMonoUtils.LimitWidthAndBox(checkbox.label, helper.Self.width - 50);
+        }
+        public static void AddCheckbox(string title, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, bool defaultState = false)
+        {
+            checkbox = (UICheckBox)helper.AddCheckbox(title, defaultState, onCheckChanged);
             KlyteMonoUtils.LimitWidthAndBox(checkbox.label, helper.Self.width - 50);
         }
 
