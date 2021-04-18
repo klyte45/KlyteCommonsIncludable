@@ -597,14 +597,15 @@ namespace Klyte.Commons.Extensions
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
             return null;
         }
-        public UITextField AddIntField(string name, float defaultValue, Action<int> eventSubmittedCallback, bool acceptNegative = true)
+        public UITextField AddIntField(string name, float defaultValue, Action<int> eventSubmittedCallback, out UILabel label, bool acceptNegative = true)
         {
             if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
             {
                 UITextField result;
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
                 uIPanel.transform.localScale = Vector3.one;
-                uIPanel.Find<UILabel>("Label").text = name;
+                label = uIPanel.Find<UILabel>("Label");
+                label.text = name;
                 uIPanel.autoLayout = true;
                 uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
                 uIPanel.wrapLayout = false;
@@ -626,6 +627,7 @@ namespace Klyte.Commons.Extensions
                 return result;
             }
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            label = null;
             return null;
         }
 

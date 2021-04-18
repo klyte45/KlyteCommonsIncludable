@@ -92,7 +92,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 LogUtils.DoLog($"NO DATA TYPE {type} & NO LEGACY");
                 instance.Instances[type] = basicInstance;
-                basicInstance.LoadDefaults();
+                basicInstance.LoadDefaults(SerializableDataManager);
                 return;
             }
             using (var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId)))

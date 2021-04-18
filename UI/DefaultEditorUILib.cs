@@ -27,9 +27,11 @@ namespace Klyte.Commons.UI
             KlyteMonoUtils.LimitWidthAndBox(label, helper.Self.width / 2, true);
         }
         public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, OnColorChanged onSelectedColorChanged) => AddColorField(helper, text, out m_colorEditor, onSelectedColorChanged, out _);
-        public static void AddIntField(string label, out UITextField field, UIHelperExtension parentHelper, Action<int> onChange, bool acceptNegative)
+
+        public static void AddIntField(string label, out UITextField field, UIHelperExtension parentHelper, Action<int> onChange, bool acceptNegative) => AddIntField(label, out field, out _, parentHelper, onChange, acceptNegative);
+        public static void AddIntField(string label, out UITextField field, out UILabel labelUI, UIHelperExtension parentHelper, Action<int> onChange, bool acceptNegative)
         {
-            field = parentHelper.AddIntField(label, 0, onChange, acceptNegative);
+            field = parentHelper.AddIntField(label, 0, onChange, out labelUI, acceptNegative);
             KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
             field.eventMouseWheel += RollInteger;
         }
@@ -219,7 +221,7 @@ namespace Klyte.Commons.UI
             cbPanel.width = parentHelper.Self.width;
             label.width = parentHelper.Self.width - 10;
             label.autoHeight = !autoSize;
-            cbPanel.AttachUIComponent(label.gameObject).transform.localScale = Vector3.one;            
+            cbPanel.AttachUIComponent(label.gameObject).transform.localScale = Vector3.one;
         }
 
         private static Vector2 CalculatePopupSize(UIPanel root, int itemCount, float itemHeight, float listPaddingVertical)
