@@ -260,7 +260,7 @@ namespace Klyte.Commons.Interfaces
         //public ISerializableData SerializableDataManager { get; private set; }
 
         //public void OnCreated(ISerializableData serializableData) => SerializableDataManager = serializableData;
-        public I OnLoadData(ISerializableData serializableData)
+        public I GetLoadData(ISerializableData serializableData)
         {
             if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
             {
