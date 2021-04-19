@@ -6,8 +6,13 @@ namespace Klyte.Commons.Interfaces
 {
     public abstract class ExtensionInterfaceIndexableImpl<R, U> : DataExtensionBase<U> where R : IIdentifiable, new() where U : ExtensionInterfaceIndexableImpl<R, U>, new()
     {
-        [XmlElement("Data")]
         protected NonSequentialList<R> m_cachedList = new NonSequentialList<R>();
+
+
+        [XmlElement("Data")]
+        [Obsolete("XML Serialization only!", true)]
+        public NonSequentialList<R> ItemList { get => m_cachedList; set => m_cachedList = value; }
+
 
         public event Action<long, R> EventOnValueChanged;
 
