@@ -266,14 +266,16 @@ namespace Klyte.Commons.Utils
             }
             label.parent.RemoveUIComponent(label);
             label.transform.SetParent(boxContainer.transform);
+            label.transform.localScale = Vector3.one;
             boxContainer.relativePosition = currentRelPos;
             return LimitWidthPrivate(label, maxWidth, alsoMinSize);
         }
 
-        [Obsolete("Use box version")]
+        [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x) => LimitWidth(x, x.minimumSize.x);
-        [Obsolete("Use box version")]
+        [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
+        [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIInteractiveComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
         private static PropertyChangedEventHandler<Vector2> LimitWidthPrivate(UIComponent x, float maxWidth, bool alsoMinSize)
         {

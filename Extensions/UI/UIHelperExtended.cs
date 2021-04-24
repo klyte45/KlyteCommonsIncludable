@@ -188,7 +188,7 @@ namespace Klyte.Commons.Extensions
                 uIPanel.transform.localScale = Vector3.one;
                 label = uIPanel.Find<UILabel>("Label");
                 if (limitLabelByPanelWidth)
-                { KlyteMonoUtils.LimitWidth(label, (uint)uIPanel.width); }
+                { KlyteMonoUtils.LimitWidthAndBox(label, (uint)uIPanel.width); }
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -219,7 +219,7 @@ namespace Klyte.Commons.Extensions
                 label.isLocalized = true;
                 if (limitLabelByPanelWidth)
                 {
-                    KlyteMonoUtils.LimitWidth(label, (uint)container.width);
+                    KlyteMonoUtils.LimitWidthAndBox(label, (uint)container.width);
                 }
                 UIDropDown uIDropDown = container.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -896,7 +896,7 @@ namespace Klyte.Commons.Extensions
             uipanel.padding = new RectOffset(10, 10, 10, 10);
             uipanel.size = new Vector2(newGroup.Self.size.x, 0f);
 
-            KlyteMonoUtils.LimitWidth(toggleLabel, uipanel.width, true);
+            KlyteMonoUtils.LimitWidthAndBox(toggleLabel, uipanel.width, true);
 
             parentPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
 
