@@ -71,7 +71,12 @@ namespace Klyte.Commons.Interfaces
         }
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
-        public static C Controller { get; private set; }
+        public static C Controller { get {
+                if (LoadingManager.instance.m_currentlyLoading)
+                {
+                    LogUtils.DoErrorLog($"Trying to access controller while loading. NOT ALLOWED!\nAsk at Klyte45's GitHub to fix this. Stacktrace:\n{Environment.StackTrace}");
+                }
+                return controller; } private set => controller = value; }
 
         public virtual void OnCreated(ILoading loading)
         {
@@ -193,6 +198,7 @@ namespace Klyte.Commons.Interfaces
 
         private UIComponent m_onSettingsUiComponent;
         private bool m_showLangDropDown = false;
+        private static C controller;
 
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
