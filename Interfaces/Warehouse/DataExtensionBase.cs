@@ -1,4 +1,5 @@
-﻿using Klyte.Commons.Utils;
+﻿using ICities;
+using Klyte.Commons.Utils;
 using System;
 using System.Text;
 using System.Xml.Serialization;
@@ -19,6 +20,10 @@ namespace Klyte.Commons.Interfaces
                     DataContainer.instance.Instances[typeof(U)] = new U();
                 }
                 return DataContainer.instance.Instances[typeof(U)] as U;
+            }
+            protected set
+            {
+                DataContainer.instance.Instances[typeof(U)] = XmlUtils.CloneViaXml(value);
             }
         }
 
@@ -42,7 +47,7 @@ namespace Klyte.Commons.Interfaces
 
         public virtual void OnReleased() { }
 
-        public virtual void LoadDefaults() { }
+        public virtual void LoadDefaults(ISerializableData serializableData) { }
         public virtual void BeforeSerialize() { }
         public virtual void AfterDeserialize(U loadedData) { }
     }

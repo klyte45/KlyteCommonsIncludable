@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace Klyte.Commons.Interfaces
 {
     [XmlRoot("ConfigWarehouse")]
-    public abstract class ConfigWarehouseBase<T, I> : SingletonLite<I>, ICities.ISerializableDataExtension where T : Enum, IConvertible where I : ConfigWarehouseBase<T, I>, new()
+    public abstract class ConfigWarehouseBase<T, I> where T : Enum, IConvertible where I : ConfigWarehouseBase<T, I>, new()
     {
 
         public const string GLOBAL_CONFIG_INDEX = "DEFAULT";
@@ -37,12 +37,12 @@ namespace Klyte.Commons.Interfaces
         public string DefaultPath => $"{CommonProperties.ModRootFolder }{Path.DirectorySeparatorChar}{ DefaultFileName}";
 
 
-        public static bool GetCurrentConfigBool(T i) => instance.CurrentLoadedCityConfig.GetBool(i);
-        public static void SetCurrentConfigBool(T i, bool? value) => instance.CurrentLoadedCityConfig.SetBool(i, value);
-        public static int GetCurrentConfigInt(T i) => instance.CurrentLoadedCityConfig.GetInt(i);
-        public static void SetCurrentConfigInt(T i, int? value) => instance.CurrentLoadedCityConfig.SetInt(i, value);
-        public static string GetCurrentConfigString(T i) => instance.CurrentLoadedCityConfig.GetString(i);
-        public static void SetCurrentConfigString(T i, string value) => instance.CurrentLoadedCityConfig.SetString(i, value);
+        //public static bool GetCurrentConfigBool(T i) => instance.CurrentLoadedCityConfig.GetBool(i);
+        //public static void SetCurrentConfigBool(T i, bool? value) => instance.CurrentLoadedCityConfig.SetBool(i, value);
+        //public static int GetCurrentConfigInt(T i) => instance.CurrentLoadedCityConfig.GetInt(i);
+        //public static void SetCurrentConfigInt(T i, int? value) => instance.CurrentLoadedCityConfig.SetInt(i, value);
+        //public static string GetCurrentConfigString(T i) => instance.CurrentLoadedCityConfig.GetString(i);
+        //public static void SetCurrentConfigString(T i, string value) => instance.CurrentLoadedCityConfig.SetString(i, value);
 
         public I CurrentLoadedCityConfig => GetConfig(CurrentCityId, CurrentCityName);
 
@@ -254,47 +254,47 @@ namespace Klyte.Commons.Interfaces
 
         #region Serialization
         protected abstract string ID { get; }
-        [XmlIgnore]
-        public IManagers Managers => SerializableDataManager?.managers;
-        [XmlIgnore]
-        public ISerializableData SerializableDataManager { get; private set; }
+        //[XmlIgnore]
+        //public IManagers Managers => SerializableDataManager?.managers;
+        //[XmlIgnore]
+        //public ISerializableData SerializableDataManager { get; private set; }
 
-        public void OnCreated(ISerializableData serializableData) => SerializableDataManager = serializableData;
-        public void OnLoadData()
+        //public void OnCreated(ISerializableData serializableData) => SerializableDataManager = serializableData;
+        public I GetLoadData(ISerializableData serializableData)
         {
             if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
             {
-                return;
+                return null;
             }
-            if (!SerializableDataManager.EnumerateData().Contains(ID))
+            if (!serializableData.EnumerateData().Contains(ID))
             {
-                return;
+                return null;
             }
-            using (var memoryStream = new MemoryStream(SerializableDataManager.LoadData(ID)))
+            using (var memoryStream = new MemoryStream(serializableData.LoadData(ID)))
             {
                 byte[] storage = memoryStream.ToArray();
-                loadedCities[CurrentCityId] = Deserialize(System.Text.Encoding.UTF8.GetString(storage));
+                return Deserialize(System.Text.Encoding.UTF8.GetString(storage));
             }
         }
 
         // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220
-        public void OnSaveData()
-        {
-            if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
-            {
-                return;
-            }
+        //public void OnSaveData()
+        //{
+        //    if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
+        //    {
+        //        return;
+        //    }
 
-            string serialData = Serialize(loadedCities[CurrentCityId]);
-            LogUtils.DoLog($"serialData: {serialData ?? "<NULL>"}");
-            if (serialData == null)
-            {
-                return;
-            }
+        //    string serialData = Serialize(loadedCities[CurrentCityId]);
+        //    LogUtils.DoLog($"serialData: {serialData ?? "<NULL>"}");
+        //    if (serialData == null)
+        //    {
+        //        return;
+        //    }
 
-            byte[] data = System.Text.Encoding.UTF8.GetBytes(serialData);
-            SerializableDataManager.SaveData(ID, data);
-        }
+        //    byte[] data = System.Text.Encoding.UTF8.GetBytes(serialData);
+        //    SerializableDataManager.SaveData(ID, data);
+        //}
 
         #endregion
 

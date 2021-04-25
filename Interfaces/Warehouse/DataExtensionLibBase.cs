@@ -1,4 +1,5 @@
-﻿using Klyte.Commons.Libraries;
+﻿using ICities;
+using Klyte.Commons.Libraries;
 using Klyte.Commons.Utils;
 using System;
 using System.Text;
@@ -45,7 +46,7 @@ namespace Klyte.Commons.Interfaces
         public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((LIB)this, false));
         public virtual void OnReleased() { }
         public virtual void AfterDeserialize(LIB instance) { }
-        public virtual void LoadDefaults() { }
+        public virtual void LoadDefaults(ISerializableData serializableData) { }
 
         public event Action EventDataChanged;
 

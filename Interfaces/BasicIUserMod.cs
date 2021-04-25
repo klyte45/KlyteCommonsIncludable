@@ -249,7 +249,7 @@ namespace Klyte.Commons.Interfaces
         {
             yield return 0;
             yield return 0;
-            m_modsTabstrip.ShowTab(CommonProperties.Acronym);
+            m_modsTabstrip.selectedIndex = m_modsTabstrip.tabs.FindIndex(x => x.name == CommonProperties.Acronym);
         }
 
         public void UnselectTab() => m_modsTabstrip.selectedIndex = -1;
