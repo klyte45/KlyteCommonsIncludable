@@ -646,10 +646,11 @@ namespace Klyte.Commons.Extensions
         }
 
         public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
-        public static UILabel AddLabel(UIComponent parent, string name, float width)
+        public static UILabel AddLabel(UIComponent parent, string name, float width) => AddLabel(parent, name, width, out _);
+        public static UILabel AddLabel(UIComponent parent, string name, float width, out UIPanel container)
         {
             KlyteMonoUtils.CreateUIElement(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
-            KlyteMonoUtils.LimitWidthAndBox(label, width);
+            KlyteMonoUtils.LimitWidthAndBox(label, width, out container);
             label.text = name;
             return label;
         }

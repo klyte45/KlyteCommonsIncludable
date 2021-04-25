@@ -71,12 +71,18 @@ namespace Klyte.Commons.Interfaces
         }
         public string Name => $"{SimpleName} {Version}";
         public abstract string Description { get; }
-        public static C Controller { get {
-                if (LoadingManager.instance.m_currentlyLoading)
+        public static C Controller
+        {
+            get
+            {
+                if (controller is null && LoadingManager.instance.m_currentlyLoading)
                 {
                     LogUtils.DoErrorLog($"Trying to access controller while loading. NOT ALLOWED!\nAsk at Klyte45's GitHub to fix this. Stacktrace:\n{Environment.StackTrace}");
                 }
-                return controller; } private set => controller = value; }
+                return controller;
+            }
+            private set => controller = value;
+        }
 
         public virtual void OnCreated(ILoading loading)
         {
