@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ICities;
+using System;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -6,7 +7,7 @@ namespace Klyte.Commons.Interfaces
     {
         string SaveId { get; }
 
-        void LoadDefaults();
+        void LoadDefaults(ISerializableData serializableData);
         IDataExtension Deserialize(Type type, byte[] data);
         byte[] Serialize();
         void OnReleased();
