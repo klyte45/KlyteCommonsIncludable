@@ -23,7 +23,7 @@ namespace Klyte.Commons.Utils
 
             selectedModel = assetList.ElementAt(new System.Random().Next(0, assetList.Count() - 1));
 
-            VehicleInfo saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel);
+            VehicleInfo saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel ?? "");
             if (saida == null)
             {
                 LogUtils.DoLog("MODEL DOESN'T EXIST!");

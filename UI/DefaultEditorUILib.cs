@@ -368,7 +368,7 @@ namespace Klyte.Commons.UI
             result.canFocus = false;
             return result;
         }
-        public static UISprite AddSpriteInEditorRow(UIComponent component, bool reduceSize = true, float width = 40)
+        public static UISprite AddSpriteInEditorRow(UIComponent component, bool reduceSize = true, float width = 40, float? height = null)
         {
             if (reduceSize)
             {
@@ -377,7 +377,7 @@ namespace Klyte.Commons.UI
             }
             var sprite = component.GetComponentInParent<UIPanel>().AddUIComponent<UISprite>();
             sprite.width = width;
-            sprite.height = component.height;
+            sprite.height = height ?? component.height;
             sprite.zOrder = component.zOrder + 1;
             return sprite;
 

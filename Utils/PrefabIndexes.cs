@@ -33,7 +33,7 @@ namespace Klyte.Commons.Utils
                 return m_propsLoaded;
             }
         }
-        public static string GetListName(T x) => (x?.name?.EndsWith("_Data") ?? false) ? $"{x?.GetLocalizedTitle()}" : x?.name ?? "";
+        public static string GetListName(T x) => x?.GetUncheckedLocalizedTitle();
 
         private Dictionary<string, string> LoadAuthors()
         {

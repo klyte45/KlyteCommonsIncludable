@@ -161,9 +161,9 @@ namespace Klyte.Commons.Interfaces
 
         public void OnReleased()
         {
-            foreach (IDataExtension item in instance.Instances.Values)
+            foreach (IDataExtension item in instance.Instances?.Values)
             {
-                item.OnReleased();
+                item?.OnReleased();
             }
             instance.Instances = null;
         }
