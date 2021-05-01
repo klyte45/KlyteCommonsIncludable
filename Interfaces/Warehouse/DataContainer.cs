@@ -45,7 +45,7 @@ namespace Klyte.Commons.Interfaces
                     }
                     catch (Exception e)
                     {
-                        LogUtils.DoErrorLog($"FAILED CREATING GENERIC PARAM EXTENSOR: {e}");
+                        LogUtils.DoErrorLog($"FAILED CREATING GENERIC PARAM EXTENSION: {e}");
                     }
                 }
                 else
