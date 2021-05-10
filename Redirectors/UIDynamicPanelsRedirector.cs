@@ -31,6 +31,15 @@ namespace Klyte.Commons.Redirectors
             }).Count();
             if (ct == 0)
             {
+                var olderInstance = __instance.m_DynamicPanels.Where(x => x?.name == K45DialogControl.PANEL_ID).FirstOrDefault();
+                if (!(olderInstance is null))
+                {
+                    LogUtils.DoWarnLog($"Harmless notice: Destroying older modal version (v = {olderInstance.panelRoot?.stringUserData})");
+                    olderInstance.Destroy();
+                    Destroy(olderInstance.instance);
+                    Destroy(olderInstance.panelRoot);
+                }
+
                 var listDynPanel = __instance.m_DynamicPanels.Where(x => x?.name != K45DialogControl.PANEL_ID).ToList();
                 listDynPanel.Insert(0, K45DialogControl.CreatePanelInfo(view));
                 __instance.m_DynamicPanels = listDynPanel.ToArray();
@@ -39,7 +48,7 @@ namespace Klyte.Commons.Redirectors
 
         public static void RemovePanel()
         {
-            if(!(UIView.library is null))
+            if (!(UIView.library is null))
             {
                 UIView.library.m_DynamicPanels = UIView.library.m_DynamicPanels.Where(x => x?.name != K45DialogControl.PANEL_ID).ToArray();
             }
