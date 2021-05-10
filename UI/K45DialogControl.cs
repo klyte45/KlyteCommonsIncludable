@@ -5,6 +5,7 @@ using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensions;
 using Klyte.Commons.i18n;
+using Klyte.Commons.Redirectors;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -39,6 +40,7 @@ namespace Klyte.Commons.Utils
             mainPanel.autoLayoutStart = LayoutStart.TopLeft;
             mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
+            
 
             #region Title
             KlyteMonoUtils.CreateUIElement(out UIPanel titleContainer, mainPanel.transform, "TitleContainer");
@@ -528,6 +530,7 @@ namespace Klyte.Commons.Utils
                 title = "Error!",
                 message = $"<color red>{title}</color>" + (message is null ? "" : $"\nDetails:\n\n{message}"),
                 showButton1 = true,
+                showClose = true,
                 textButton1 = Locale.Get("EXCEPTION_OK"),
                 showTextField = false,
                 useFullWindowWidth = true
@@ -831,5 +834,11 @@ namespace Klyte.Commons.Utils
 
 
         #endregion
+
+        public void OnDestroy()
+        {
+            LogUtils.DoWarnLog("PANEL REMOVED");
+            UIDynamicPanelsRedirector.RemovePanel();
+        }
     }
 }
