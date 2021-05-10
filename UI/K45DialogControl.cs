@@ -5,6 +5,7 @@ using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensions;
 using Klyte.Commons.i18n;
+using Klyte.Commons.Redirectors;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20210331";
+        public const string VERSION = "20210508";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -39,6 +40,7 @@ namespace Klyte.Commons.Utils
             mainPanel.autoLayoutStart = LayoutStart.TopLeft;
             mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
+            
 
             #region Title
             KlyteMonoUtils.CreateUIElement(out UIPanel titleContainer, mainPanel.transform, "TitleContainer");
@@ -86,6 +88,8 @@ namespace Klyte.Commons.Utils
             #region Text area
             KlyteMonoUtils.CreateUIElement(out UILabel boxText, mainPanel.transform, "BoxText");
             boxText.minimumSize = new Vector2(800, 60);
+            boxText.maximumSize = new Vector2(0, view.fixedHeight * 0.8f);
+            boxText.clipChildren = true;
             boxText.wordWrap = true;
             boxText.autoSize = false;
             boxText.autoHeight = true;
@@ -189,18 +193,15 @@ namespace Klyte.Commons.Utils
             KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
         }
 
-        private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property)
+        private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property) => new BindPropertyByKey.BindingInfo()
         {
-            return new BindPropertyByKey.BindingInfo()
+            key = key,
+            target = new BindingReference()
             {
-                key = key,
-                target = new BindingReference()
-                {
-                    component = component,
-                    memberName = property
-                }
-            };
-        }
+                component = component,
+                memberName = property
+            }
+        };
         #endregion
 
         public void Awake()
@@ -222,7 +223,7 @@ namespace Klyte.Commons.Utils
 
 
             m_closeButton.eventClicked += (x, y) => Close(0);
-            
+
             m_mainPanel.enabled = true;
 
 
@@ -522,11 +523,32 @@ namespace Klyte.Commons.Utils
                 ShowModalInternal(properties, action);
             }
         }
+        public static void ShowModalError(string title, string message)
+        {
+            BindProperties properties = new BindProperties
+            {
+                title = "Error!",
+                message = $"<color red>{title}</color>" + (message is null ? "" : $"\nDetails:\n\n{message}"),
+                showButton1 = true,
+                showClose = true,
+                textButton1 = Locale.Get("EXCEPTION_OK"),
+                showTextField = false,
+                useFullWindowWidth = true
+            };
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, (x) => true));
+            }
+            else
+            {
+                ShowModalInternal(properties, (x) => true);
+            }
+        }
 
         private static void ShowModalInternal(BindProperties properties, Func<int, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (!(uIComponent is null) && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 addAction(properties.ToDictionary(), action);
             }
@@ -539,7 +561,7 @@ namespace Klyte.Commons.Utils
         public static void UpdateCurrentMessage(string newText)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
+            if (!(uIComponent is null) && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
             {
                 properties.FindBinding("message").property.value = newText;
             }
@@ -552,12 +574,12 @@ namespace Klyte.Commons.Utils
         private static void ShowErrorPanelNotFound()
         {
             UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
-            if (uIComponent != null)
+            if (!(uIComponent is null))
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                if (component != null)
+                if (!(component is null))
                 {
                     string title = $"Mod not loaded";
                     string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
@@ -595,7 +617,7 @@ namespace Klyte.Commons.Utils
         private static void ShowModalPromptTextInternal(BindProperties properties, Func<int, string, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (!(uIComponent is null) && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 bool targetAction(int x)
                 {
@@ -774,46 +796,49 @@ namespace Klyte.Commons.Utils
                 return result;
             }
 
-            public Dictionary<string, object> ToDictionary()
+            public Dictionary<string, object> ToDictionary() => new Dictionary<string, object>()
             {
-                return new Dictionary<string, object>()
-                {
-                    ["title"] = title ?? CommonProperties.ModName,
-                    ["icon"] = icon ?? CommonProperties.ModIcon,
-                    ["showClose"] = showClose,
-                    ["message"] = message,
-                    ["messageAlign"] = messageAlign,
-                    ["showButton1"] = showButton1,
-                    ["showButton2"] = showButton2,
-                    ["showButton3"] = showButton3,
-                    ["showButton4"] = showButton4,
-                    ["showButton5"] = showButton5,
-                    ["textButton1"] = textButton1,
-                    ["textButton2"] = textButton2,
-                    ["textButton3"] = textButton3,
-                    ["textButton4"] = textButton4,
-                    ["textButton5"] = textButton5,
-                    ["useFullWindowWidth"] = useFullWindowWidth,
-                    ["showTextField"] = showTextField,
-                    ["showDropDown"] = showDropDown,
-                    ["dropDownOptions"] = dropDownOptions,
-                    ["dropDownCurrentSelection"] = dropDownCurrentSelection,
-                    ["defaultTextFieldContent"] = defaultTextFieldContent,
-                    ["imageTexturePath"] = imageTexturePath,
+                ["title"] = title ?? CommonProperties.ModName,
+                ["icon"] = icon ?? CommonProperties.ModIcon,
+                ["showClose"] = showClose,
+                ["message"] = message,
+                ["messageAlign"] = messageAlign,
+                ["showButton1"] = showButton1,
+                ["showButton2"] = showButton2,
+                ["showButton3"] = showButton3,
+                ["showButton4"] = showButton4,
+                ["showButton5"] = showButton5,
+                ["textButton1"] = textButton1,
+                ["textButton2"] = textButton2,
+                ["textButton3"] = textButton3,
+                ["textButton4"] = textButton4,
+                ["textButton5"] = textButton5,
+                ["useFullWindowWidth"] = useFullWindowWidth,
+                ["showTextField"] = showTextField,
+                ["showDropDown"] = showDropDown,
+                ["dropDownOptions"] = dropDownOptions,
+                ["dropDownCurrentSelection"] = dropDownCurrentSelection,
+                ["defaultTextFieldContent"] = defaultTextFieldContent,
+                ["imageTexturePath"] = imageTexturePath,
 
 
-                    ["help_isArticle"] = help_isArticle,
-                    ["help_fullPathName"] = help_fullPathName,
-                    ["help_currentPage"] = help_currentPage,
-                    ["help_featureName"] = help_featureName,
-                    ["help_formatsEntries"] = help_formatsEntries,
-                };
-            }
+                ["help_isArticle"] = help_isArticle,
+                ["help_fullPathName"] = help_fullPathName,
+                ["help_currentPage"] = help_currentPage,
+                ["help_featureName"] = help_featureName,
+                ["help_formatsEntries"] = help_formatsEntries,
+            };
 
             public override string ToString() => string.Join(",", ToDictionary().ToList().Select(x => $"{x.Key}≠{x.Value}").ToArray());
         }
 
 
         #endregion
+
+        public void OnDestroy()
+        {
+            LogUtils.DoWarnLog("PANEL REMOVED");
+            UIDynamicPanelsRedirector.RemovePanel();
+        }
     }
 }
