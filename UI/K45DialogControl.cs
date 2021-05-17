@@ -189,22 +189,34 @@ namespace Klyte.Commons.Utils
             KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
         }
 
-        private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property)
+        private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property) => new BindPropertyByKey.BindingInfo()
         {
-            return new BindPropertyByKey.BindingInfo()
+            key = key,
+            target = new BindingReference()
             {
-                key = key,
-                target = new BindingReference()
-                {
-                    component = component,
-                    memberName = property
-                }
-            };
-        }
+                component = component,
+                memberName = property
+            }
+        };
         #endregion
 
-        public void Awake()
+        public void Awake() => component.stringUserData = VERSION;
+public void Start()
         {
+            try
+            {
+                if (gameObject is null || !gameObject.name.StartsWith("(Library)"))
+                {
+                    Destroy(this);
+                    return;
+                }
+            }
+            catch
+            {
+                Destroy(this);
+                return;
+            }
+            LogUtils.DoWarnLog($"Starting panel at version {VERSION}");
             BindControls();
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
@@ -222,7 +234,7 @@ namespace Klyte.Commons.Utils
 
 
             m_closeButton.eventClicked += (x, y) => Close(0);
-            
+
             m_mainPanel.enabled = true;
 
 
@@ -774,41 +786,38 @@ namespace Klyte.Commons.Utils
                 return result;
             }
 
-            public Dictionary<string, object> ToDictionary()
+            public Dictionary<string, object> ToDictionary() => new Dictionary<string, object>()
             {
-                return new Dictionary<string, object>()
-                {
-                    ["title"] = title ?? CommonProperties.ModName,
-                    ["icon"] = icon ?? CommonProperties.ModIcon,
-                    ["showClose"] = showClose,
-                    ["message"] = message,
-                    ["messageAlign"] = messageAlign,
-                    ["showButton1"] = showButton1,
-                    ["showButton2"] = showButton2,
-                    ["showButton3"] = showButton3,
-                    ["showButton4"] = showButton4,
-                    ["showButton5"] = showButton5,
-                    ["textButton1"] = textButton1,
-                    ["textButton2"] = textButton2,
-                    ["textButton3"] = textButton3,
-                    ["textButton4"] = textButton4,
-                    ["textButton5"] = textButton5,
-                    ["useFullWindowWidth"] = useFullWindowWidth,
-                    ["showTextField"] = showTextField,
-                    ["showDropDown"] = showDropDown,
-                    ["dropDownOptions"] = dropDownOptions,
-                    ["dropDownCurrentSelection"] = dropDownCurrentSelection,
-                    ["defaultTextFieldContent"] = defaultTextFieldContent,
-                    ["imageTexturePath"] = imageTexturePath,
+                ["title"] = title ?? CommonProperties.ModName,
+                ["icon"] = icon ?? CommonProperties.ModIcon,
+                ["showClose"] = showClose,
+                ["message"] = message,
+                ["messageAlign"] = messageAlign,
+                ["showButton1"] = showButton1,
+                ["showButton2"] = showButton2,
+                ["showButton3"] = showButton3,
+                ["showButton4"] = showButton4,
+                ["showButton5"] = showButton5,
+                ["textButton1"] = textButton1,
+                ["textButton2"] = textButton2,
+                ["textButton3"] = textButton3,
+                ["textButton4"] = textButton4,
+                ["textButton5"] = textButton5,
+                ["useFullWindowWidth"] = useFullWindowWidth,
+                ["showTextField"] = showTextField,
+                ["showDropDown"] = showDropDown,
+                ["dropDownOptions"] = dropDownOptions,
+                ["dropDownCurrentSelection"] = dropDownCurrentSelection,
+                ["defaultTextFieldContent"] = defaultTextFieldContent,
+                ["imageTexturePath"] = imageTexturePath,
 
 
-                    ["help_isArticle"] = help_isArticle,
-                    ["help_fullPathName"] = help_fullPathName,
-                    ["help_currentPage"] = help_currentPage,
-                    ["help_featureName"] = help_featureName,
-                    ["help_formatsEntries"] = help_formatsEntries,
-                };
-            }
+                ["help_isArticle"] = help_isArticle,
+                ["help_fullPathName"] = help_fullPathName,
+                ["help_currentPage"] = help_currentPage,
+                ["help_featureName"] = help_featureName,
+                ["help_formatsEntries"] = help_formatsEntries,
+            };
 
             public override string ToString() => string.Join(",", ToDictionary().ToList().Select(x => $"{x.Key}≠{x.Value}").ToArray());
         }
