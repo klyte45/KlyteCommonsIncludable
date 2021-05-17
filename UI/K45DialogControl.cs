@@ -19,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20210508";
+        public const string VERSION = "20210517";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -204,8 +204,23 @@ namespace Klyte.Commons.Utils
         };
         #endregion
 
-        public void Awake()
+        public void Awake() => component.stringUserData = VERSION;
+public void Start()
         {
+            try
+            {
+                if (gameObject is null || !gameObject.name.StartsWith("(Library)"))
+                {
+                    Destroy(this);
+                    return;
+                }
+            }
+            catch
+            {
+                Destroy(this);
+                return;
+            }
+            LogUtils.DoWarnLog($"Starting panel at version {VERSION}");
             BindControls();
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
