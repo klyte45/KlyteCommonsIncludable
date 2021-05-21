@@ -539,7 +539,7 @@ public void Start()
 
         private static void ShowErrorPanelNotFound()
         {
-            UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
+            UIComponent uIComponent = null;//UIView.library.ShowModal("ExceptionPanel");
             if (uIComponent != null)
             {
                 Cursor.lockState = CursorLockMode.None;
