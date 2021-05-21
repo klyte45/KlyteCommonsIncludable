@@ -323,7 +323,7 @@ public void Start()
             }
             else
             {
-                uIComponent = UIView.library.ShowModal("ExceptionPanel");
+                uIComponent = null;//UIView.library.ShowModal("ExceptionPanel");
                 if (uIComponent != null)
                 {
                     Cursor.lockState = CursorLockMode.None;
