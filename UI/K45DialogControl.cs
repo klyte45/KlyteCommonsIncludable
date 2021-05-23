@@ -204,8 +204,23 @@ namespace Klyte.Commons.Utils
         };
         #endregion
 
-        public void Awake()
+        public void Awake() => component.stringUserData = VERSION;
+public void Start()
         {
+            try
+            {
+                if (gameObject is null || !gameObject.name.StartsWith("(Library)"))
+                {
+                    Destroy(this);
+                    return;
+                }
+            }
+            catch
+            {
+                Destroy(this);
+                return;
+            }
+            LogUtils.DoWarnLog($"Starting panel at version {VERSION}");
             BindControls();
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
