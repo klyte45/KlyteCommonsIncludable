@@ -24,13 +24,14 @@ namespace Klyte.Commons.UI
         {
             m_colorEditor = helper.AddColorPicker(text, Color.white, onSelectedColorChanged);
             label = m_colorEditor.parent.GetComponentInChildren<UILabel>();
-            KlyteMonoUtils.LimitWidthAndBox(label, helper.Self.width / 2, true);
+            KlyteMonoUtils.LimitWidthAndBox(label, (helper.Self.width / 2) - 10);
         }
         public static void AddColorField(UIHelperExtension helper, string text, out UIColorField m_colorEditor, OnColorChanged onSelectedColorChanged) => AddColorField(helper, text, out m_colorEditor, onSelectedColorChanged, out _);
         public static void AddIntField(string label, out UITextField field, UIHelperExtension parentHelper, Action<int> onChange, bool acceptNegative)
         {
             field = parentHelper.AddIntField(label, 0, onChange, acceptNegative);
-            KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
+            var labelIt = field.parent.GetComponentInChildren<UILabel>();
+            KlyteMonoUtils.LimitWidthAndBox(labelIt, (parentHelper.Self.width / 2) - 10);
             field.eventMouseWheel += RollInteger;
         }
 
@@ -146,16 +147,16 @@ namespace Klyte.Commons.UI
             KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
             field.eventMouseWheel += RollFloat;
         }
-        public static void AddDropdown(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange) => AddDropdown(title, out dropdown, out UILabel label, parentHelper, options, onChange);
+        public static void AddDropdown(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange) => AddDropdown(title, out dropdown, out _, parentHelper, options, onChange);
         public static void AddDropdown(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange)
         {
             dropdown = (UIDropDown)parentHelper.AddDropdown(title, options, 0, onChange);
+            label = dropdown.parent.GetComponentInChildren<UILabel>();
+            label.padding.top = 10;
+            KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
             dropdown.width = (parentHelper.Self.width / 2) - 10;
             dropdown.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
             dropdown.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
-            label = dropdown.parent.GetComponentInChildren<UILabel>();
-            KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
-            label.padding.top = 10;
         }
         public static void AddTextField(string title, out UITextField textField, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null) => AddTextField(title, out textField, out UILabel label, parentHelper, onSubmit, defaultValue, onChanged);
         public static void AddTextField(string title, out UITextField textField, out UILabel label, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null)

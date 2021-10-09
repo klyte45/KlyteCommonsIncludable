@@ -176,7 +176,7 @@ namespace Klyte.Commons.Extensions
 
         public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent, out UILabel label, bool limitLabelByPanelWidth = false)
         {
-            if (eventCallback != null && !string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
                 var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 label = uIPanel.Find<UILabel>("Label");
@@ -185,13 +185,17 @@ namespace Klyte.Commons.Extensions
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
-                uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
+                if (!(eventCallback is null))
                 {
-                    eventCallback(sel);
-                };
+                    uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
+                    {
+                        eventCallback(sel);
+                    };
+                }
+
                 return uIDropDown;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name");
             label = null;
             return null;
         }
@@ -582,7 +586,7 @@ namespace Klyte.Commons.Extensions
                 uIPanel.autoFitChildrenVertically = true;
                 result = uIPanel.Find<UITextField>("Text Field");
                 result.numericalOnly = true;
-                result.width = 60;
+                result.width = 100;
                 result.allowNegative = acceptNegative;
                 result.allowFloats = false;
 
@@ -596,7 +600,7 @@ namespace Klyte.Commons.Extensions
                 result.text = defaultValue.ToString();
                 return result;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create int field with no name or no event");
             return null;
         }
 
