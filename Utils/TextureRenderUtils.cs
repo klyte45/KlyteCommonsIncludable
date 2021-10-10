@@ -188,6 +188,23 @@ namespace Klyte.Commons.Utils
             textRealSize = new Vector2(result.width, result.height);
             return RescalePowerOf2(result);
         }
+        public const string TAG_LINE = "k45Symbol";
+        private static bool Matches(UIMarkupToken token, string text)
+        {
+            int length = token.length;
+            if (length != text.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < length; i++)
+            {
+                if (char.ToLower(token.source[token.startOffset + i]) != char.ToLower(text[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         private static Vector2 CalculateTextureSize(UIDynamicFont font, float textScale, ref PoolList<UIMarkupToken> tokens, out int startYPos)
         {
@@ -227,7 +244,7 @@ namespace Klyte.Commons.Utils
                 }
                 else if (token.tokenType == UIMarkupTokenType.StartTag)
                 {
-                    if (UIDynamicFontRendererRedirector.Matches(token, "sprite"))
+                    if (Matches(token, "sprite"))
                     {
                         if (token.attributeCount != 1)
                         {
@@ -249,7 +266,7 @@ namespace Klyte.Commons.Utils
                         yBounds.x = Mathf.Min(yBounds.x, 0);
                         yBounds.y = Mathf.Max(yBounds.y, token.height);
                     }
-                    else if (UIDynamicFontRendererRedirector.Matches(token, UIDynamicFontRendererRedirector.TAG_LINE))
+                    else if (Matches(token, TAG_LINE))
                     {
                         if (token.attributeCount != 1)
                         {
@@ -309,16 +326,16 @@ namespace Klyte.Commons.Utils
                 }
                 else if (tokenType == UIMarkupTokenType.StartTag)
                 {
-                    if (UIDynamicFontRendererRedirector.Matches(uimarkupToken, "sprite"))
+                    if (Matches(uimarkupToken, "sprite"))
                     {
                         ColorInfo colorInfo2 = colors.Peek();
                         position.x += RenderSprite(UIView.GetAView().defaultAtlas, uimarkupToken.GetAttribute(0).m_Value.value, colorInfo2.color, outputTexture, null, uimarkupToken.height, position).z;
                     }
-                    else if (UIDynamicFontRendererRedirector.Matches(uimarkupToken, "color"))
+                    else if (Matches(uimarkupToken, "color"))
                     {
                         colors.Push(ParseColor(uimarkupToken, colors.First().color));
                     }
-                    else if (UIDynamicFontRendererRedirector.Matches(uimarkupToken, UIDynamicFontRendererRedirector.TAG_LINE))
+                    else if (Matches(uimarkupToken, TAG_LINE))
                     {
                         string[] args = uimarkupToken.GetAttribute(0)?.m_Value?.value?.Split(new char[] { ',' }, 3);
                         if (args == null || args.Length != 3)
@@ -337,7 +354,7 @@ namespace Klyte.Commons.Utils
                         position.x += spriteLineTex.width;
                     }
                 }
-                else if (tokenType == UIMarkupTokenType.EndTag && UIDynamicFontRendererRedirector.Matches(uimarkupToken, "color") && colors.Count > 1)
+                else if (tokenType == UIMarkupTokenType.EndTag && Matches(uimarkupToken, "color") && colors.Count > 1)
                 {
                     colors.Pop();
                 }
