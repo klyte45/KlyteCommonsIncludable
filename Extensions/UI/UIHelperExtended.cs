@@ -618,11 +618,11 @@ namespace Klyte.Commons.Extensions
             return null;
         }
 
-        public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
-        public static UILabel AddLabel(UIComponent parent, string name, float width)
+        public UILabel AddLabel(string name, float width = 700, bool fixedMinSize = false) => AddLabel(m_root, name, width, fixedMinSize);
+        public static UILabel AddLabel(UIComponent parent, string name, float width, bool fixedMinSize = false)
         {
             KlyteMonoUtils.CreateUIElement(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
-            KlyteMonoUtils.LimitWidthAndBox(label, width);
+            KlyteMonoUtils.LimitWidthAndBox(label, width, fixedMinSize);
             label.text = name;
             return label;
         }
