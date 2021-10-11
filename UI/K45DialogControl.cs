@@ -48,7 +48,7 @@ namespace Klyte.Commons.Utils
 
 
             KlyteMonoUtils.CreateUIElement(out UILabel title, titleContainer.transform, "Title");
-            title.text = "<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Klyte45";
+            title.text = "Klyte45";
             title.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
             title.minimumSize = new Vector3(titleContainer.width - 100, 0);
             title.textScale = 2;
