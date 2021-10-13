@@ -19,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20210510";
+        public const string VERSION = "20211014";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
