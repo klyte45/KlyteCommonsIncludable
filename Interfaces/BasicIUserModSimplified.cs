@@ -203,7 +203,6 @@ namespace Klyte.Commons.Interfaces
         public static U Instance => m_instance;
 
         private UIComponent m_onSettingsUiComponent;
-        private bool m_showLangDropDown = false;
         private static C controller;
 
         public void OnSettingsUI(UIHelperBase helperDefault)
@@ -211,19 +210,17 @@ namespace Klyte.Commons.Interfaces
 
             m_onSettingsUiComponent = new UIHelperExtension((UIHelper)helperDefault).Self ?? m_onSettingsUiComponent;
 
-            if (!Locale.Exists(KlyteLocaleManager.m_defaultTestKey) || Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
+            if (Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) == CommonProperties.ModName)
             {
-                if (Locale.Get(KlyteLocaleManager.m_defaultModControllingKey) != CommonProperties.ModName)
+                if (GameObject.FindObjectOfType<KlyteLocaleManager>() is null)
                 {
                     KlyteMonoUtils.CreateElement<KlyteLocaleManager>(new GameObject(typeof(U).Name).transform);
-                    if (!Locale.Exists(KlyteLocaleManager.m_defaultTestKey))
+                    if (Locale.GetUnchecked(KlyteLocaleManager.m_defaultTestKey) != KlyteLocaleManager.m_defaultTestValue)
                     {
                         LogUtils.DoErrorLog("CAN'T LOAD LOCALE!!!!!");
                     }
                     LocaleManager.eventLocaleChanged += KlyteLocaleManager.ReloadLanguage;
                 }
-
-                m_showLangDropDown = true;
             }
             foreach (string lang in KlyteLocaleManager.locales)
             {
@@ -308,7 +305,7 @@ namespace Klyte.Commons.Interfaces
                 return true;
             }));
 
-            if (m_showLangDropDown)
+            if (!(GameObject.FindObjectOfType<KlyteLocaleManager>() is null))
             {
                 UIDropDown dd = null;
                 dd = group9.AddDropdownLocalized("K45_MOD_LANG", (new string[] { "K45_GAME_DEFAULT_LANGUAGE" }.Concat(KlyteLocaleManager.locales.Select(x => $"K45_LANG_{x}")).Select(x => Locale.Get(x))).ToArray(), KlyteLocaleManager.GetLoadedLanguage(), delegate (int idx)
