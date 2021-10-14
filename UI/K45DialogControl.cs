@@ -19,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20210508";
+        public const string VERSION = "20211014";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -48,7 +48,7 @@ namespace Klyte.Commons.Utils
 
 
             KlyteMonoUtils.CreateUIElement(out UILabel title, titleContainer.transform, "Title");
-            title.text = "<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Klyte45";
+            title.text = "Klyte45";
             title.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
             title.minimumSize = new Vector3(titleContainer.width - 100, 0);
             title.textScale = 2;
@@ -204,8 +204,23 @@ namespace Klyte.Commons.Utils
         };
         #endregion
 
-        public void Awake()
+        public void Awake() => component.stringUserData = VERSION;
+public void Start()
         {
+            try
+            {
+                if (gameObject is null || !gameObject.name.StartsWith("(Library)"))
+                {
+                    Destroy(this);
+                    return;
+                }
+            }
+            catch
+            {
+                Destroy(this);
+                return;
+            }
+            LogUtils.DoWarnLog($"Starting panel at version {VERSION}");
             BindControls();
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
@@ -322,7 +337,6 @@ namespace Klyte.Commons.Utils
             m_mainPanel.autoLayout = true;
             if (propertiesToSet.help_isArticle)
             {
-
                 if (!Directory.Exists(propertiesToSet.help_fullPathName))
                 {
                     LogUtils.DoErrorLog($"Invalid tutorial path! {propertiesToSet.help_fullPathName}");
@@ -403,10 +417,11 @@ namespace Klyte.Commons.Utils
             m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4 ?? "";
             m_properties.FindBinding("textButton5").property.value = propertiesToSet.textButton5 ?? "";
 
+            m_boxText.textScale = propertiesToSet.smallFont ? 0.75f : 1;
             m_textField.isVisible = propertiesToSet.showTextField;
             m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
 
-            if (m_dropDown == null)
+            if (m_dropDown is null)
             {
                 KlyteMonoUtils.CreateUIElement(out UIPanel DDpanel, m_mainPanel.transform);
                 DDpanel.maximumSize = new Vector2(m_boxText.minimumSize.x - 10, 40);
@@ -523,25 +538,37 @@ namespace Klyte.Commons.Utils
                 ShowModalInternal(properties, action);
             }
         }
-        public static void ShowModalError(string title, string message)
+        public static void ShowModalError(string title, string message, bool showGitHubButton = false)
         {
             BindProperties properties = new BindProperties
             {
                 title = "Error!",
                 message = $"<color red>{title}</color>" + (message is null ? "" : $"\nDetails:\n\n{message}"),
                 showButton1 = true,
+                showButton2 = showGitHubButton && !CommonProperties.GitHubRepoPath.IsNullOrWhiteSpace(),
                 showClose = true,
                 textButton1 = Locale.Get("EXCEPTION_OK"),
+                textButton2 = "GitHub: open an issue to check this",
                 showTextField = false,
-                useFullWindowWidth = true
+                useFullWindowWidth = true,
+                smallFont = true
             };
+            bool action(int x)
+            {
+                if (x == 2)
+                {
+                    FileSystemUtils.OpenURLInOverlayOrBrowser($"https://github.com/{CommonProperties.GitHubRepoPath}/issues/new");
+                    return false;
+                }
+                return true;
+            }
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
-                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, (x) => true));
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, action));
             }
             else
             {
-                ShowModalInternal(properties, (x) => true);
+                ShowModalInternal(properties, action);
             }
         }
 
@@ -747,6 +774,7 @@ namespace Klyte.Commons.Utils
             public int dropDownCurrentSelection;
             public string defaultTextFieldContent;
             public string imageTexturePath;
+            public bool smallFont;
 
             public bool help_isArticle;
             public string help_fullPathName;
@@ -785,12 +813,14 @@ namespace Klyte.Commons.Utils
                         case "dropDownCurrentSelection": result.dropDownCurrentSelection = (int)kv.Value; break;
                         case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
                         case "imageTexturePath": result.imageTexturePath = (string)kv.Value; break;
+                        case "smallFont": result.smallFont = (bool)kv.Value; break;
 
                         case "help_isArticle": result.help_isArticle = (bool)kv.Value; break;
                         case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
                         case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
                         case "help_featureName": result.help_featureName = (string)kv.Value; break;
                         case "help_formatsEntries": result.help_formatsEntries = (string[])kv.Value; break;
+
                     }
                 }
                 return result;
@@ -820,7 +850,7 @@ namespace Klyte.Commons.Utils
                 ["dropDownCurrentSelection"] = dropDownCurrentSelection,
                 ["defaultTextFieldContent"] = defaultTextFieldContent,
                 ["imageTexturePath"] = imageTexturePath,
-
+                ["smallFont"] = smallFont,
 
                 ["help_isArticle"] = help_isArticle,
                 ["help_fullPathName"] = help_fullPathName,

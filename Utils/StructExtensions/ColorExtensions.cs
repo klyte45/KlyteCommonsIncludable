@@ -9,6 +9,16 @@ namespace Klyte.Commons.Utils
         public static string ToRGB(this Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
         public static string ToRGBA(this Color color) => ToRGBA((Color32)color);
         public static string ToRGB(this Color color) => ToRGB((Color32)color);
+        public static Color SetBrightness(this Color color, float brightness)
+        {
+            Color.RGBToHSV(color, out float hue, out float saturation, out _);
+            return Color.HSVToRGB(hue, saturation, brightness);
+        }
+        public static Color ClampSaturation(this Color color, float maxSaturation)
+        {
+            Color.RGBToHSV(color, out float hue, out float saturation, out float brightness);
+            return Color.HSVToRGB(hue, Mathf.Min(saturation, maxSaturation), brightness);
+        }
         public static Color MultiplyChannelsButAlpha(this Color color, Color other) => new Color(color.r * other.r, color.g * other.g, color.b * other.b, color.a);
         public static Color32 FromRGBA(string rgba)
         {
