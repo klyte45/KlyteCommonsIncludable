@@ -92,7 +92,7 @@ namespace Klyte.Commons.Interfaces
                 }
                 LogUtils.DoLog($"NO DATA TYPE {type} & NO LEGACY");
                 instance.Instances[type] = basicInstance;
-                basicInstance.LoadDefaults();
+                basicInstance.LoadDefaults(SerializableDataManager);
                 return;
             }
             using (var memoryStream = new MemoryStream(SerializableDataManager.LoadData(basicInstance.SaveId)))
@@ -109,8 +109,20 @@ namespace Klyte.Commons.Interfaces
                 }
                 catch (Exception e)
                 {
-                    string content = System.Text.Encoding.UTF8.GetString(storage);
-                    LogUtils.DoLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage.Length}b:\n{content}");
+                    byte[] targetArr;
+                    bool zipped = false;
+                    try
+                    {
+                        targetArr = ZipUtils.UnzipBytes(storage);
+                        zipped = true;
+                    }
+                    catch
+                    {
+                        targetArr = storage;
+                    }
+                    string content = System.Text.Encoding.UTF8.GetString(targetArr);
+                    LogUtils.DoErrorLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage.Length} Z={zipped} b:\n{content}");
+                    K45DialogControl.ShowModalError($"Error loading '{type}' data", $"An error occurred while loading the data from <color yellow>{CommonProperties.ModName}</color>.{(CommonProperties.GitHubRepoPath.IsNullOrWhiteSpace()?"": "\nPlease open a issue in GitHub along with the game log attached and a printscreen of this window to get this checked by the mod developer. See the <color cyan>Report-a-bug Helper</color> button in the mod options menu to see details about how to get the game log.")}\nRaw data:\n{content}", true);
                     instance.Instances[type] = basicInstance;
                 }
             }
@@ -161,9 +173,9 @@ namespace Klyte.Commons.Interfaces
 
         public void OnReleased()
         {
-            foreach (IDataExtension item in instance.Instances.Values)
+            foreach (IDataExtension item in instance.Instances?.Values)
             {
-                item.OnReleased();
+                item?.OnReleased();
             }
             instance.Instances = null;
         }

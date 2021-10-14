@@ -1,5 +1,6 @@
 ﻿
 using Klyte.Commons.Interfaces;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
@@ -9,7 +10,7 @@ namespace Klyte.Commons.Utils
 {
     [XmlRoot("TimeableList")]
 
-    public class TimeableList<TValue> : IXmlSerializable where TValue : ITimeable<TValue>
+    public class TimeableList<TValue> : IXmlSerializable, IEnumerable<TValue> where TValue : ITimeable<TValue>
     {
 
         #region IXmlSerializable Members
@@ -18,7 +19,7 @@ namespace Klyte.Commons.Utils
 
         private List<TValue> m_items = new List<TValue>();
         private Tuple<TValue, int>[] m_hourTable;
-
+        
         public void ReadXml(System.Xml.XmlReader reader)
 
         {
@@ -38,7 +39,7 @@ namespace Klyte.Commons.Utils
                     continue;
                 }
 
-                var value = (TValue) valueSerializer.Deserialize(reader);
+                var value = (TValue)valueSerializer.Deserialize(reader);
                 if (value.HourOfDay == null)
                 {
                     continue;
@@ -69,7 +70,7 @@ namespace Klyte.Commons.Utils
             {
                 RebuildHourTable();
             }
-            int fullHour = (int) hour;
+            int fullHour = (int)hour;
             if (hour % 1 < 0.5f)
             {
                 return Tuple.New(m_hourTable[(fullHour + 23) % 24], m_hourTable[fullHour], (hour % 1) + 0.5f);
@@ -86,7 +87,7 @@ namespace Klyte.Commons.Utils
             {
                 RebuildHourTable();
             }
-            int fullHour = (int) hour;
+            int fullHour = (int)hour;
             return m_hourTable[fullHour];
         }
 
@@ -141,5 +142,7 @@ namespace Klyte.Commons.Utils
             }
         }
 
+        public IEnumerator<TValue> GetEnumerator() => m_items.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => m_items.GetEnumerator();
     }
 }

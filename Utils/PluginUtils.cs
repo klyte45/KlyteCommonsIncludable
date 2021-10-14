@@ -32,6 +32,7 @@ namespace Klyte.Commons.Utils
             {
                 try
                 {
+                    LogUtils.DoWarnLog($"Using {typeof(O).Name} as implementation of {typeof(I).Name}");
                     return objTarget.AddComponent<O>();
                 }
                 catch (Exception e)
@@ -42,6 +43,7 @@ namespace Klyte.Commons.Utils
             }
             else
             {
+                LogUtils.DoWarnLog($"Using {typeof(F).Name}  (fallback) as implementation of {typeof(I).Name}");
                 return objTarget.AddComponent<F>();
             }
         }

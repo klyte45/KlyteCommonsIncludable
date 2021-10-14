@@ -264,15 +264,18 @@ namespace Klyte.Commons.Utils
             {
                 boxContainer.minimumSize = new Vector2(maxWidth, 0);
             }
+            label.parent.RemoveUIComponent(label);
             label.transform.SetParent(boxContainer.transform);
+            label.transform.localScale = Vector3.one;
             boxContainer.relativePosition = currentRelPos;
             return LimitWidthPrivate(label, maxWidth, alsoMinSize);
         }
 
-        [Obsolete("Use box version")]
+        [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x) => LimitWidth(x, x.minimumSize.x);
-        [Obsolete("Use box version")]
+        [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
+        [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIInteractiveComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
         private static PropertyChangedEventHandler<Vector2> LimitWidthPrivate(UIComponent x, float maxWidth, bool alsoMinSize)
         {
@@ -400,29 +403,56 @@ namespace Klyte.Commons.Utils
         }
 
         private static UIColorField m_colorFieldTemplate;
+
+        public static UIColorPicker GetDefaultPicker()
+        {
+            if (!EnsureColorFieldTemplate())
+            {
+                return null;
+            }
+            return GameObject.Instantiate(m_colorFieldTemplate.colorPicker);
+        }
         public static UIColorField CreateColorField(UIComponent parent)
+        {
+            if (!EnsureColorFieldTemplate())
+            {
+                return null;
+            }
+
+            var go = GameObject.Instantiate(m_colorFieldTemplate.gameObject, parent.transform);
+            UIColorField component = go.GetComponent<UIColorField>();
+            parent.AttachUIComponent(go).transform.localScale = Vector3.one;
+            InitColorField(component, 28);
+            return component;
+        }
+
+        public static bool EnsureColorFieldTemplate()
         {
             if (m_colorFieldTemplate == null)
             {
                 UIComponent uIComponent = UITemplateManager.Get("LineTemplate");
                 if (uIComponent == null)
                 {
-                    return null;
+                    return false;
                 }
                 m_colorFieldTemplate = uIComponent.Find<UIColorField>("LineColor");
                 if (m_colorFieldTemplate == null)
                 {
-                    return null;
+                    return false;
                 }
             }
-            var go = GameObject.Instantiate(m_colorFieldTemplate.gameObject, parent.transform);
-            UIColorField component = go.GetComponent<UIColorField>();
+            return true;
+        }
+
+        public static UIColorField InitColorField(UIColorField component, float size)
+        {
             component.pickerPosition = UIColorField.ColorPickerPosition.RightAbove;
-            component.transform.SetParent(parent.transform);
             component.eventColorPickerOpen += DefaultColorPickerHandler;
-            component.size = new Vector2(28, 28);
+            component.size = new Vector2(size, size);
             return component;
         }
+
+        private static bool alreadyOnHandler = false;
         public static void DefaultColorPickerHandler(UIColorField colorField, UIColorPicker popup, ref bool overridden)
         {
             if (!overridden)
@@ -434,34 +464,45 @@ namespace Klyte.Commons.Utils
                 UiTextFieldDefaults(textField);
                 textField.normalBgSprite = "TextFieldPanel";
                 textField.maxLength = 6;
-                textField.eventKeyUp += (x, y) =>
+                textField.eventTextChanged += (x, y) =>
                 {
-                    if (popup && textField.text.Length == 6)
+                    if (Event.current.isKey && !alreadyOnHandler)
                     {
                         try
                         {
-                            Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
-                            if (popup.color != targetColor)
+                            alreadyOnHandler = true;
+                            if (popup && textField.text.Length == 6)
                             {
-                                popup.color = targetColor;
-                                var selStart = ((UITextField)x).selectionStart;
-                                var selEnd = ((UITextField)x).selectionEnd;
-                                colorField.selectedColor = targetColor;
-                                ((UITextField)x).textColor = Color.white;
-                                ((UITextField)x).text = targetColor.ToRGB();
-                                colorField.GetType().GetMethod("OnSelectedColorChanged", RedirectorUtils.allFlags).Invoke(colorField, new object[0]);
-                                ((UITextField)x).selectionStart = selStart;
-                                ((UITextField)x).selectionEnd = selEnd;
+                                try
+                                {
+                                    Color32 targetColor = ColorExtensions.FromRGB(((UITextField)x).text);
+                                    if (popup.color != targetColor)
+                                    {
+                                        popup.color = targetColor;
+                                        var selStart = ((UITextField)x).selectionStart;
+                                        var selEnd = ((UITextField)x).selectionEnd;
+                                        colorField.selectedColor = targetColor;
+                                        ((UITextField)x).textColor = Color.white;
+                                        ((UITextField)x).text = targetColor.ToRGB();
+                                        colorField.GetType().GetMethod("OnSelectedColorChanged", RedirectorUtils.allFlags).Invoke(colorField, new object[0]);
+                                        ((UITextField)x).selectionStart = selStart;
+                                        ((UITextField)x).selectionEnd = selEnd;
+                                    }
+                                }
+                                catch
+                                {
+                                    ((UITextField)x).textColor = Color.red;
+                                }
+                            }
+                            else
+                            {
+                                ((UITextField)x).textColor = Color.red;
                             }
                         }
-                        catch
+                        finally
                         {
-                            ((UITextField)x).textColor = Color.red;
+                            alreadyOnHandler = false;
                         }
-                    }
-                    else
-                    {
-                        ((UITextField)x).textColor = Color.red;
                     }
                 };
                 popup.eventColorUpdated += (x) => textField.text = ((Color32)x).ToRGB();

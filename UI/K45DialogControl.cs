@@ -5,6 +5,7 @@ using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensions;
 using Klyte.Commons.i18n;
+using Klyte.Commons.Redirectors;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20210331";
+        public const string VERSION = "20211014";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -40,13 +41,14 @@ namespace Klyte.Commons.Utils
             mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
 
+
             #region Title
             KlyteMonoUtils.CreateUIElement(out UIPanel titleContainer, mainPanel.transform, "TitleContainer");
             titleContainer.size = new Vector2(mainPanel.width, 40);
 
 
             KlyteMonoUtils.CreateUIElement(out UILabel title, titleContainer.transform, "Title");
-            title.text = "<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Klyte45";
+            title.text = "Klyte45";
             title.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
             title.minimumSize = new Vector3(titleContainer.width - 100, 0);
             title.textScale = 2;
@@ -86,6 +88,8 @@ namespace Klyte.Commons.Utils
             #region Text area
             KlyteMonoUtils.CreateUIElement(out UILabel boxText, mainPanel.transform, "BoxText");
             boxText.minimumSize = new Vector2(800, 60);
+            boxText.maximumSize = new Vector2(0, view.fixedHeight * 0.8f);
+            boxText.clipChildren = true;
             boxText.wordWrap = true;
             boxText.autoSize = false;
             boxText.autoHeight = true;
@@ -333,7 +337,6 @@ public void Start()
             m_mainPanel.autoLayout = true;
             if (propertiesToSet.help_isArticle)
             {
-
                 if (!Directory.Exists(propertiesToSet.help_fullPathName))
                 {
                     LogUtils.DoErrorLog($"Invalid tutorial path! {propertiesToSet.help_fullPathName}");
@@ -414,10 +417,11 @@ public void Start()
             m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4 ?? "";
             m_properties.FindBinding("textButton5").property.value = propertiesToSet.textButton5 ?? "";
 
+            m_boxText.textScale = propertiesToSet.smallFont ? 0.75f : 1;
             m_textField.isVisible = propertiesToSet.showTextField;
             m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
 
-            if (m_dropDown == null)
+            if (m_dropDown is null)
             {
                 KlyteMonoUtils.CreateUIElement(out UIPanel DDpanel, m_mainPanel.transform);
                 DDpanel.maximumSize = new Vector2(m_boxText.minimumSize.x - 10, 40);
@@ -534,11 +538,44 @@ public void Start()
                 ShowModalInternal(properties, action);
             }
         }
+        public static void ShowModalError(string title, string message, bool showGitHubButton = false)
+        {
+            BindProperties properties = new BindProperties
+            {
+                title = "Error!",
+                message = $"<color red>{title}</color>" + (message is null ? "" : $"\nDetails:\n\n{message}"),
+                showButton1 = true,
+                showButton2 = showGitHubButton && !CommonProperties.GitHubRepoPath.IsNullOrWhiteSpace(),
+                showClose = true,
+                textButton1 = Locale.Get("EXCEPTION_OK"),
+                textButton2 = "GitHub: open an issue to check this",
+                showTextField = false,
+                useFullWindowWidth = true,
+                smallFont = true
+            };
+            bool action(int x)
+            {
+                if (x == 2)
+                {
+                    FileSystemUtils.OpenURLInOverlayOrBrowser($"https://github.com/{CommonProperties.GitHubRepoPath}/issues/new");
+                    return false;
+                }
+                return true;
+            }
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, action));
+            }
+            else
+            {
+                ShowModalInternal(properties, action);
+            }
+        }
 
         private static void ShowModalInternal(BindProperties properties, Func<int, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (!(uIComponent is null) && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 addAction(properties.ToDictionary(), action);
             }
@@ -551,7 +588,7 @@ public void Start()
         public static void UpdateCurrentMessage(string newText)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
+            if (!(uIComponent is null) && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
             {
                 properties.FindBinding("message").property.value = newText;
             }
@@ -564,12 +601,12 @@ public void Start()
         private static void ShowErrorPanelNotFound()
         {
             UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
-            if (uIComponent != null)
+            if (!(uIComponent is null))
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                if (component != null)
+                if (!(component is null))
                 {
                     string title = $"Mod not loaded";
                     string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
@@ -607,7 +644,7 @@ public void Start()
         private static void ShowModalPromptTextInternal(BindProperties properties, Func<int, string, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (!(uIComponent is null) && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 bool targetAction(int x)
                 {
@@ -737,6 +774,7 @@ public void Start()
             public int dropDownCurrentSelection;
             public string defaultTextFieldContent;
             public string imageTexturePath;
+            public bool smallFont;
 
             public bool help_isArticle;
             public string help_fullPathName;
@@ -775,12 +813,14 @@ public void Start()
                         case "dropDownCurrentSelection": result.dropDownCurrentSelection = (int)kv.Value; break;
                         case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
                         case "imageTexturePath": result.imageTexturePath = (string)kv.Value; break;
+                        case "smallFont": result.smallFont = (bool)kv.Value; break;
 
                         case "help_isArticle": result.help_isArticle = (bool)kv.Value; break;
                         case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
                         case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
                         case "help_featureName": result.help_featureName = (string)kv.Value; break;
                         case "help_formatsEntries": result.help_formatsEntries = (string[])kv.Value; break;
+
                     }
                 }
                 return result;
@@ -810,7 +850,7 @@ public void Start()
                 ["dropDownCurrentSelection"] = dropDownCurrentSelection,
                 ["defaultTextFieldContent"] = defaultTextFieldContent,
                 ["imageTexturePath"] = imageTexturePath,
-
+                ["smallFont"] = smallFont,
 
                 ["help_isArticle"] = help_isArticle,
                 ["help_fullPathName"] = help_fullPathName,
@@ -824,5 +864,11 @@ public void Start()
 
 
         #endregion
+
+        public void OnDestroy()
+        {
+            LogUtils.DoWarnLog("PANEL REMOVED");
+            UIDynamicPanelsRedirector.RemovePanel();
+    }
     }
 }

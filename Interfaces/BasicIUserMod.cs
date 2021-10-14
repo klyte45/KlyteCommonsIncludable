@@ -79,12 +79,19 @@ namespace Klyte.Commons.Interfaces
                     m_modPanelButton.textScale = 1.3f;
                     m_modPanelButton.textVerticalAlignment = UIVerticalAlignment.Middle;
                     m_modPanelButton.textHorizontalAlignment = UIHorizontalAlignment.Center;
-                    m_modPanelButton.tooltip = "Double click to move the button!";
-                    m_modPanelButton.eventDoubleClick += (component, ms) =>
+                    m_modPanelButton.tooltip = "Ctrl + click to move the button!";
+                    m_modPanelButton.eventClicked += (component, ms) =>
                     {
+                        if (Event.current.control)
+                        {
                         handle.zOrder = 13;
                         doneButton.Show();
                         handle.enabled = true;
+                        }
+                        else
+                        {
+                            TogglePanel(component, ms);
+                        }
                     };
 
                     m_modsPanel = m_bg.AddUIComponent<UIPanel>();
@@ -94,7 +101,6 @@ namespace Klyte.Commons.Interfaces
                     m_modsPanel.isInteractive = false;
                     m_modsPanel.Hide();
 
-                    m_modPanelButton.eventClicked += TogglePanel;
 
                     KlyteMonoUtils.CreateTabsComponent(out m_modsTabstrip, out UITabContainer container, m_modsPanel.transform, "K45", new Vector4(52, -8, m_modsPanel.width - 52, 40), new Vector4(0, 32, m_modsPanel.width, m_modsPanel.height));
                     m_modsTabstrip.isInteractive = false;
@@ -249,7 +255,7 @@ namespace Klyte.Commons.Interfaces
         {
             yield return 0;
             yield return 0;
-            m_modsTabstrip.selectedIndex = m_modsTabstrip.tabs.Where(x => x.name == CommonProperties.Acronym).FirstOrDefault()?.zOrder ?? -1;
+            m_modsTabstrip.selectedIndex = m_modsTabstrip.tabs.FindIndex(x => x.name == CommonProperties.Acronym);
         }
 
         public void UnselectTab() => m_modsTabstrip.selectedIndex = -1;
