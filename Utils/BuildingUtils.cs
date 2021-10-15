@@ -206,12 +206,12 @@ namespace Klyte.Commons.Utils
 
             return bm.GetBuildingName(buildingId, iid);
         }
-        public static bool IsBuildingValidForStation(bool excludeCargo, BuildingManager bm, ushort tempBuildingId) => tempBuildingId > 0 && (
-    !excludeCargo
-    || !(bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is DepotAI || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is CargoStationAI)
-    || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is TransportStationAI
-    );
-      
+        public static bool IsBuildingValidForStation(bool excludeCargo, BuildingManager bm, ushort tempBuildingId)
+        {
+            var ai = bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI;
+            return tempBuildingId > 0 && ((!excludeCargo && (ai is DepotAI || ai is CargoStationAI)) || ai is TransportStationAI || ai is OutsideConnectionAI);
+        }
+
         #endregion
     }
 }

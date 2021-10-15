@@ -1,10 +1,13 @@
-﻿using ColossalFramework;
+﻿
+
+using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 
 namespace Klyte.Commons.Utils
 {
@@ -236,22 +239,43 @@ namespace Klyte.Commons.Utils
             {
                 return false;
             }
-            if (requireSameDirection)
+            ref NetSegment seg1 = ref nm.m_segments.m_buffer[segment1];
+            ref NetSegment seg2 = ref nm.m_segments.m_buffer[segment2];
+            if (!(seg1.Info.m_hasBackwardVehicleLanes && seg1.Info.m_hasForwardVehicleLanes) || !(seg2.Info.m_hasBackwardVehicleLanes && seg2.Info.m_hasForwardVehicleLanes))
             {
-                NetSegment seg1 = nm.m_segments.m_buffer[segment1];
-                NetSegment seg2 = nm.m_segments.m_buffer[segment2];
-                if (!(seg1.Info.m_hasBackwardVehicleLanes && seg1.Info.m_hasForwardVehicleLanes) || !(seg2.Info.m_hasBackwardVehicleLanes && seg2.Info.m_hasForwardVehicleLanes))
+                if ((seg1.m_endNode == seg2.m_endNode || seg1.m_startNode == seg2.m_startNode))
                 {
-                    if ((seg1.m_endNode == seg2.m_endNode || seg1.m_startNode == seg2.m_startNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) == (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                    if (seg1.m_endNode == seg2.m_endNode && Mathf.Abs(seg1.m_endDirection.GetAngleXZ() - seg2.m_endDirection.GetAngleXZ()) < 90)
                     {
                         return false;
                     }
-                    if ((seg1.m_endNode == seg2.m_startNode || seg1.m_startNode == seg2.m_endNode) && (nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert))
+                    if (seg1.m_startNode == seg2.m_startNode && Mathf.Abs(seg1.m_startDirection.GetAngleXZ() - seg2.m_startDirection.GetAngleXZ()) < 90)
+                    {
+                        return false;
+                    }
+
+                    if ((nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) == (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert) && requireSameDirection)
+                    {
+                        return false;
+                    }
+                }
+                if ((seg1.m_endNode == seg2.m_startNode || seg1.m_startNode == seg2.m_endNode))
+                {
+                    if (seg1.m_endNode == seg2.m_startNode && Mathf.Abs(seg1.m_endDirection.GetAngleXZ() - seg2.m_startDirection.GetAngleXZ()) < 90)
+                    {
+                        return false;
+                    }
+                    if (seg1.m_startNode == seg2.m_endNode && Mathf.Abs(seg1.m_startDirection.GetAngleXZ() - seg2.m_endDirection.GetAngleXZ()) < 90)
+                    {
+                        return false;
+                    }
+                    if ((nm.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != (nm.m_segments.m_buffer[segment2].m_flags & NetSegment.Flags.Invert) && requireSameDirection)
                     {
                         return false;
                     }
                 }
             }
+
 
             if (requireSameSize)
             {
@@ -532,8 +556,8 @@ namespace Klyte.Commons.Utils
 
         #endregion
         #region Streets Addressing
-        private static readonly ushort[] m_closestSegsFind = new ushort[16];
-        public static bool GetAddressStreetAndNumber(Vector3 sidewalk, Vector3 midPosBuilding, out int number, out string streetName)
+        private static readonly ushort[] m_closestSegsFind = new ushort[64];
+        public static bool GetBasicAddressStreetAndNumber(Vector3 sidewalk, Vector3 midPosBuilding, out int number, out string streetName)
         {
             GetNearestSegment(sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId);
             if (targetSegmentId == 0)
@@ -542,8 +566,11 @@ namespace Klyte.Commons.Utils
                 streetName = string.Empty;
                 return false;
             }
-
-            number = GetNumberAt(targetLength, targetSegmentId, out bool startAsEnd);
+            return GetAddressStreetAndNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, false, 0, out number, out streetName);
+        }
+        public static bool GetAddressStreetAndNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset, out int number, out string streetName)
+        {
+            number = GetNumberAt(targetLength, targetSegmentId, invertStart, metersOffset, out bool startAsEnd);
             streetName = NetManager.instance.GetSegmentName(targetSegmentId)?.ToString();
             float angleTg = VectorUtils.XZ(targetPosition).GetAngleToPoint(VectorUtils.XZ(midPosBuilding));
             if (angleTg == 90 || angleTg == 270)
@@ -614,9 +641,13 @@ namespace Klyte.Commons.Utils
         }
 
 
-        public static int GetNumberAt(ushort targetSegmentId, bool startNode)
+        public static int GetDistanceFromStart(ushort targetSegmentId, bool startNode, bool invertStart = false, int metersOffset = 0)
         {
             List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _, out _);
+            if (invertStart)
+            {
+                roadSegments.Reverse();
+            }
             int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
             NetSegment targSeg = NetManager.instance.m_segments.m_buffer[targetSegmentId];
             ushort targetNode = startNode ? targSeg.m_startNode : targSeg.m_endNode;
@@ -634,14 +665,18 @@ namespace Klyte.Commons.Utils
             {
                 distanceFromStart += NetManager.instance.m_segments.m_buffer[roadSegments[i]].m_averageLength;
             }
-            return (int)Math.Round(distanceFromStart);
+            return (int)Math.Round(distanceFromStart) + metersOffset;
         }
 
-        private static int GetNumberAt(float targetLength, ushort targetSegmentId, out bool startAsEnd)
+        internal static int GetNumberAt(float targetLength, ushort targetSegmentId, bool invertStart, int metersOffset, out bool startAsEnd)
         {
             //doLog($"targets = S:{targetSegmentId} P:{targetPosition} D:{targetDirection.magnitude} L:{targetLength}");
 
             List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _, out _);
+            if (invertStart)
+            {
+                roadSegments.Reverse();
+            }
             //doLog("roadSegments = [{0}] ", string.Join(",", roadSegments.Select(x => x.ToString()).ToArray()));
             int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
             //doLog($"targSeg = {targetSegmentIdIdx} ({targetSegmentId})");
@@ -676,7 +711,7 @@ namespace Klyte.Commons.Utils
                 distanceFromStart += NetManager.instance.m_segments.m_buffer[roadSegments[i]].m_averageLength;
             }
             distanceFromStart += targetLength * targSeg.m_averageLength;
-            return (int)Math.Round(distanceFromStart);
+            return (int)Math.Round(distanceFromStart) + metersOffset;
 
             //doLog($"number = {number} B");
         }

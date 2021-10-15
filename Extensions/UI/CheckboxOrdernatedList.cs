@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.Extensors
+namespace Klyte.Commons.Extensions
 {
     public class CheckboxOrdernatedList<T> : UICustomControl where T : class, ICheckable
     {
@@ -56,7 +56,7 @@ namespace Klyte.Commons.Extensors
                     weight = i
                 }, (x, y) =>
                 {
-                    (x.objectUserData as IdAndWeight).weight = m_parent.components.Where(x => (x as UICheckBox).isChecked).Count() - 1;
+                    (x.objectUserData as IdAndWeight).weight = m_parent.components.Where(z => (z as UICheckBox).isChecked).Count() - 1;
                     Reordenate();
                     EventOnValueChanged?.Invoke(GetSelectionOrder());
                 });
@@ -79,6 +79,8 @@ namespace Klyte.Commons.Extensors
         private UICheckBox AddCheckboxLocale(string text, bool defaultValue, IdAndWeight idAndWeight, Action<UICheckBox, bool> eventCallback = null)
         {
             var uICheckBox = m_parent.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kCheckBoxTemplate)) as UICheckBox;
+
+            uICheckBox.transform.localScale = Vector3.one;
             uICheckBox.isChecked = defaultValue;
             uICheckBox.label.text = text;
             if (eventCallback != null)
@@ -118,7 +120,7 @@ namespace Klyte.Commons.Extensors
 
     public interface ICheckable
     {
-        public bool IsChecked { get; set; }
+         bool IsChecked { get; set; }
     }
 }
 

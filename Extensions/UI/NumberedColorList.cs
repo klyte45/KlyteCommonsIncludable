@@ -3,7 +3,7 @@ using ICities;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Klyte.Commons.Extensors
+namespace Klyte.Commons.Extensions
 {
     public class NumberedColorList
     {
@@ -18,7 +18,8 @@ namespace Klyte.Commons.Extensors
         public List<Color32> ColorList
         {
             get => m_colorList;
-            set {
+            set
+            {
                 m_colorList = value;
                 RedrawButtons();
             }
@@ -56,8 +57,9 @@ namespace Klyte.Commons.Extensors
         {
             m_parent = parent;
             parent.width = 500;
-            ((UIPanel) parent).autoFitChildrenVertically = true;
+            ((UIPanel)parent).autoFitChildrenVertically = true;
             m_linesListPanel = m_parent.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+            m_linesListPanel.transform.localScale = Vector3.one;
             m_linesListPanel.name = "NumberedColorList";
             m_linesListPanel.height = 40;
             m_linesListPanel.width = 500;
@@ -75,6 +77,7 @@ namespace Klyte.Commons.Extensors
             if (addButtonContainer != null)
             {
                 m_add = addButtonContainer.GetComponentInChildren<UILabel>().AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kButtonTemplate)) as UIButton;
+                m_add.transform.localScale = Vector3.one;
                 m_add.text = "+";
                 m_add.autoSize = false;
                 m_add.height = 27;

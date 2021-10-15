@@ -18,10 +18,10 @@ namespace Klyte.Commons.Utils
 
 
             var bounds = new Bounds(position, new Vector3(maxDistance * 2f, maxDistance * 2f, maxDistance * 2f));
-            int num = Mathf.Max((int) (((bounds.min.x - 64f) / 64f) + 135f), 0);
-            int num2 = Mathf.Max((int) (((bounds.min.z - 64f) / 64f) + 135f), 0);
-            int num3 = Mathf.Min((int) (((bounds.max.x + 64f) / 64f) + 135f), 269);
-            int num4 = Mathf.Min((int) (((bounds.max.z + 64f) / 64f) + 135f), 269);
+            int num = Mathf.Max((int)(((bounds.min.x - 64f) / 64f) + 135f), 0);
+            int num2 = Mathf.Max((int)(((bounds.min.z - 64f) / 64f) + 135f), 0);
+            int num3 = Mathf.Min((int)(((bounds.max.x + 64f) / 64f) + 135f), 269);
+            int num4 = Mathf.Min((int)(((bounds.max.z + 64f) / 64f) + 135f), 269);
             NetManager instance = Singleton<NetManager>.instance;
             var result = new List<Tuple<ushort, float, Vector3>>();
 
@@ -46,7 +46,8 @@ namespace Klyte.Commons.Utils
                                 && (instance.m_nodes.m_buffer[nodeId].m_flags & (NetNode.Flags.Created)) != NetNode.Flags.None
                                 && instance.m_nodes.m_buffer[nodeId].m_transportLine > 0
                                 && (allowUnderground || !info.m_netAI.IsUnderground())
-                                && (stopType == VehicleInfo.VehicleType.None || stopType == TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine].Info.m_vehicleType))
+                                && (stopType == VehicleInfo.VehicleType.None || stopType == (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine]).Info.m_vehicleType)
+                                && (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine].m_flags & TransportLine.Flags.Complete) != TransportLine.Flags.None)
                             {
                                 NetNode node = instance.m_nodes.m_buffer[nodeId];
                                 Vector3 nodePos = node.m_position;
@@ -64,7 +65,7 @@ namespace Klyte.Commons.Utils
                                     }
                                 }
                             }
-                            GOTO_NEXT:
+                        GOTO_NEXT:
                             nodeId = instance.m_nodes.m_buffer[nodeId].m_nextGridNode;
                             if (++num7 >= 36864)
                             {
@@ -93,7 +94,7 @@ namespace Klyte.Commons.Utils
             public Bezier3 platformLine;
             public float width;
             public VehicleInfo.VehicleType vehicleType;
-            public ushort laneId;
+            public int laneId;
             public sbyte subbuildingId;
             public Vector3 directionPath;
 
@@ -103,75 +104,79 @@ namespace Klyte.Commons.Utils
         public static StopPointDescriptorLanes[] MapStopPoints(BuildingInfo buildingInfo, float thresold)
         {
             var result = new List<StopPointDescriptorLanes>();
-            if (buildingInfo?.m_paths == null)
+
+            if (buildingInfo?.m_paths != null)
             {
-                return result.ToArray();
-            }
-
-            foreach (BuildingInfo.PathInfo path in buildingInfo.m_paths)
-            {
-                Vector3 position = path.m_nodes[0];
-                Vector3 position2 = path.m_nodes[1];
-
-
-                position.z *= -1;
-                position2.z *= -1;
-                Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
-
-                foreach (NetInfo.Lane refLane in path.m_netInfo.m_lanes)
+                foreach (BuildingInfo.PathInfo path in buildingInfo.m_paths)
                 {
-                    if (refLane.m_stopType == VehicleInfo.VehicleType.None)
-                    {
-                        continue;
-                    }
-                    NetInfo.Lane lane = FindNearestVehicleStopLane(path.m_netInfo.m_lanes, refLane, out ushort laneId);
-                    if (lane == null)
+                    if (path.m_nodes.Length < 2)
                     {
                         continue;
                     }
 
+                    Vector3 position = path.m_nodes[0];
+                    Vector3 position2 = path.m_nodes[1];
 
-                    LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
-                    Vector3 lanePos = position + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                    Vector3 lanePos2 = position2 + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                    Vector3 b3, c;
-                    if (path.m_curveTargets == null || path.m_curveTargets.Length == 0)
+
+                    position.z *= -1;
+                    position2.z *= -1;
+                    Vector3 directionPath = Quaternion.AngleAxis(90, Vector3.up) * (position2 - position).normalized;
+
+                    foreach (NetInfo.Lane refLane in path.m_netInfo.m_lanes)
                     {
-                        NetSegment.CalculateMiddlePoints(lanePos, Vector3.zero, lanePos2, Vector3.zero, true, true, out b3, out c);
+                        if (refLane.m_stopType == VehicleInfo.VehicleType.None)
+                        {
+                            continue;
+                        }
+                        NetInfo.Lane lane = FindNearestVehicleStopLane(path.m_netInfo.m_lanes, refLane, out ushort laneId);
+                        if (lane == null)
+                        {
+                            continue;
+                        }
+
+
+                        LogUtils.DoLog($"[{buildingInfo}] pos + dir = ({position} {position2} + {directionPath})");
+                        Vector3 lanePos = position + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                        Vector3 lanePos2 = position2 + (lane.m_position / 2 * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                        Vector3 b3, c;
+                        if (path.m_curveTargets == null || path.m_curveTargets.Length == 0)
+                        {
+                            NetSegment.CalculateMiddlePoints(lanePos, Vector3.zero, lanePos2, Vector3.zero, true, true, out b3, out c);
+                        }
+                        else
+                        {
+                            GetMiddlePointsFor(path, out b3, out c);
+                            LogUtils.DoLog($"[{buildingInfo}] GetMiddlePointsFor path =  ({b3} {c})");
+                            b3 += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                            c += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
+                            b3.y = c.y = (lanePos.y + lanePos2.y) / 2;
+                        }
+                        var refBezier = new Bezier3(lanePos, b3, c, lanePos2);
+                        LogUtils.DoLog($"[{buildingInfo}]refBezier = {refBezier} ({lanePos} {b3} {c} {lanePos2})");
+
+
+                        Vector3 positionR = refBezier.Position(m_defaultStopOffset);
+                        Vector3 direction = refBezier.Tangent(m_defaultStopOffset);
+                        LogUtils.DoLog($"[{buildingInfo}]1positionR = {positionR}; direction = {direction}");
+
+                        Vector3 normalized = Vector3.Cross(Vector3.up, direction).normalized;
+                        positionR += normalized * (MathUtils.SmootherStep(0.5f, 0f, Mathf.Abs(m_defaultStopOffset - 0.5f)) * lane.m_stopOffset);
+                        LogUtils.DoLog($"[{buildingInfo}]2positionR = {positionR}; direction = {direction}; {normalized}");
+                        result.Add(new StopPointDescriptorLanes
+                        {
+                            platformLine = refBezier,
+                            width = lane.m_width,
+                            vehicleType = refLane.m_stopType,
+                            laneId = laneId,
+                            subbuildingId = -1,
+                            directionPath = directionPath * (path.m_invertSegments == (refLane.m_finalDirection == NetInfo.Direction.AvoidForward || refLane.m_finalDirection == NetInfo.Direction.Backward) ? 1 : -1)
+
+                        });
+
                     }
-                    else
-                    {
-                        GetMiddlePointsFor(path, out b3, out c);
-                        LogUtils.DoLog($"[{buildingInfo}] GetMiddlePointsFor path =  ({b3} {c})");
-                        b3 += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                        c += (lane.m_position * directionPath) + new Vector3(0, lane.m_verticalOffset);
-                        b3.y = c.y = (lanePos.y + lanePos2.y) / 2;
-                    }
-                    var refBezier = new Bezier3(lanePos, b3, c, lanePos2);
-                    LogUtils.DoLog($"[{buildingInfo}]refBezier = {refBezier} ({lanePos} {b3} {c} {lanePos2})");
-
-
-                    Vector3 positionR = refBezier.Position(m_defaultStopOffset);
-                    Vector3 direction = refBezier.Tangent(m_defaultStopOffset);
-                    LogUtils.DoLog($"[{buildingInfo}]1positionR = {positionR}; direction = {direction}");
-
-                    Vector3 normalized = Vector3.Cross(Vector3.up, direction).normalized;
-                    positionR += normalized * (MathUtils.SmootherStep(0.5f, 0f, Mathf.Abs(m_defaultStopOffset - 0.5f)) * lane.m_stopOffset);
-                    LogUtils.DoLog($"[{buildingInfo}]2positionR = {positionR}; direction = {direction}; {normalized}");
-                    result.Add(new StopPointDescriptorLanes
-                    {
-                        platformLine = refBezier,
-                        width = lane.m_width,
-                        vehicleType = refLane.m_stopType,
-                        laneId = laneId,
-                        subbuildingId = -1,
-                        directionPath = directionPath * (path.m_invertSegments == (refLane.m_finalDirection == NetInfo.Direction.AvoidForward || refLane.m_finalDirection == NetInfo.Direction.Backward) ? 1 : -1)
-
-                    });
-
                 }
             }
-            for (int i = 0; i < buildingInfo.m_subBuildings.Length; i++)
+            for (int i = 0; i < (buildingInfo.m_subBuildings?.Length ?? 0); i++)
             {
                 StopPointDescriptorLanes[] subPlats = MapStopPoints(buildingInfo.m_subBuildings[i].m_buildingInfo, thresold);
                 if (subPlats != null)
@@ -183,7 +188,8 @@ namespace Klyte.Commons.Utils
                         x.platformLine.b = (rotationToApply * x.platformLine.b) + buildingInfo.m_subBuildings[i].m_position;
                         x.platformLine.c = (rotationToApply * x.platformLine.c) + buildingInfo.m_subBuildings[i].m_position;
                         x.platformLine.d = (rotationToApply * x.platformLine.d) + buildingInfo.m_subBuildings[i].m_position;
-                        x.subbuildingId = (sbyte) i;
+                        x.subbuildingId = (sbyte)i;
+                        x.directionPath = (rotationToApply * x.directionPath).normalized;
                         return x;
                     }));
                 }

@@ -18,32 +18,39 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static byte[] Zip(string str)
+        public static byte[] Zip(string str) => ZipBytes(Encoding.UTF8.GetBytes(str));
+
+        public static byte[] ZipBytes(byte[] bytes)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(str);
-
-            using var msi = new MemoryStream(bytes);
-            using var mso = new MemoryStream();
-            using (var gs = new GZipStream(mso, CompressionMode.Compress))
+            using (var msi = new MemoryStream(bytes))
             {
-                //msi.CopyTo(gs);
-                CopyTo(msi, gs);
+                using (var mso = new MemoryStream())
+                {
+                    using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                    {
+                        CopyTo(msi, gs);
+                    }
+                    return mso.ToArray();
+                }
             }
-
-            return mso.ToArray();
         }
 
-        public static string Unzip(byte[] bytes)
-        {
-            using var msi = new MemoryStream(bytes);
-            using var mso = new MemoryStream();
-            using (var gs = new GZipStream(msi, CompressionMode.Decompress))
-            {
-                //gs.CopyTo(mso);
-                CopyTo(gs, mso);
-            }
+        public static string Unzip(byte[] bytes) => Encoding.UTF8.GetString(UnzipBytes(bytes));
 
-            return Encoding.UTF8.GetString(mso.ToArray());
+        public static byte[] UnzipBytes(byte[] bytes)
+        {
+            using (var msi = new MemoryStream(bytes))
+            {
+                using (var mso = new MemoryStream())
+                {
+                    using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+                    {
+                        //gs.CopyTo(mso);
+                        CopyTo(gs, mso);
+                    }
+                    return mso.ToArray();
+                }
+            }
         }
     }
 }

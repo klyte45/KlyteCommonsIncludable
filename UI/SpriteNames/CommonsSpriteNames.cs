@@ -37,6 +37,9 @@
         K45_Right,
         K45_Layers,
         K45_Import,
-        K45_Export
+        K45_Export,
+        K45_Steam,
+        K45_Dropper,
+        K45_PaintBucket
     }
 }

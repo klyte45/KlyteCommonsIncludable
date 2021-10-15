@@ -3,8 +3,9 @@ using ColossalFramework.DataBinding;
 using ColossalFramework.Globalization;
 using ColossalFramework.Threading;
 using ColossalFramework.UI;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.i18n;
+using Klyte.Commons.Redirectors;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20200426";
+        public const string VERSION = "20211014";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -39,6 +40,7 @@ namespace Klyte.Commons.Utils
             mainPanel.autoLayoutStart = LayoutStart.TopLeft;
             mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
+            
 
             #region Title
             KlyteMonoUtils.CreateUIElement(out UIPanel titleContainer, mainPanel.transform, "TitleContainer");
@@ -46,7 +48,7 @@ namespace Klyte.Commons.Utils
 
 
             KlyteMonoUtils.CreateUIElement(out UILabel title, titleContainer.transform, "Title");
-            title.text = "<k45symbol K45_HexagonIcon_NOBORDER,5e35b1,K> Klyte45";
+            title.text = "Klyte45";
             title.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
             title.minimumSize = new Vector3(titleContainer.width - 100, 0);
             title.textScale = 2;
@@ -86,6 +88,8 @@ namespace Klyte.Commons.Utils
             #region Text area
             KlyteMonoUtils.CreateUIElement(out UILabel boxText, mainPanel.transform, "BoxText");
             boxText.minimumSize = new Vector2(800, 60);
+            boxText.maximumSize = new Vector2(0, view.fixedHeight * 0.8f);
+            boxText.clipChildren = true;
             boxText.wordWrap = true;
             boxText.autoSize = false;
             boxText.autoHeight = true;
@@ -137,6 +141,12 @@ namespace Klyte.Commons.Utils
             button4.text = "DDDDD";
             button4.wordWrap = true;
             KlyteMonoUtils.InitButtonFull(button4, false, "ButtonMenu");
+            KlyteMonoUtils.CreateUIElement(out UIButton button5, buttonSubContainer.transform, "ButtonAction5");
+            button5.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
+            button5.size = new Vector2(150, 60);
+            button5.text = "EEEEE";
+            button5.wordWrap = true;
+            KlyteMonoUtils.InitButtonFull(button5, false, "ButtonMenu");
             #endregion
 
             #region Bindings creation
@@ -152,10 +162,12 @@ namespace Klyte.Commons.Utils
                 CreateBind("showButton2"        ,button2,"isVisible"),
                 CreateBind("showButton3"        ,button3,"isVisible"),
                 CreateBind("showButton4"        ,button4,"isVisible"),
+                CreateBind("showButton5"        ,button5,"isVisible"),
                 CreateBind("textButton1"        ,button1,"text"),
                 CreateBind("textButton2"        ,button2,"text"),
                 CreateBind("textButton3"        ,button3,"text"),
                 CreateBind("textButton4"        ,button4,"text"),
+                CreateBind("textButton5"        ,button5,"text"),
             });
             #endregion
 
@@ -181,18 +193,15 @@ namespace Klyte.Commons.Utils
             KlyteMonoUtils.UiTextFieldDefaultsForm(textField);
         }
 
-        private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property)
+        private static BindPropertyByKey.BindingInfo CreateBind(string key, UIComponent component, string property) => new BindPropertyByKey.BindingInfo()
         {
-            return new BindPropertyByKey.BindingInfo()
+            key = key,
+            target = new BindingReference()
             {
-                key = key,
-                target = new BindingReference()
-                {
-                    component = component,
-                    memberName = property
-                }
-            };
-        }
+                component = component,
+                memberName = property
+            }
+        };
         #endregion
 
         public void Awake() => component.stringUserData = VERSION;
@@ -212,35 +221,12 @@ public void Start()
                 return;
             }
             LogUtils.DoWarnLog($"Starting panel at version {VERSION}");
-            m_mainPanel = GetComponent<UIPanel>();
-
-            m_titleContainer = m_mainPanel.Find<UIPanel>("TitleContainer");
-            m_title = m_titleContainer.Find<UILabel>("Title");
-            m_modIcon = m_titleContainer.Find<UISprite>("ModIcon");
-            m_closeButton = m_titleContainer.Find<UIButton>("CloseButton");
-            m_boxText = m_mainPanel.Find<UILabel>("BoxText");
-            m_buttonSupContainer = m_mainPanel.Find<UIPanel>("ButtonSupContainer");
-
-            m_button1 = m_mainPanel.Find<UIButton>("ButtonAction1");
-            m_button2 = m_mainPanel.Find<UIButton>("ButtonAction2");
-            m_button3 = m_mainPanel.Find<UIButton>("ButtonAction3");
-            m_button4 = m_mainPanel.Find<UIButton>("ButtonAction4");
-
-            m_textField = m_mainPanel.Find<UITextField>(TEXT_INPUT_ID);
-
-            m_textureSupContainer = m_mainPanel.Find<UIPanel>("TextureSupContainer");
-            m_textureSprite = m_mainPanel.Find<UITextureSprite>("TextureSprite");
+            BindControls();
 
             m_properties = m_mainPanel.GetComponent<BindPropertyByKey>();
 
             #region Events bindings
-            m_mainPanel.enabled = false;
-
-            m_button1.eventClicked += (x, y) => OnButton1();
-            m_button2.eventClicked += (x, y) => OnButton2();
-            m_button3.eventClicked += (x, y) => OnButton3();
-            m_button4.eventClicked += (x, y) => OnButton4();
-
+            BindEvents();
 
             KlyteMonoUtils.LimitWidthAndBox(m_title, out UIPanel boxContainerTitle);
             boxContainerTitle.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.Top;
@@ -254,14 +240,50 @@ public void Start()
             m_closeButton.eventClicked += (x, y) => Close(0);
 
             m_mainPanel.enabled = true;
+
+
             #endregion
+        }
+
+        private void BindEvents()
+        {
+            m_mainPanel.enabled = false;
+
+            m_button1.eventClicked += (x, y) => OnButton1();
+            m_button2.eventClicked += (x, y) => OnButton2();
+            m_button3.eventClicked += (x, y) => OnButton3();
+            m_button4.eventClicked += (x, y) => OnButton4();
+            m_button5.eventClicked += (x, y) => OnButton5();
+        }
+
+        private void BindControls()
+        {
+            m_mainPanel = GetComponent<UIPanel>();
+
+            m_titleContainer = m_mainPanel.Find<UIPanel>("TitleContainer");
+            m_title = m_titleContainer.Find<UILabel>("Title");
+            m_modIcon = m_titleContainer.Find<UISprite>("ModIcon");
+            m_closeButton = m_titleContainer.Find<UIButton>("CloseButton");
+            m_boxText = m_mainPanel.Find<UILabel>("BoxText");
+            m_buttonSupContainer = m_mainPanel.Find<UIPanel>("ButtonSupContainer");
+
+            m_button1 = m_mainPanel.Find<UIButton>("ButtonAction1");
+            m_button2 = m_mainPanel.Find<UIButton>("ButtonAction2");
+            m_button3 = m_mainPanel.Find<UIButton>("ButtonAction3");
+            m_button4 = m_mainPanel.Find<UIButton>("ButtonAction4");
+            m_button5 = m_mainPanel.Find<UIButton>("ButtonAction5");
+
+            m_textField = m_mainPanel.Find<UITextField>(TEXT_INPUT_ID);
+
+            m_textureSupContainer = m_mainPanel.Find<UIPanel>("TextureSupContainer");
+            m_textureSprite = m_mainPanel.Find<UITextureSprite>("TextureSprite");
         }
 
         public void Update()
         {
             if (UIView.GetModalComponent()?.GetComponent<K45DialogControl>() != null)
             {
-                m_mainPanel.zOrder = 9999;
+                m_mainPanel.zOrder = UIView.GetModalComponent().zOrder + 1;
             }
         }
 
@@ -272,6 +294,7 @@ public void Start()
         private void OnButton3() => Close(3);
 
         private void OnButton4() => Close(4);
+        private void OnButton5() => Close(5);
 
         private IEnumerator Enqueue(BindProperties properties, Func<int, bool> callback)
         {
@@ -314,7 +337,6 @@ public void Start()
             m_mainPanel.autoLayout = true;
             if (propertiesToSet.help_isArticle)
             {
-
                 if (!Directory.Exists(propertiesToSet.help_fullPathName))
                 {
                     LogUtils.DoErrorLog($"Invalid tutorial path! {propertiesToSet.help_fullPathName}");
@@ -345,18 +367,20 @@ public void Start()
                 string textureImagePath = File.Exists(targetImg) ? targetImg : null;
                 string path = propertiesToSet.help_fullPathName;
                 string feature = propertiesToSet.help_featureName;
+                string[] formatEntries = propertiesToSet.help_formatsEntries;
                 LogUtils.DoLog($"IMG: {targetImg}");
                 propertiesToSet = new BindProperties
                 {
+                    icon = propertiesToSet.icon,
                     title = string.Format(Locale.Get("K45_CMNS_HELP_FORMAT"), propertiesToSet.help_featureName, currentPage + 1, lastPage + 1),
-                    message = tutorialEntries[currentPage],
+                    message = string.Format(tutorialEntries[currentPage], formatEntries),
                     imageTexturePath = textureImagePath,
 
                     showClose = true,
                     showButton1 = currentPage != 0,
                     textButton1 = "<<<\n" + Locale.Get("K45_CMNS_PREV"),
                     showButton2 = true,
-                    textButton2 = Locale.Get("K45_CMNS_OK"),
+                    textButton2 = Locale.Get("EXCEPTION_OK"),
                     showButton3 = currentPage != lastPage,
                     textButton3 = ">>>\n" + Locale.Get("K45_CMNS_NEXT"),
                 };
@@ -364,11 +388,11 @@ public void Start()
                 {
                     if (x == 1)
                     {
-                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1);
+                        ShowModalHelpAbsolutePath(path, feature, currentPage - 1, formatEntries);
                     }
                     if (x == 3)
                     {
-                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1);
+                        ShowModalHelpAbsolutePath(path, feature, currentPage + 1, formatEntries);
                     }
                     return true;
                 };
@@ -386,15 +410,18 @@ public void Start()
             m_properties.FindBinding("showButton2").property.value = propertiesToSet.showButton2;
             m_properties.FindBinding("showButton3").property.value = propertiesToSet.showButton3;
             m_properties.FindBinding("showButton4").property.value = propertiesToSet.showButton4;
+            m_properties.FindBinding("showButton5").property.value = propertiesToSet.showButton5;
             m_properties.FindBinding("textButton1").property.value = propertiesToSet.textButton1 ?? "";
             m_properties.FindBinding("textButton2").property.value = propertiesToSet.textButton2 ?? "";
             m_properties.FindBinding("textButton3").property.value = propertiesToSet.textButton3 ?? "";
             m_properties.FindBinding("textButton4").property.value = propertiesToSet.textButton4 ?? "";
+            m_properties.FindBinding("textButton5").property.value = propertiesToSet.textButton5 ?? "";
 
+            m_boxText.textScale = propertiesToSet.smallFont ? 0.75f : 1;
             m_textField.isVisible = propertiesToSet.showTextField;
             m_textField.text = propertiesToSet.defaultTextFieldContent ?? "";
 
-            if (m_dropDown == null)
+            if (m_dropDown is null)
             {
                 KlyteMonoUtils.CreateUIElement(out UIPanel DDpanel, m_mainPanel.transform);
                 DDpanel.maximumSize = new Vector2(m_boxText.minimumSize.x - 10, 40);
@@ -489,6 +516,7 @@ public void Start()
         private UIButton m_button2;
         private UIButton m_button3;
         private UIButton m_button4;
+        private UIButton m_button5;
         private UITextField m_textField;
         private UIDropDown m_dropDown;
         private UITextureSprite m_textureSprite;
@@ -510,11 +538,44 @@ public void Start()
                 ShowModalInternal(properties, action);
             }
         }
+        public static void ShowModalError(string title, string message, bool showGitHubButton = false)
+        {
+            BindProperties properties = new BindProperties
+            {
+                title = "Error!",
+                message = $"<color red>{title}</color>" + (message is null ? "" : $"\nDetails:\n\n{message}"),
+                showButton1 = true,
+                showButton2 = showGitHubButton && !CommonProperties.GitHubRepoPath.IsNullOrWhiteSpace(),
+                showClose = true,
+                textButton1 = Locale.Get("EXCEPTION_OK"),
+                textButton2 = "GitHub: open an issue to check this",
+                showTextField = false,
+                useFullWindowWidth = true,
+                smallFont = true
+            };
+            bool action(int x)
+            {
+                if (x == 2)
+                {
+                    FileSystemUtils.OpenURLInOverlayOrBrowser($"https://github.com/{CommonProperties.GitHubRepoPath}/issues/new");
+                    return false;
+                }
+                return true;
+            }
+            if (Dispatcher.mainSafe != Dispatcher.currentSafe)
+            {
+                ThreadHelper.dispatcher.Dispatch(() => ShowModalInternal(properties, action));
+            }
+            else
+            {
+                ShowModalInternal(properties, action);
+            }
+        }
 
         private static void ShowModalInternal(BindProperties properties, Func<int, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (!(uIComponent is null) && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 addAction(properties.ToDictionary(), action);
             }
@@ -527,7 +588,7 @@ public void Start()
         public static void UpdateCurrentMessage(string newText)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
+            if (!(uIComponent is null) && uIComponent.GetComponent<BindPropertyByKey>() is BindPropertyByKey properties && properties != null)
             {
                 properties.FindBinding("message").property.value = newText;
             }
@@ -539,16 +600,16 @@ public void Start()
 
         private static void ShowErrorPanelNotFound()
         {
-            UIComponent uIComponent = null;//UIView.library.ShowModal("ExceptionPanel");
-            if (uIComponent != null)
+            UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
+            if (!(uIComponent is null))
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                if (component != null)
+                if (!(component is null))
                 {
                     string title = $"Mod not loaded";
-                    string text = $"Seems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!";
+                    string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
                     string img = "IconMessage";
                     component.SetProperties(TooltipHelper.Format(new string[]
                     {
@@ -583,7 +644,7 @@ public void Start()
         private static void ShowModalPromptTextInternal(BindProperties properties, Func<int, string, bool> action)
         {
             UIComponent uIComponent = UIView.library.Get(PANEL_ID);
-            if (uIComponent != null && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
+            if (!(uIComponent is null) && uIComponent.objectUserData is Action<Dictionary<string, object>, Func<int, bool>> addAction)
             {
                 bool targetAction(int x)
                 {
@@ -599,16 +660,18 @@ public void Start()
             }
         }
 
-        public static void ShowModalHelp(string pathName, string featureName, int startPage = 0)
+        public static void ShowModalHelp(string pathName, string featureName, int startPage, params string[] formatsEntries)
         {
             string fullPathName = $"{CommonProperties.ModDllRootFolder}{Path.DirectorySeparatorChar}{TUTORIAL_FOLDER_NAME}{Path.DirectorySeparatorChar}{pathName}";
 
             var properties = new BindProperties
             {
+                icon = CommonProperties.ModIcon,
                 help_isArticle = true,
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
+                help_formatsEntries = new string[] { featureName }.Union(formatsEntries).ToArray(),
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
@@ -619,15 +682,17 @@ public void Start()
                 ShowModalInternal(properties, null);
             }
         }
-        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage)
+        private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage, params string[] formatsEntries)
         {
 
             var properties = new BindProperties
             {
+                icon = CommonProperties.ModIcon,
                 help_isArticle = true,
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
+                help_formatsEntries = formatsEntries,
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {
@@ -696,10 +761,12 @@ public void Start()
             public bool showButton2;
             public bool showButton3;
             public bool showButton4;
+            public bool showButton5;
             public string textButton1;
             public string textButton2;
             public string textButton3;
             public string textButton4;
+            public string textButton5;
             public bool useFullWindowWidth;
             public bool showTextField;
             public bool showDropDown;
@@ -707,11 +774,13 @@ public void Start()
             public int dropDownCurrentSelection;
             public string defaultTextFieldContent;
             public string imageTexturePath;
+            public bool smallFont;
 
             public bool help_isArticle;
             public string help_fullPathName;
             public int help_currentPage;
             public string help_featureName;
+            public string[] help_formatsEntries;
 
 
 
@@ -731,10 +800,12 @@ public void Start()
                         case "showButton2": result.showButton2 = (bool)kv.Value; break;
                         case "showButton3": result.showButton3 = (bool)kv.Value; break;
                         case "showButton4": result.showButton4 = (bool)kv.Value; break;
+                        case "showButton5": result.showButton5 = (bool)kv.Value; break;
                         case "textButton1": result.textButton1 = (string)kv.Value; break;
                         case "textButton2": result.textButton2 = (string)kv.Value; break;
                         case "textButton3": result.textButton3 = (string)kv.Value; break;
                         case "textButton4": result.textButton4 = (string)kv.Value; break;
+                        case "textButton5": result.textButton5 = (string)kv.Value; break;
                         case "useFullWindowWidth": result.useFullWindowWidth = (bool)kv.Value; break;
                         case "showTextField": result.showTextField = (bool)kv.Value; break;
                         case "showDropDown": result.showDropDown = (bool)kv.Value; break;
@@ -742,53 +813,62 @@ public void Start()
                         case "dropDownCurrentSelection": result.dropDownCurrentSelection = (int)kv.Value; break;
                         case "defaultTextFieldContent": result.defaultTextFieldContent = (string)kv.Value; break;
                         case "imageTexturePath": result.imageTexturePath = (string)kv.Value; break;
+                        case "smallFont": result.smallFont = (bool)kv.Value; break;
 
                         case "help_isArticle": result.help_isArticle = (bool)kv.Value; break;
                         case "help_fullPathName": result.help_fullPathName = (string)kv.Value; break;
                         case "help_currentPage": result.help_currentPage = (int)kv.Value; break;
                         case "help_featureName": result.help_featureName = (string)kv.Value; break;
+                        case "help_formatsEntries": result.help_formatsEntries = (string[])kv.Value; break;
+
                     }
                 }
                 return result;
             }
 
-            public Dictionary<string, object> ToDictionary()
+            public Dictionary<string, object> ToDictionary() => new Dictionary<string, object>()
             {
-                return new Dictionary<string, object>()
-                {
-                    ["title"] = title,
-                    ["icon"] = icon,
-                    ["showClose"] = showClose,
-                    ["message"] = message,
-                    ["messageAlign"] = messageAlign,
-                    ["showButton1"] = showButton1,
-                    ["showButton2"] = showButton2,
-                    ["showButton3"] = showButton3,
-                    ["showButton4"] = showButton4,
-                    ["textButton1"] = textButton1,
-                    ["textButton2"] = textButton2,
-                    ["textButton3"] = textButton3,
-                    ["textButton4"] = textButton4,
-                    ["useFullWindowWidth"] = useFullWindowWidth,
-                    ["showTextField"] = showTextField,
-                    ["showDropDown"] = showDropDown,
-                    ["dropDownOptions"] = dropDownOptions,
-                    ["dropDownCurrentSelection"] = dropDownCurrentSelection,
-                    ["defaultTextFieldContent"] = defaultTextFieldContent,
-                    ["imageTexturePath"] = imageTexturePath,
+                ["title"] = title ?? CommonProperties.ModName,
+                ["icon"] = icon ?? CommonProperties.ModIcon,
+                ["showClose"] = showClose,
+                ["message"] = message,
+                ["messageAlign"] = messageAlign,
+                ["showButton1"] = showButton1,
+                ["showButton2"] = showButton2,
+                ["showButton3"] = showButton3,
+                ["showButton4"] = showButton4,
+                ["showButton5"] = showButton5,
+                ["textButton1"] = textButton1,
+                ["textButton2"] = textButton2,
+                ["textButton3"] = textButton3,
+                ["textButton4"] = textButton4,
+                ["textButton5"] = textButton5,
+                ["useFullWindowWidth"] = useFullWindowWidth,
+                ["showTextField"] = showTextField,
+                ["showDropDown"] = showDropDown,
+                ["dropDownOptions"] = dropDownOptions,
+                ["dropDownCurrentSelection"] = dropDownCurrentSelection,
+                ["defaultTextFieldContent"] = defaultTextFieldContent,
+                ["imageTexturePath"] = imageTexturePath,
+                ["smallFont"] = smallFont,
 
-
-                    ["help_isArticle"] = help_isArticle,
-                    ["help_fullPathName"] = help_fullPathName,
-                    ["help_currentPage"] = help_currentPage,
-                    ["help_featureName"] = help_featureName,
-                };
-            }
+                ["help_isArticle"] = help_isArticle,
+                ["help_fullPathName"] = help_fullPathName,
+                ["help_currentPage"] = help_currentPage,
+                ["help_featureName"] = help_featureName,
+                ["help_formatsEntries"] = help_formatsEntries,
+            };
 
             public override string ToString() => string.Join(",", ToDictionary().ToList().Select(x => $"{x.Key}≠{x.Value}").ToArray());
         }
 
 
         #endregion
+
+        public void OnDestroy()
+        {
+            LogUtils.DoWarnLog("PANEL REMOVED");
+            UIDynamicPanelsRedirector.RemovePanel();
+        }
     }
 }

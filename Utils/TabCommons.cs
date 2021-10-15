@@ -37,11 +37,7 @@ namespace Klyte.Commons.Utils
         private static T CreateTabInternal<T>(this UITabstrip stripMain, string sprite, string text, string objectName, bool scroll = true, UITextureAtlas textureAtlas = null, Vector2? nullableSize = null, bool isHorizontal = true) where T : UICustomControl
         {
             GameObject go = CreateTabInternal(stripMain, sprite, text, objectName, scroll, textureAtlas, nullableSize, isHorizontal);
-            if (typeof(T) != typeof(UICustomControl))
-            {
-                return go.AddComponent<T>();
-            }
-            return null;
+            return typeof(T) != typeof(UICustomControl) ? go.AddComponent<T>() : null;
         }
 
         private static GameObject CreateTabInternal(UITabstrip stripMain, string sprite, string text, string objectName, bool scroll, UITextureAtlas textureAtlas, Vector2? nullableSize, bool isHorizontal)

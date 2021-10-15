@@ -127,7 +127,13 @@ namespace Klyte.Commons.Utils
             newFiles.AddRange(textureAtlas.sprites.Where(x => !newSpritesNames.Contains(x.name)));
             textureAtlas.sprites.Clear();
             textureAtlas.AddSprites(newFiles.ToArray());
+            if (textureAtlas.texture == null)
+            {
+                textureAtlas.material.mainTexture = new Texture2D(1, 1);
+                (textureAtlas.material.mainTexture as Texture2D).SetPixel(0, 0, default);
+            }
             Rect[] array = textureAtlas.texture.PackTextures(textureAtlas.sprites.Select(x => x.texture).ToArray(), textureAtlas.padding, 4096 * 4);
+
             for (int i = 0; i < textureAtlas.count; i++)
             {
                 textureAtlas.sprites[i].region = array[i];

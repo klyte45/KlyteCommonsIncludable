@@ -4,12 +4,12 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ExtensionInterfaceSingleImpl<T, R, U> : DataExtensorBase<U>  where T : Enum, IConvertible where R : new() where U : ExtensionInterfaceSingleImpl< T, R, U>, new()
+    public abstract class ExtensionInterfaceSingleImpl<T, R, U> : DataExtensionBase<U> where T : Enum, IConvertible where R : new() where U : ExtensionInterfaceSingleImpl<T, R, U>, new()
     {
         [XmlElement("Data")]
         public SimpleEnumerableList<T, R> m_cachedListString = new SimpleEnumerableList<T, R>();
 
-        public event Action<T, R> eventOnValueChanged;
+        public event Action<T, R> EventOnValueChanged;
 
         protected virtual bool HasNullValue { get; } = false;
 
@@ -36,7 +36,7 @@ namespace Klyte.Commons.Interfaces
             {
                 m_cachedListString[key] = value;
             }
-            eventOnValueChanged?.Invoke(key, value);
+            EventOnValueChanged?.Invoke(key, value);
         }
 
         public void SafeCleanProperty(T key)
@@ -45,7 +45,7 @@ namespace Klyte.Commons.Interfaces
             if (m_cachedListString.ContainsKey(key))
             {
                 m_cachedListString.Remove(key);
-                eventOnValueChanged?.Invoke(key, default);
+                EventOnValueChanged?.Invoke(key, default);
             }
         }
         #endregion

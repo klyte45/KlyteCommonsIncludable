@@ -36,7 +36,12 @@ namespace Klyte.Commons.Utils
             })[0], out workshopId);
         }
 
-        public static void ScanPrefabsFolders<T>(string filenameToSearch, Action<FileStream, T> action) where T : PrefabInfo
+        public static void ScanPrefabsFolders<T>(string filenameToSearch, Action<FileStream, T> action) where T : PrefabInfo => ScanPrefabsFolders(new Dictionary<string, Action<FileStream, T>>
+        {
+            [filenameToSearch] = action
+        });
+
+        public static void ScanPrefabsFolders<T>(Dictionary<string, Action<FileStream, T>> actions) where T : PrefabInfo
         {
             var list = new List<string>();
             ForEachLoadedPrefab<T>((loaded) =>
@@ -47,21 +52,40 @@ namespace Klyte.Commons.Utils
                     string packagePath = asset.package.packagePath;
                     if (packagePath != null)
                     {
-                        string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
-                        if (!list.Contains(filePath))
+                        foreach (string filenameToSearch in actions.Keys)
                         {
-                            list.Add(filePath);
-                            if (File.Exists(filePath))
+                            string filePath = Path.Combine(Path.GetDirectoryName(packagePath), filenameToSearch);
+                            if (!list.Contains(filePath))
                             {
-                                using FileStream stream = File.OpenRead(filePath);
-                                action(stream, loaded);
+                                list.Add(filePath);
+                                if (File.Exists(filePath))
+                                {
+                                    using (FileStream stream = File.OpenRead(filePath))
+                                    {
+                                        actions[filenameToSearch](stream, loaded);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             });
         }
-        public static void ScanPrefabsFoldersDirectory<T>(string directoryToFind, Action<string, T> action) where T : PrefabInfo
+
+        public static void DoInPrefabFolder(PrefabInfo targetPrefab, Action<string> actionToPerform) => DoInPrefabFolder(targetPrefab.name, actionToPerform);
+        public static void DoInPrefabFolder(string prefabName, Action<string> actionToPerform)
+        {
+            Package.Asset asset = PackageManager.FindAssetByName(prefabName);
+            if (!(asset == null) && !(asset.package == null))
+            {
+                string packagePath = asset.package.packagePath;
+                if (packagePath != null)
+                {
+                    actionToPerform(Path.GetDirectoryName(packagePath));
+                }
+            }
+        }
+        public static void ScanPrefabsFoldersDirectory<T>(string directoryToFind, Action<ulong, string, T> action) where T : PrefabInfo
         {
             var list = new List<string>();
             ForEachLoadedPrefab<T>((loaded) =>
@@ -79,7 +103,7 @@ namespace Klyte.Commons.Utils
                             LogUtils.DoLog("DIRECTORY TO FIND: " + filePath);
                             if (Directory.Exists(filePath))
                             {
-                                action(filePath, loaded);
+                                action(asset.package.GetPublishedFileID().AsUInt64, filePath, loaded);
                             }
                         }
                     }
@@ -121,8 +145,10 @@ namespace Klyte.Commons.Utils
                         list.Add(filePath);
                         if (File.Exists(filePath))
                         {
-                            using FileStream stream = File.OpenRead(filePath);
-                            action(stream, package, asset);
+                            using (FileStream stream = File.OpenRead(filePath))
+                            {
+                                action(stream, package, asset);
+                            }
                         }
                     }
                 }

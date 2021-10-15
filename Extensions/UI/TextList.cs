@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.Extensors
+namespace Klyte.Commons.Extensions
 {
     public class TextList<T>
     {
@@ -16,7 +16,8 @@ namespace Klyte.Commons.Extensors
         public T SelectedItem
         {
             get => m_selectedItem;
-            internal set {
+            internal set
+            {
                 m_selectedItem = value;
                 RefreshSelection();
             }
@@ -26,7 +27,8 @@ namespace Klyte.Commons.Extensors
         public Dictionary<T, string> ItemsList
         {
             get => m_itemsList;
-            set {
+            set
+            {
                 if (value == null)
                 {
                     value = new Dictionary<T, string>();
@@ -76,9 +78,10 @@ namespace Klyte.Commons.Extensors
         {
             this.name = name;
             m_parent = parent;
-            ((UIPanel) parent).autoFitChildrenVertically = true;
-            ((UIPanel) parent).padding = new RectOffset(20, 20, 20, 20);
+            ((UIPanel)parent).autoFitChildrenVertically = true;
+            ((UIPanel)parent).padding = new RectOffset(20, 20, 20, 20);
             var panelListing = m_parent.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+            panelListing.transform.localScale = Vector3.one;
             panelListing.name = "TextList";
             panelListing.height = height;
             panelListing.width = width;
@@ -107,7 +110,8 @@ namespace Klyte.Commons.Extensors
             {
                 m_linesListPanel.scrollPosition -= new Vector2(0, eventParam.wheelDelta * m_linesListPanel.scrollWheelAmount);
             };
-            panelListing.AttachUIComponent(m_linesListPanel.gameObject);
+            var k = panelListing.AttachUIComponent(m_linesListPanel.gameObject);
+            k.transform.localScale = Vector3.one;
             m_linesListPanel.autoLayout = true;
             m_linesListPanel.autoLayoutDirection = LayoutDirection.Vertical;
 
@@ -173,7 +177,7 @@ namespace Klyte.Commons.Extensors
                 itemButton.id = entry.Key;
                 itemButton.eventClick += (component, eventParam) =>
                 {
-                    SelectedItem = (T) itemButton.id;
+                    SelectedItem = (T)itemButton.id;
                     EventOnSelect(SelectedItem);
                     eventParam.Use();
                 };

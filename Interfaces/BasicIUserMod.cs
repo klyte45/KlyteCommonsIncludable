@@ -1,9 +1,10 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.Extensors;
+using Klyte.Commons.Extensions;
 using Klyte.Commons.UI.SpriteNames;
 using Klyte.Commons.Utils;
+using System.Collections;
 using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
@@ -25,10 +26,10 @@ namespace Klyte.Commons.Interfaces
         protected sealed override void OnLevelLoadedInherit(LoadMode mode)
         {
             base.OnLevelLoadedInherit(mode);
-            if (LoadUI)
+            if (LoadUI && IsValidLoadMode(mode))
             {
                 m_modsPanel = UIView.Find<UIPanel>("K45_ModsPanel");
-                if (m_modsPanel == null)
+                if (m_modsPanel is null)
                 {
                     UIComponent uicomponent = UIView.Find("TSBar");
                     m_bg = uicomponent.AddUIComponent<UIPanel>();
@@ -78,12 +79,19 @@ namespace Klyte.Commons.Interfaces
                     m_modPanelButton.textScale = 1.3f;
                     m_modPanelButton.textVerticalAlignment = UIVerticalAlignment.Middle;
                     m_modPanelButton.textHorizontalAlignment = UIHorizontalAlignment.Center;
-                    m_modPanelButton.tooltip = "Double click to move the button!";
-                    m_modPanelButton.eventDoubleClick += (component, ms) =>
+                    m_modPanelButton.tooltip = "Ctrl + click to move the button!";
+                    m_modPanelButton.eventClicked += (component, ms) =>
                     {
-                        handle.zOrder = 13;
-                        doneButton.Show();
-                        handle.enabled = true;
+                        if (Event.current.control)
+                        {
+                            handle.zOrder = 13;
+                            doneButton.Show();
+                            handle.enabled = true;
+                        }
+                        else
+                        {
+                            TogglePanel(component, ms);
+                        }
                     };
 
                     m_modsPanel = m_bg.AddUIComponent<UIPanel>();
@@ -93,7 +101,6 @@ namespace Klyte.Commons.Interfaces
                     m_modsPanel.isInteractive = false;
                     m_modsPanel.Hide();
 
-                    m_modPanelButton.eventClicked += TogglePanel;
 
                     KlyteMonoUtils.CreateTabsComponent(out m_modsTabstrip, out UITabContainer container, m_modsPanel.transform, "K45", new Vector4(52, -8, m_modsPanel.width - 52, 40), new Vector4(0, 32, m_modsPanel.width, m_modsPanel.height));
                     m_modsTabstrip.isInteractive = false;
@@ -107,8 +114,21 @@ namespace Klyte.Commons.Interfaces
                     m_modsTabstrip.tabContainer.isInteractive = false;
                 }
 
+                if (m_modPanelButton.color != (UseLowSaturationButton ? Color.gray : Color.white))
+                {
+                    ApplyButtonColor();
+                }
+
                 AddTab();
             }
+        }
+
+        private static void ApplyButtonColor()
+        {
+            m_modPanelButton.color = UseLowSaturationButton ? Color.gray : Color.white;
+            m_modPanelButton.hoveredColor = Color.white;
+            m_modPanelButton.focusedColor = UseLowSaturationButton ? Color.gray : Color.white;
+            m_modPanelButton.disabledColor = UseLowSaturationButton ? Color.gray : Color.white;
         }
 
         public override void Group9SettingsUI(UIHelperExtension group9)
@@ -125,9 +145,31 @@ namespace Klyte.Commons.Interfaces
             });
         }
 
+        protected override void CreateGroup9(UIHelperExtension helper)
+        {
+            base.CreateGroup9(helper);
+            var chk_lowSat = helper.AddCheckboxLocale("K45_CMNS_USE_LOW_BRIGHT_BUTTON", UseLowSaturationButton);
+            helper.Self.eventVisibilityChanged += (x, y) =>
+            {
+                if (y)
+                {
+                    chk_lowSat.isChecked = UseLowSaturationButton;
+                }
+            };
+            chk_lowSat.eventClicked += (x, y) =>
+            {
+                UseLowSaturationButton.value = chk_lowSat.isChecked;
+
+                if (!(m_modPanelButton is null))
+                {
+                    ApplyButtonColor();
+                }
+            };
+        }
+
         internal void AddTab()
         {
-            if (m_modsTabstrip.Find<UIComponent>(CommonProperties.Acronym) != null)
+            if (!(m_modsTabstrip.Find<UIComponent>(CommonProperties.Acronym) is null))
             {
                 return;
             }
@@ -206,13 +248,21 @@ namespace Klyte.Commons.Interfaces
         public void OpenPanelAtModTab()
         {
             OpenPanel();
-            m_modsTabstrip.ShowTab(CommonProperties.Acronym);
+            Controller.StartCoroutine(ShowTab());
+        }
+
+        private static IEnumerator ShowTab()
+        {
+            yield return 0;
+            yield return 0;
+            m_modsTabstrip.selectedIndex = m_modsTabstrip.tabs.FindIndex(x => x.name == CommonProperties.Acronym);
         }
 
         public void UnselectTab() => m_modsTabstrip.selectedIndex = -1;
 
         public static SavedFloat ButtonPosX { get; } = new SavedFloat("K45_ButtonPosX_v2", Settings.gameSettingsFile, 5, true);
         public static SavedFloat ButtonPosY { get; } = new SavedFloat("K45_ButtonPosY_v2", Settings.gameSettingsFile, 60, true);
+        public static SavedBool UseLowSaturationButton { get; } = new SavedBool("K45_UseLowSaturationButton", Settings.gameSettingsFile, true, true);
 
         protected override void ExtraUnloadBinds()
         {
