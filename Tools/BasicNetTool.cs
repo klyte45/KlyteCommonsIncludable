@@ -165,7 +165,7 @@ namespace Klyte.Commons
             output.m_disaster = 0;
             output.m_currentEditObject = false;
             var ray = new Segment3(origin, vector);
-            RayCastSegmentAndNode(input.m_buildObject as NetInfo, ray, input.m_netSnap, input.m_segmentNameOnly, input.m_netService.m_service, input.m_netService2.m_service, input.m_netService.m_subService, input.m_netService2.m_subService, input.m_netService.m_itemLayers, input.m_netService2.m_itemLayers, input.m_ignoreNodeFlags, input.m_ignoreSegmentFlags, out _, out output.m_netNode, out output.m_netSegment);
+            RayCastSegmentAndNode(input.m_buildObject as NetInfo, ray, input.m_netSnap, input.m_segmentNameOnly, input.m_netService.m_service, input.m_netService2.m_service, input.m_netService.m_subService, input.m_netService2.m_subService, input.m_netService.m_itemLayers, input.m_netService2.m_itemLayers, input.m_ignoreNodeFlags, input.m_ignoreSegmentFlags, out m_raycastHit, out output.m_netNode, out output.m_netSegment);
 
             m_hoverSegment = output.m_netSegment;
 
@@ -191,8 +191,8 @@ namespace Klyte.Commons
             return num / (Stopwatch.Frequency / 1000L);
         }
 
-        protected static NetSegment[] SegmentBuffer => Singleton<NetManager>.instance.m_segments.m_buffer;
-        protected static NetNode[] NodeBuffer => Singleton<NetManager>.instance.m_nodes.m_buffer;
+        protected static ref NetSegment[] SegmentBuffer => ref Singleton<NetManager>.instance.m_segments.m_buffer;
+        protected static ref NetNode[] NodeBuffer => ref Singleton<NetManager>.instance.m_nodes.m_buffer;
 
 
 
@@ -210,6 +210,8 @@ namespace Klyte.Commons
         public static Shader shaderSolid = Shader.Find("Custom/Props/Decal/Solid");
 
         protected ushort m_hoverSegment;
+
+        protected Vector3 m_raycastHit;
 
         private bool m_prevRenderZones;
 
