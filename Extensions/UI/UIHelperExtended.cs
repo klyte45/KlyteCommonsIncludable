@@ -712,10 +712,10 @@ namespace Klyte.Commons.Extensions
                 }
 
                 colorField.selectedColor = defaultValue;
-
+                colorField.name = name;
                 return colorField;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name");
             return null;
         }
 
