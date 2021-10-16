@@ -191,8 +191,8 @@ namespace Klyte.Commons
             return num / (Stopwatch.Frequency / 1000L);
         }
 
-        protected static NetSegment[] SegmentBuffer => Singleton<NetManager>.instance.m_segments.m_buffer;
-        protected static NetNode[] NodeBuffer => Singleton<NetManager>.instance.m_nodes.m_buffer;
+        protected static ref NetSegment[] SegmentBuffer => ref Singleton<NetManager>.instance.m_segments.m_buffer;
+        protected static ref NetNode[] NodeBuffer => ref Singleton<NetManager>.instance.m_nodes.m_buffer;
 
 
 
