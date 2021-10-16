@@ -581,7 +581,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
 
@@ -594,37 +594,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
-            }
-        }
-
-        private static void ShowErrorPanelNotFound()
-        {
-            UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
-            if (!(uIComponent is null))
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                if (!(component is null))
-                {
-                    string title = $"Mod not loaded";
-                    string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
-                    string img = "IconMessage";
-                    component.SetProperties(TooltipHelper.Format(new string[]
-                    {
-                            "title",
-                            title,
-                            "message",
-                            text,
-                            "img",
-                            img
-                    }));
-                }
-            }
-            else
-            {
-                LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
 
@@ -656,7 +626,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
 
@@ -742,7 +712,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
         #endregion
