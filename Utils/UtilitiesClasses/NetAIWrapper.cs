@@ -10,6 +10,7 @@ namespace Klyte.Commons.Utils
         private FieldInfo m_slope;
         private FieldInfo m_tunnel;
         private FieldInfo m_invisible;
+        private ElevationType DefaultElevationType;
 
         public NetAIWrapper(NetAI ai)
         {
@@ -31,6 +32,7 @@ namespace Klyte.Commons.Utils
                 m_tunnel = null;
                 m_invisible = null;
             }
+            DefaultElevationType = ClassifyInfo(Default);
         }
 
         public bool HasElevation => m_elevated != null && m_bridge != null && m_slope != null && m_tunnel != null;
@@ -43,7 +45,7 @@ namespace Klyte.Commons.Utils
 
         public NetInfo Elevated
         {
-            get => HasElevation ? m_elevated.GetValue(AI) as NetInfo : null;
+            get => HasElevation ? m_elevated.GetValue(AI) as NetInfo : DefaultElevationType == ElevationType.Elevated ? Default : null;
             set
             {
                 if (!HasElevation)
@@ -85,7 +87,7 @@ namespace Klyte.Commons.Utils
 
         public NetInfo Tunnel
         {
-            get => HasElevation ? m_tunnel.GetValue(AI) as NetInfo : null;
+            get => HasElevation ? m_tunnel.GetValue(AI) as NetInfo : DefaultElevationType == ElevationType.Tunnel ? Default : null;
             set
             {
                 if (!HasElevation)
@@ -105,14 +107,14 @@ namespace Klyte.Commons.Utils
         {
             None = -1,
             Default,
-            Tunnel,
             Ground,
             Elevated,
             Bridge,
+            Tunnel,
             Slope
         }
 
-        internal NetInfo RelativeTo(ElevationType elevationType)
+        internal NetInfo RelativeTo(ElevationType elevationType, bool strict = false)
         {
             if (!HasElevation)
             {
@@ -125,15 +127,15 @@ namespace Klyte.Commons.Utils
                 case ElevationType.None:
                 case ElevationType.Default:
                 case ElevationType.Ground:
-                    return Default;
+                    return DefaultElevationType == ElevationType.Ground ? Default : (strict ? null : Default);
                 case ElevationType.Tunnel:
-                    return Tunnel ?? Default;
+                    return Tunnel ?? (strict ? null : Default);
                 case ElevationType.Elevated:
-                    return Elevated ?? Default;
+                    return Elevated ?? (strict ? null : Default);
                 case ElevationType.Bridge:
-                    return Bridge ?? Default;
+                    return Bridge ?? (strict ? null : Default);
                 case ElevationType.Slope:
-                    return Slope ?? Default;
+                    return Slope ?? (strict ? null : Default);
             }
         }
 
@@ -141,7 +143,7 @@ namespace Klyte.Commons.Utils
         {
             if (!HasElevation)
             {
-                return AI.IsUnderground() ? ElevationType.Tunnel : Default.m_clipTerrain ? ElevationType.Ground : ElevationType.Elevated;
+                return ClassifyInfo(oldInfo);
             }
 
             if (oldInfo == Default)
@@ -166,5 +168,7 @@ namespace Klyte.Commons.Utils
             }
             return ElevationType.None;
         }
+
+        private ElevationType ClassifyInfo(NetInfo oldInfo) => oldInfo.m_netAI.IsUnderground() ? ElevationType.Tunnel : oldInfo.m_clipTerrain ? ElevationType.Ground : ElevationType.Elevated;
     }
 }
