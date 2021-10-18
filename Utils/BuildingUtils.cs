@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static ItemClass;
 
 namespace Klyte.Commons.Utils
 {
@@ -29,10 +28,10 @@ namespace Klyte.Commons.Utils
             //}
 
 
-            int num = Mathf.Max((int) (((pos.x - maxDistance) / 64f) + 135f), 0);
-            int num2 = Mathf.Max((int) (((pos.z - maxDistance) / 64f) + 135f), 0);
-            int num3 = Mathf.Min((int) (((pos.x + maxDistance) / 64f) + 135f), 269);
-            int num4 = Mathf.Min((int) (((pos.z + maxDistance) / 64f) + 135f), 269);
+            int num = Mathf.Max((int)(((pos.x - maxDistance) / 64f) + 135f), 0);
+            int num2 = Mathf.Max((int)(((pos.z - maxDistance) / 64f) + 135f), 0);
+            int num3 = Mathf.Min((int)(((pos.x + maxDistance) / 64f) + 135f), 269);
+            int num4 = Mathf.Min((int)(((pos.z + maxDistance) / 64f) + 135f), 269);
             ushort result = 0;
             float currentDistance = maxDistance * maxDistance;
             for (int i = num2; i <= num4; i++)
@@ -88,7 +87,13 @@ namespace Klyte.Commons.Utils
                         //doErrorLog("CheckInfoCompatibility 5");
                         if (dist < lastNearest)
                         {
-                            result = buildingId;
+                            ushort resultBuilding = buildingId;
+                            while (bm.m_buildings.m_buffer[resultBuilding].m_parentBuilding > 0)
+                            {
+                                resultBuilding = bm.m_buildings.m_buffer[resultBuilding].m_parentBuilding;
+                            }
+
+                            result = resultBuilding;
                             lastNearest = dist;
                             return true;
                         }
