@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Klyte.Commons
 {
 
-    public abstract class BasicNetTool<T> : TransportTool where T : BasicNetTool<T>
+    public abstract class BaseNetTool<T> : NetTool where T : BaseNetTool<T>
     {
 
         protected override void Awake()
@@ -38,6 +38,7 @@ namespace Klyte.Commons
 
         protected override void OnDisable() => Singleton<TerrainManager>.instance.RenderZones = m_prevRenderZones;
 
+        public override void RenderGeometry(RenderManager.CameraInfo cameraInfo) { }
 
         protected override void OnToolUpdate()
         {
@@ -114,6 +115,7 @@ namespace Klyte.Commons
         protected virtual void OnLeftMouseDown() { }
 
         protected override void OnToolLateUpdate() { }
+        public override void RenderOverlay(RenderManager.CameraInfo cameraInfo) { }
 
         public override void SimulationStep() { }
 
