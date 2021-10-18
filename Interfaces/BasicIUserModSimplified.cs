@@ -1,6 +1,7 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Globalization;
 using ColossalFramework.Packaging;
+using ColossalFramework.PlatformServices;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
@@ -153,6 +154,7 @@ namespace Klyte.Commons.Interfaces
 
         protected void PatchesApply()
         {
+            UnsubAuto();
             Redirector.PatchAll();
             OnPatchesApply();
         }
@@ -435,17 +437,20 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
-        public Dictionary<ulong, string> SearchIncompatibilities()
+        private void UnsubAuto()
         {
-            if (IncompatibleModList.Count == 0)
+            if (AutomaticUnsubMods.Count > 0)
             {
-                return null;
-            }
-            else
-            {
-                return PluginUtils.VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
+                var modsToUnsub = PluginUtils.VerifyModsSubscribed(AutomaticUnsubMods);
+                foreach (var mod in modsToUnsub)
+                {
+                    LogUtils.DoWarnLog($"Unsubscribing from mod: {mod.Value} (id: {mod.Key})");
+                    PlatformService.workshop.Unsubscribe(new PublishedFileId(mod.Key));
+                }
             }
         }
+
+        public Dictionary<ulong, string> SearchIncompatibilities() => IncompatibleModList.Count == 0 ? null : PluginUtils.VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
         public void OnViewStart() => ExtraOnViewStartActions();
 
         protected virtual void ExtraOnViewStartActions() { }
@@ -455,6 +460,7 @@ namespace Klyte.Commons.Interfaces
 
         private List<ulong> IncompatibleModListCommons { get; } = new List<ulong>();
         private List<string> IncompatibleDllModListCommons { get; } = new List<string>();
+        protected virtual List<ulong> AutomaticUnsubMods { get; } = new List<ulong>();
 
 
         public IEnumerable<ulong> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);

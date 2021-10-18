@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Klyte.Commons
 {
 
-    public abstract class BasicNetTool<T> : TransportTool where T : BasicNetTool<T>
+    public abstract class BaseNetTool<T> : NetTool where T : BaseNetTool<T>
     {
 
         protected override void Awake()
@@ -38,6 +38,7 @@ namespace Klyte.Commons
 
         protected override void OnDisable() => Singleton<TerrainManager>.instance.RenderZones = m_prevRenderZones;
 
+        public override void RenderGeometry(RenderManager.CameraInfo cameraInfo) { }
 
         protected override void OnToolUpdate()
         {
@@ -114,6 +115,7 @@ namespace Klyte.Commons
         protected virtual void OnLeftMouseDown() { }
 
         protected override void OnToolLateUpdate() { }
+        public override void RenderOverlay(RenderManager.CameraInfo cameraInfo) { }
 
         public override void SimulationStep() { }
 
@@ -165,7 +167,7 @@ namespace Klyte.Commons
             output.m_disaster = 0;
             output.m_currentEditObject = false;
             var ray = new Segment3(origin, vector);
-            RayCastSegmentAndNode(input.m_buildObject as NetInfo, ray, input.m_netSnap, input.m_segmentNameOnly, input.m_netService.m_service, input.m_netService2.m_service, input.m_netService.m_subService, input.m_netService2.m_subService, input.m_netService.m_itemLayers, input.m_netService2.m_itemLayers, input.m_ignoreNodeFlags, input.m_ignoreSegmentFlags, out _, out output.m_netNode, out output.m_netSegment);
+            RayCastSegmentAndNode(input.m_buildObject as NetInfo, ray, input.m_netSnap, input.m_segmentNameOnly, input.m_netService.m_service, input.m_netService2.m_service, input.m_netService.m_subService, input.m_netService2.m_subService, input.m_netService.m_itemLayers, input.m_netService2.m_itemLayers, input.m_ignoreNodeFlags, input.m_ignoreSegmentFlags, out m_raycastHit, out output.m_netNode, out output.m_netSegment);
 
             m_hoverSegment = output.m_netSegment;
 
@@ -210,6 +212,8 @@ namespace Klyte.Commons
         public static Shader shaderSolid = Shader.Find("Custom/Props/Decal/Solid");
 
         protected ushort m_hoverSegment;
+
+        protected Vector3 m_raycastHit;
 
         private bool m_prevRenderZones;
 
