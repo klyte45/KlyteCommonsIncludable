@@ -19,6 +19,10 @@ namespace Klyte.Commons.Utils
              || (modsDlls != null && pi.GetAssemblies().Where(x => modsDlls.Contains(x.GetName().Name)).Count() > 0)
             )
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
+        public static Dictionary<ulong, string> VerifyModsSubscribed(List<ulong> modIds) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+            pi.assemblyCount > 0
+            && (modIds?.Contains(pi.publishedFileID.AsUInt64) ?? false)
+        ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance)?.Name);
 
 
         public static I GetImplementationTypeForMod<O, F, I>(GameObject objTarget, string dllName, string dllMinVersion) where O : MonoBehaviour, I where F : MonoBehaviour, I
