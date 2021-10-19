@@ -38,15 +38,9 @@ namespace Klyte.Commons.Utils
         {
             var result = new List<ushort>();
             var resultNodes = new List<ushort>();
-            ushort edgeNode;
-            if (startSegment)
-            {
-                edgeNode = NetManager.instance.m_segments.m_buffer[segmentID].m_startNode;
-            }
-            else
-            {
-                edgeNode = NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
-            }
+            ushort edgeNode = startSegment
+                ? NetManager.instance.m_segments.m_buffer[segmentID].m_startNode
+                : NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
             resultNodes.Add(edgeNode);
             CalculatePathNet(segmentID, segmentID, edgeNode, startSegment, ref result, ref resultNodes, requireSameDirection, requireSameSizeAndType);
             nodes = resultNodes.ToArray();
@@ -142,7 +136,6 @@ namespace Klyte.Commons.Utils
         public static List<ushort> GetSegmentOrderRoad(ushort segmentID, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out bool startRef, out bool endRef, out ushort[] nodes)
         {
             NetSegment.Flags flags = NetManager.instance.m_segments.m_buffer[segmentID].m_flags;
-            var nodeList = new List<ushort>();
             if (segmentID != 0 && flags != NetSegment.Flags.None)
             {
                 List<ushort> path = CalculatePathNet(segmentID, false, requireSameDirection, requireSameSizeAndType, out nodes);
