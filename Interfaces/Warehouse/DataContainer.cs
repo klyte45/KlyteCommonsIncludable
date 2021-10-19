@@ -122,7 +122,7 @@ namespace Klyte.Commons.Interfaces
                     }
                     string content = System.Text.Encoding.UTF8.GetString(targetArr);
                     LogUtils.DoErrorLog($"{type} CORRUPTED DATA! => \nException: {e.Message}\n{e.StackTrace}\nData  {storage.Length} Z={zipped} b:\n{content}");
-                    K45DialogControl.ShowModalError($"Error loading '{type}' data", $"An error occurred while loading the data from <color yellow>{CommonProperties.ModName}</color>.{(CommonProperties.GitHubRepoPath.IsNullOrWhiteSpace()?"": "\nPlease open a issue in GitHub along with the game log attached and a printscreen of this window to get this checked by the mod developer. See the <color cyan>Report-a-bug Helper</color> button in the mod options menu to see details about how to get the game log.")}\nRaw data:\n{content}", true);
+                    K45DialogControl.ShowModalError($"Error loading '{type}' data", $"An error occurred while loading the data from <color yellow>{CommonProperties.ModName}</color>.{(CommonProperties.GitHubRepoPath.IsNullOrWhiteSpace() ? "" : "\nPlease open a issue in GitHub along with the game log attached and a printscreen of this window to get this checked by the mod developer. See the <color cyan>Report-a-bug Helper</color> button in the mod options menu to see details about how to get the game log.")}\nRaw data:\n{content}", true);
                     instance.Instances[type] = basicInstance;
                 }
             }
@@ -141,6 +141,10 @@ namespace Klyte.Commons.Interfaces
         public void OnSaveData()
         {
             LogUtils.DoLog($"SAVING DATA {GetType()}");
+            if (instance?.Instances is null)
+            {
+                return;
+            }
 
             foreach (Type type in instance.Instances.Keys)
             {
