@@ -49,7 +49,7 @@ namespace Klyte.Commons.Utils
                                 && (stopType == VehicleInfo.VehicleType.None || stopType == (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine]).Info.m_vehicleType)
                                 && (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine].m_flags & TransportLine.Flags.Complete) != TransportLine.Flags.None)
                             {
-                                NetNode node = instance.m_nodes.m_buffer[nodeId];
+                                ref NetNode node = ref instance.m_nodes.m_buffer[nodeId];
                                 Vector3 nodePos = node.m_position;
                                 if (boundaries != null && boundaries.Count != 0 && !boundaries.Any(x => x.Intersect(VectorUtils.XZ(nodePos))))
                                 {
