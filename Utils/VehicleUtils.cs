@@ -228,7 +228,7 @@ namespace Klyte.Commons.Utils
             return num;
         }
 
-        public static IEnumerator UpdateCapacityUnits(ThreadBase t)
+        public static IEnumerator UpdateCapacityUnits()
         {
             int count = 0;
             Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
