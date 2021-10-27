@@ -1,5 +1,6 @@
 ﻿
 
+using ColossalFramework.Globalization;
 using Klyte.Commons.Utils;
 using System;
 using UnityEngine;
@@ -25,8 +26,9 @@ public struct CardinalPoint
         "NW",
         "NNW",
     };
-
-    public static string GetCardinalPoint16(float angle)
+    [Obsolete("Use localized version", true)]
+    public static string GetCardinalPoint16(float angle) => GetCardinalPoint16_internal(angle);
+    private static string GetCardinalPoint16_internal(float angle)
     {
         float diagSize = 22.5f;
         angle %= 360;
@@ -41,6 +43,10 @@ public struct CardinalPoint
             }
         }
         return m_cardinal16[0];
+    }
+    public static string GetCardinalPoint16LocalizedShort(float angle)
+    {
+        return Locale.Get("K45_CMNS_CARDINALPOINT_SHORT", GetCardinalPoint16_internal(angle));
     }
 
 
@@ -118,7 +124,7 @@ public struct CardinalPoint
 
     private CardinalInternal InternalValue { get; set; }
 
-    public CardinalInternal Value { get { return InternalValue; } }
+    public CardinalInternal Value => InternalValue;
 
     public static readonly CardinalPoint N = CardinalInternal.N;
     public static readonly CardinalPoint E = CardinalInternal.E;
@@ -130,38 +136,41 @@ public struct CardinalPoint
     public static readonly CardinalPoint NW = CardinalInternal.NW;
     public static readonly CardinalPoint ZERO = CardinalInternal.ZERO;
 
-    public static implicit operator CardinalPoint(CardinalInternal otherType)
+    public static implicit operator CardinalPoint(CardinalInternal otherType) => new CardinalPoint
     {
-        return new CardinalPoint
-        {
-            InternalValue = otherType
-        };
-    }
+        InternalValue = otherType
+    };
 
-    public static implicit operator CardinalInternal(CardinalPoint otherType)
-    {
-        return otherType.InternalValue;
-    }
+    public static implicit operator CardinalInternal(CardinalPoint otherType) => otherType.InternalValue;
 
     public int StepsTo(CardinalPoint other)
     {
-        if (other.InternalValue == InternalValue) return 0;
-        if ((((int)other.InternalValue) & ((int)other.InternalValue - 1)) != 0 || (((int)InternalValue) & ((int)InternalValue - 1)) != 0) return int.MaxValue;
+        if (other.InternalValue == InternalValue)
+        {
+            return 0;
+        }
+
+        if ((((int)other.InternalValue) & ((int)other.InternalValue - 1)) != 0 || (((int)InternalValue) & ((int)InternalValue - 1)) != 0)
+        {
+            return int.MaxValue;
+        }
+
         CardinalPoint temp = other;
         int count = 0;
-        while (temp.InternalValue != this.InternalValue)
+        while (temp.InternalValue != InternalValue)
         {
             temp++;
             count++;
         }
-        if (count > 4) count -= 8;
+        if (count > 4)
+        {
+            count -= 8;
+        }
+
         return count;
     }
 
-    public static int operator -(CardinalPoint c, CardinalPoint other)
-    {
-        return c.StepsTo(other);
-    }
+    public static int operator -(CardinalPoint c, CardinalPoint other) => c.StepsTo(other);
 
     public Vector2 GetCardinalOffset()
     {
@@ -309,51 +318,33 @@ public struct CardinalPoint
         }
     }
 
-    public static CardinalPoint operator &(CardinalPoint c1, CardinalPoint c2)
+    public static CardinalPoint operator &(CardinalPoint c1, CardinalPoint c2) => new CardinalPoint
     {
-        return new CardinalPoint
-        {
-            InternalValue = c1.InternalValue & c2.InternalValue
-        };
-    }
+        InternalValue = c1.InternalValue & c2.InternalValue
+    };
 
-    public static CardinalPoint operator |(CardinalPoint c1, CardinalPoint c2)
+    public static CardinalPoint operator |(CardinalPoint c1, CardinalPoint c2) => new CardinalPoint
     {
-        return new CardinalPoint
-        {
-            InternalValue = c1.InternalValue | c2.InternalValue
-        };
-    }
+        InternalValue = c1.InternalValue | c2.InternalValue
+    };
 
-    public override int GetHashCode()
-    {
-        return base.GetHashCode();
-    }
+    public override int GetHashCode() => base.GetHashCode();
 
-    public override bool Equals(object o)
-    {
+    public override bool Equals(object o) => o.GetType() == GetType() && this == ((CardinalPoint)o);
 
-        return o.GetType() == GetType() && this == ((CardinalPoint)o);
-    }
+    public static bool operator ==(CardinalPoint c1, CardinalPoint c2) => c1.InternalValue == c2.InternalValue;
 
-    public static bool operator ==(CardinalPoint c1, CardinalPoint c2)
-    {
-        return c1.InternalValue == c2.InternalValue;
-    }
+    public static bool operator <(CardinalPoint left, CardinalPoint right) => (Compare(left, right) < 0);
 
-    public static bool operator <(CardinalPoint left, CardinalPoint right)
-    {
-        return (Compare(left, right) < 0);
-    }
-
-    public static bool operator >(CardinalPoint left, CardinalPoint right)
-    {
-        return (Compare(left, right) > 0);
-    }
+    public static bool operator >(CardinalPoint left, CardinalPoint right) => (Compare(left, right) > 0);
 
     public int CompareTo(CardinalPoint other)
     {
-        if (this == other) return 0;
+        if (this == other)
+        {
+            return 0;
+        }
+
         var a = GetCardinalAngle();
         var b = other.GetCardinalAngle() + 360;
         if (b - a > 180)
@@ -380,10 +371,7 @@ public struct CardinalPoint
     }
 
 
-    public static bool operator !=(CardinalPoint c1, CardinalPoint c2)
-    {
-        return c1.InternalValue != c2.InternalValue;
-    }
+    public static bool operator !=(CardinalPoint c1, CardinalPoint c2) => c1.InternalValue != c2.InternalValue;
 
     public static CardinalPoint operator ~(CardinalPoint c)
     {
@@ -423,16 +411,10 @@ public struct CardinalPoint
         ZERO = 0
     }
 
-    public Vector2 GetPointForAngle(Vector2 p1, float distance)
-    {
-        return p1 + this.GetCardinalOffset() * distance;
-    }
+    public Vector2 GetPointForAngle(Vector2 p1, float distance) => p1 + GetCardinalOffset() * distance;
 
 
-    public override string ToString()
-    {
-        return InternalValue.ToString();
-    }
+    public override string ToString() => InternalValue.ToString();
 
     public static CardinalPoint GetCardinal2D(Vector2 p1, Vector2 p2)
     {

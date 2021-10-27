@@ -837,7 +837,7 @@ public void Start()
 
         public void OnDestroy()
         {
-            LogUtils.DoWarnLog("PANEL REMOVED");
+            LogUtils.DoWarnLog($"K45 PANEL REMOVED @ {Environment.StackTrace}");
             UIDynamicPanelsRedirector.RemovePanel();
     }
     }
