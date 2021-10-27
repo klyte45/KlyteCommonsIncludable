@@ -22,12 +22,6 @@ namespace Klyte.Commons.Utils
         public static ushort FindBuilding(Vector3 pos, float maxDistance, ItemClass.Service service, ItemClass.SubService subService, TransferManager.TransferReason[] allowedTypes, Building.Flags flagsRequired, Building.Flags flagsForbidden)
         {
             BuildingManager bm = Singleton<BuildingManager>.instance;
-            //if (allowedTypes == null || allowedTypes.Length == 0)
-            //{
-            //    return bm.FindBuilding(pos, maxDistance, service, subService, flagsRequired, flagsForbidden);
-            //}
-
-
             int num = Mathf.Max((int)(((pos.x - maxDistance) / 64f) + 135f), 0);
             int num2 = Mathf.Max((int)(((pos.z - maxDistance) / 64f) + 135f), 0);
             int num3 = Mathf.Min((int)(((pos.x + maxDistance) / 64f) + 135f), 269);
@@ -87,13 +81,8 @@ namespace Klyte.Commons.Utils
                         //doErrorLog("CheckInfoCompatibility 5");
                         if (dist < lastNearest)
                         {
-                            ushort resultBuilding = buildingId;
-                            while (bm.m_buildings.m_buffer[resultBuilding].m_parentBuilding > 0)
-                            {
-                                resultBuilding = bm.m_buildings.m_buffer[resultBuilding].m_parentBuilding;
-                            }
-
-                            result = resultBuilding;
+                            result = Building.FindParentBuilding(buildingId);
+                            if (result == 0) result = buildingId;
                             lastNearest = dist;
                             return true;
                         }
@@ -198,11 +187,9 @@ namespace Klyte.Commons.Utils
 
             BuildingManager bm = Singleton<BuildingManager>.instance;
 
-            while (bm.m_buildings.m_buffer[buildingId].m_parentBuilding > 0)
+            if (bm.m_buildings.m_buffer[buildingId].m_parentBuilding > 0)
             {
-                LogUtils.DoLog("getBuildingName(): building id {0} - parent = {1}", buildingId, bm.m_buildings.m_buffer[buildingId].m_parentBuilding);
-                buildingId = bm.m_buildings.m_buffer[buildingId].m_parentBuilding;
-                bm.m_buildings.m_buffer[buildingId] = bm.m_buildings.m_buffer[buildingId];
+                buildingId = Building.FindParentBuilding(buildingId);
             }
             InstanceID iid = default;
             iid.Building = buildingId;

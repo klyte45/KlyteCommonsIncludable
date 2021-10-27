@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Klyte.Commons
 {
 
-    public abstract class BasicBuildingTool<T> : BuildingTool where T : BasicBuildingTool<T>
+    public abstract class BaseBuildingTool<T> : BuildingTool where T : BaseBuildingTool<T>
     {
 
         protected override void Awake()

@@ -1,5 +1,6 @@
 ﻿using Klyte.Commons.Utils;
 using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
@@ -49,6 +50,8 @@ namespace Klyte.Commons.Interfaces
                 EventOnValueChanged?.Invoke(key, default);
             }
         }
+
+        public IEnumerable<R> GetAvailableEntries() => m_cachedList.Values;
         #endregion
     }
 }
