@@ -63,5 +63,13 @@ namespace Klyte.Commons.Redirectors
                 UIView.library.m_DynamicPanels = UIView.library.m_DynamicPanels.Where(x => x?.name != K45DialogControl.PANEL_ID).ToArray();
             }
         }
+
+        public static void RemovePanel()
+        {
+            if (!(UIView.library is null))
+            {
+                UIView.library.m_DynamicPanels = UIView.library.m_DynamicPanels.Where(x => x?.name != K45DialogControl.PANEL_ID).ToArray();
+            }
+        }
     }
 }
