@@ -40,7 +40,7 @@ namespace Klyte.Commons.Utils
             mainPanel.autoLayoutStart = LayoutStart.TopLeft;
             mainPanel.padding = new RectOffset(5, 5, 0, 0);
             mainPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 10);
-            
+
 
             #region Title
             KlyteMonoUtils.CreateUIElement(out UIPanel titleContainer, mainPanel.transform, "TitleContainer");
@@ -839,6 +839,6 @@ public void Start()
         {
             LogUtils.DoWarnLog("PANEL REMOVED");
             UIDynamicPanelsRedirector.RemovePanel();
-        }
+    }
     }
 }

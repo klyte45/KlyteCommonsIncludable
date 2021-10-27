@@ -182,7 +182,7 @@ namespace Klyte.Commons.Extensions
 
         public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent, out UILabel label, bool limitLabelByPanelWidth = false)
         {
-            if (eventCallback != null && !string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
                 var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
                 uIPanel.transform.localScale = Vector3.one;
@@ -192,13 +192,17 @@ namespace Klyte.Commons.Extensions
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
-                uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
+                if (!(eventCallback is null))
                 {
-                    eventCallback(sel);
-                };
+                    uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
+                    {
+                        eventCallback(sel);
+                    };
+                }
+
                 return uIDropDown;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name");
             label = null;
             return null;
         }
@@ -400,7 +404,7 @@ namespace Klyte.Commons.Extensions
                     alreadyCalling = true;
                     try
                     {
-                        eventChangedCallback?.Invoke(sel);
+                    eventChangedCallback?.Invoke(sel);
                     }
                     finally
                     {
@@ -612,7 +616,7 @@ namespace Klyte.Commons.Extensions
                 uIPanel.autoFitChildrenVertically = true;
                 result = uIPanel.Find<UITextField>("Text Field");
                 result.numericalOnly = true;
-                result.width = 60;
+                result.width = 100;
                 result.allowNegative = acceptNegative;
                 result.allowFloats = false;
 
@@ -626,7 +630,7 @@ namespace Klyte.Commons.Extensions
                 result.text = defaultValue.ToString();
                 return result;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create int field with no name or no event");
             label = null;
             return null;
         }
@@ -645,12 +649,11 @@ namespace Klyte.Commons.Extensions
             return null;
         }
 
-        public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
-        public static UILabel AddLabel(UIComponent parent, string name, float width) => AddLabel(parent, name, width, out _);
-        public static UILabel AddLabel(UIComponent parent, string name, float width, out UIPanel container)
+        public UILabel AddLabel(string name, float width = 700, bool fixedMinSize = false) => AddLabel(m_root, name, width, out _, fixedMinSize);
+        public static UILabel AddLabel(UIComponent parent, string name, float width, out UIPanel container, bool fixedMinSize = false)
         {
             KlyteMonoUtils.CreateUIElement(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
-            KlyteMonoUtils.LimitWidthAndBox(label, width, out container);
+            KlyteMonoUtils.LimitWidthAndBox(label, width, out container, fixedMinSize);
             label.text = name;
             return label;
         }

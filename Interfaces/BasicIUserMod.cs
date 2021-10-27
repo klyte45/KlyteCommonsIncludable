@@ -84,9 +84,9 @@ namespace Klyte.Commons.Interfaces
                     {
                         if (Event.current.control)
                         {
-                            handle.zOrder = 13;
-                            doneButton.Show();
-                            handle.enabled = true;
+                        handle.zOrder = 13;
+                        doneButton.Show();
+                        handle.enabled = true;
                         }
                         else
                         {
