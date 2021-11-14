@@ -277,6 +277,7 @@ namespace Klyte.Commons.Utils
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
         [Obsolete("Use box version", true)]
         public static PropertyChangedEventHandler<Vector2> LimitWidth(UIInteractiveComponent x, float maxWidth, bool alsoMinSize = false) => LimitWidthPrivate(x, maxWidth, alsoMinSize);
+        public static PropertyChangedEventHandler<Vector2> LimitWidthNoBox(UIComponent x, float maxWidth) => LimitWidthPrivate(x, maxWidth, true);
         private static PropertyChangedEventHandler<Vector2> LimitWidthPrivate(UIComponent x, float maxWidth, bool alsoMinSize)
         {
             x.autoSize = true;
