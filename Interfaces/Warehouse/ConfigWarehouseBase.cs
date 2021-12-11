@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace Klyte.Commons.Interfaces
 {
     [XmlRoot("ConfigWarehouse")]
-    public abstract class ConfigWarehouseBase<T, I> : SingletonLite<I>, ICities.ISerializableDataExtension where T : Enum, IConvertible where I : ConfigWarehouseBase<T, I>, new()
+    public abstract class ConfigWarehouseBase<T, I> where T : Enum, IConvertible where I : ConfigWarehouseBase<T, I>, new()
     {
 
         public const string GLOBAL_CONFIG_INDEX = "DEFAULT";
@@ -37,16 +37,16 @@ namespace Klyte.Commons.Interfaces
         public string DefaultPath => $"{CommonProperties.ModRootFolder }{Path.DirectorySeparatorChar}{ DefaultFileName}";
 
 
-        public static bool GetCurrentConfigBool(T i) => instance.CurrentLoadedCityConfig.GetBool(i);
-        public static void SetCurrentConfigBool(T i, bool? value) => instance.CurrentLoadedCityConfig.SetBool(i, value);
-        public static int GetCurrentConfigInt(T i) => instance.CurrentLoadedCityConfig.GetInt(i);
-        public static void SetCurrentConfigInt(T i, int? value) => instance.CurrentLoadedCityConfig.SetInt(i, value);
-        public static string GetCurrentConfigString(T i) => instance.CurrentLoadedCityConfig.GetString(i);
-        public static void SetCurrentConfigString(T i, string value) => instance.CurrentLoadedCityConfig.SetString(i, value);
+        //public static bool GetCurrentConfigBool(T i) => instance.CurrentLoadedCityConfig.GetBool(i);
+        //public static void SetCurrentConfigBool(T i, bool? value) => instance.CurrentLoadedCityConfig.SetBool(i, value);
+        //public static int GetCurrentConfigInt(T i) => instance.CurrentLoadedCityConfig.GetInt(i);
+        //public static void SetCurrentConfigInt(T i, int? value) => instance.CurrentLoadedCityConfig.SetInt(i, value);
+        //public static string GetCurrentConfigString(T i) => instance.CurrentLoadedCityConfig.GetString(i);
+        //public static void SetCurrentConfigString(T i, string value) => instance.CurrentLoadedCityConfig.SetString(i, value);
 
         public I CurrentLoadedCityConfig => GetConfig(CurrentCityId, CurrentCityName);
 
-       
+
 
 
         public I GetConfig2(string cityId, string cityName) => GetConfig(cityId, cityName);
@@ -86,28 +86,24 @@ namespace Klyte.Commons.Interfaces
                 try
                 {
                     I defaultFile = GetConfig(GLOBAL_CONFIG_INDEX, GLOBAL_CONFIG_INDEX);
-                    foreach (int value in Enum.GetValues(typeof(T)))
+                    try
                     {
-                        try
+                        foreach (var entry in defaultFile.m_cachedBoolSaved)
                         {
-                            var ci = (T) Enum.ToObject(typeof(T), value);
-                            switch (value & TYPE_PART)
-                            {
-                                case TYPE_BOOL:
-                                    result.SetBool(ci, defaultFile.GetBool(ci));
-                                    break;
-                                case TYPE_STRING:
-                                    result.SetString(ci, defaultFile.GetString(ci));
-                                    break;
-                                case TYPE_INT:
-                                    result.SetInt(ci, defaultFile.GetInt(ci));
-                                    break;
-                            }
+                            result.SetBool(entry.Key, entry.Value);
                         }
-                        catch (Exception e)
+                        foreach (var entry in defaultFile.m_cachedIntSaved)
                         {
-                            LogUtils.DoErrorLog($"Erro copiando propriedade \"{value}\" para o novo arquivo da classe {typeof(I)}: {e.Message}");
+                            result.SetInt(entry.Key, entry.Value);
                         }
+                        foreach (var entry in defaultFile.m_cachedStringSaved)
+                        {
+                            result.SetString(entry.Key, entry.Value);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogUtils.DoErrorLog($"Erro copiando propriedades para o novo arquivo da classe {typeof(I)}: {e.Message}");
                     }
                 }
                 catch
@@ -135,7 +131,7 @@ namespace Klyte.Commons.Interfaces
                     }
                     catch (Exception e)
                     {
-                        LogUtils.DoLog($"{typeof(I)} CORRUPTED DATA! => Data:\n{text}\nException: {e.Message}\n{e.StackTrace}");
+                        LogUtils.DoErrorLog($"{typeof(I)} CORRUPTED DATA! => Data:\n{text}\nException: {e.Message}\n{e.StackTrace}");
                         result = new I
                         {
                             cityId = cityId,
@@ -156,7 +152,7 @@ namespace Klyte.Commons.Interfaces
         protected virtual void FallBackDefaultFile() { }
         public void SaveAsDefault()
         {
-            File.WriteAllText(DefaultPath, Serialize((I) this));
+            File.WriteAllText(DefaultPath, Serialize((I)this));
             LogUtils.DoErrorLog($"Saved global at {DefaultPath}");
         }
         public void LoadFromDefault()
@@ -169,7 +165,7 @@ namespace Klyte.Commons.Interfaces
         }
         public string Export()
         {
-            File.WriteAllText(ThisPath, Serialize((I) this));
+            File.WriteAllText(ThisPath, Serialize((I)this));
             LogUtils.DoErrorLog($"Saved Export at {ThisPath}");
             return ThisPath;
         }
@@ -181,12 +177,12 @@ namespace Klyte.Commons.Interfaces
                 LogUtils.DoErrorLog($"Saved {cityId} from {ThisPath}");
             }
         }
-        public string GetString(T i) => GetFromFileString(i) ?? GetDefaultStringValueForProperty(i);
-        public bool GetBool(T i) => GetFromFileBool(i) ?? GetDefaultBoolValueForProperty(i);
-        public int GetInt(T i) => GetFromFileInt(i) ?? GetDefaultIntValueForProperty(i);
-        public void SetString(T i, string value) => SetToFile(i, value);
-        public void SetBool(T idx, bool? newVal) => SetToFile(idx, newVal);
-        public void SetInt(T idx, int? value) => SetToFile(idx, value);
+        public virtual string GetString(T i) => GetFromFileString(i) ?? GetDefaultStringValueForProperty(i);
+        public virtual bool GetBool(T i) => GetFromFileBool(i) ?? GetDefaultBoolValueForProperty(i);
+        public virtual int GetInt(T i) => GetFromFileInt(i) ?? GetDefaultIntValueForProperty(i);
+        public virtual void SetString(T i, string value) => SetToFile(i, value);
+        public virtual void SetBool(T idx, bool? newVal) => SetToFile(idx, newVal);
+        public virtual void SetInt(T idx, int? value) => SetToFile(idx, value);
 
         [XmlElement("StringData")]
         public SimpleEnumerableList<T, string> m_cachedStringSaved = new SimpleEnumerableList<T, string>();
@@ -258,45 +254,47 @@ namespace Klyte.Commons.Interfaces
 
         #region Serialization
         protected abstract string ID { get; }
-        [XmlIgnore]
-        public IManagers Managers => SerializableDataManager?.managers;
-        [XmlIgnore]
-        public ISerializableData SerializableDataManager { get; private set; }
+        //[XmlIgnore]
+        //public IManagers Managers => SerializableDataManager?.managers;
+        //[XmlIgnore]
+        //public ISerializableData SerializableDataManager { get; private set; }
 
-        public void OnCreated(ISerializableData serializableData) => SerializableDataManager = serializableData;
-        public void OnLoadData()
+        //public void OnCreated(ISerializableData serializableData) => SerializableDataManager = serializableData;
+        public I GetLoadData(ISerializableData serializableData)
         {
             if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
             {
-                return;
+                return null;
             }
-            if (!SerializableDataManager.EnumerateData().Contains(ID))
+            if (!serializableData.EnumerateData().Contains(ID))
             {
-                return;
+                return null;
             }
-            using var memoryStream = new MemoryStream(SerializableDataManager.LoadData(ID));
-            byte[] storage = memoryStream.ToArray();
-            loadedCities[CurrentCityId] = Deserialize(System.Text.Encoding.UTF8.GetString(storage));
+            using (var memoryStream = new MemoryStream(serializableData.LoadData(ID)))
+            {
+                byte[] storage = memoryStream.ToArray();
+                return Deserialize(System.Text.Encoding.UTF8.GetString(storage));
+            }
         }
 
         // Token: 0x0600003B RID: 59 RVA: 0x00004020 File Offset: 0x00002220
-        public void OnSaveData()
-        {
-            if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
-            {
-                return;
-            }
+        //public void OnSaveData()
+        //{
+        //    if (ID == null || Singleton<ToolManager>.instance.m_properties.m_mode != ItemClass.Availability.Game)
+        //    {
+        //        return;
+        //    }
 
-            string serialData = Serialize(loadedCities[CurrentCityId]);
-            LogUtils.DoLog($"serialData: {serialData ?? "<NULL>"}");
-            if (serialData == null)
-            {
-                return;
-            }
+        //    string serialData = Serialize(loadedCities[CurrentCityId]);
+        //    LogUtils.DoLog($"serialData: {serialData ?? "<NULL>"}");
+        //    if (serialData == null)
+        //    {
+        //        return;
+        //    }
 
-            byte[] data = System.Text.Encoding.UTF8.GetBytes(serialData);
-            SerializableDataManager.SaveData(ID, data);
-        }
+        //    byte[] data = System.Text.Encoding.UTF8.GetBytes(serialData);
+        //    SerializableDataManager.SaveData(ID, data);
+        //}
 
         #endregion
 

@@ -1,5 +1,4 @@
 ﻿using ColossalFramework;
-using System;
 using UnityEngine;
 
 namespace Klyte.Commons.UI
@@ -14,43 +13,28 @@ namespace Klyte.Commons.UI
 
         public Vector2 Size
         {
-            get {
-                return new Vector2((float)this.m_camera.targetTexture.width, (float)this.m_camera.targetTexture.height);
-            }
+            get => new Vector2(m_camera.targetTexture.width, m_camera.targetTexture.height);
             set {
-                if (this.Size != value)
+                if (Size != value)
                 {
-                    this.m_camera.targetTexture = new RenderTexture((int)value.x, (int)value.y, 24, RenderTextureFormat.ARGB32);
-                    this.m_camera.pixelRect = new Rect(0f, 0f, value.x, value.y);
+                    m_camera.targetTexture = new RenderTexture((int)value.x, (int)value.y, 24, RenderTextureFormat.ARGB32);
+                    m_camera.pixelRect = new Rect(0f, 0f, value.x, value.y);
                 }
             }
         }
 
-        public RenderTexture Texture
-        {
-            get {
-                return this.m_camera.targetTexture;
-            }
-        }
+        public RenderTexture Texture => m_camera.targetTexture;
 
         public float CameraRotation
         {
-            get {
-                return this.m_rotation;
-            }
-            set {
-                this.m_rotation = value % 360f;
-            }
+            get => m_rotation;
+            set => m_rotation = value % 360f;
         }
 
         public float Zoom
         {
-            get {
-                return this.m_zoom;
-            }
-            set {
-                this.m_zoom = Mathf.Clamp(value, 0.5f, 5f);
-            }
+            get => m_zoom;
+            set => m_zoom = Mathf.Clamp(value, 0.5f, 5f);
         }
 
         public AVOPreviewRenderer()
@@ -69,10 +53,7 @@ namespace Klyte.Commons.UI
             m_camera.name = "TLMCamera";
         }
 
-        public void RenderVehicle(VehicleInfo info)
-        {
-            this.RenderVehicle(info, info.m_color0, false);
-        }
+        public void RenderVehicle(VehicleInfo info) => RenderVehicle(info, info.m_color0, false);
 
         public void RenderVehicle(VehicleInfo info, Color color, bool useColor = true)
         {
@@ -98,12 +79,12 @@ namespace Klyte.Commons.UI
             Vector3 one = Vector3.one;
             float magnitude = info.m_mesh.bounds.extents.magnitude;
             float num = magnitude + 16f;
-            float num2 = magnitude * this.m_zoom;
-            this.m_camera.transform.position = Vector3.forward * num2;
-            this.m_camera.transform.rotation = Quaternion.AngleAxis(180f, Vector3.up);
-            this.m_camera.nearClipPlane = Mathf.Max(num2 - num * 1.5f, 0.01f);
-            this.m_camera.farClipPlane = num2 + num * 1.5f;
-            Quaternion quaternion = Quaternion.Euler(20f, 0f, 0f) * Quaternion.Euler(0f, this.m_rotation, 0f);
+            float num2 = magnitude * m_zoom;
+            m_camera.transform.position = Vector3.forward * num2;
+            m_camera.transform.rotation = Quaternion.AngleAxis(180f, Vector3.up);
+            m_camera.nearClipPlane = Mathf.Max(num2 - num * 1.5f, 0.01f);
+            m_camera.farClipPlane = num2 + num * 1.5f;
+            Quaternion quaternion = Quaternion.Euler(20f, 0f, 0f) * Quaternion.Euler(0f, m_rotation, 0f);
             Vector3 pos = quaternion * -info.m_mesh.bounds.center;
             VehicleManager instance2 = Singleton<VehicleManager>.instance;
             Matrix4x4 matrix = Matrix4x4.TRS(pos, quaternion, Vector3.one);
@@ -115,12 +96,13 @@ namespace Klyte.Commons.UI
             materialBlock.SetVector(instance2.ID_LightState, Vector3.zero);
             if (useColor)
             {
+                color.a = 0;
                 materialBlock.SetColor(instance2.ID_Color, color);
             }
             instance2.m_drawCallData.m_defaultCalls += 1;
             info.m_material.SetVectorArray(instance2.ID_TyreLocation, info.m_generatedInfo.m_tyres);
-            Graphics.DrawMesh(info.m_mesh, matrix, info.m_material, 0, this.m_camera, 0, materialBlock, true, true);
-            this.m_camera.RenderWithShader(info.m_material.shader, "");
+            Graphics.DrawMesh(info.m_mesh, matrix, info.m_material, 0, m_camera, 0, materialBlock, true, true);
+            m_camera.RenderWithShader(info.m_material.shader, "");
             sunLightSource.intensity = intensity;
             sunLightSource.color = color2;
             sunLightSource.transform.eulerAngles = eulerAngles;

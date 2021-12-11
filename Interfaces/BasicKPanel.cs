@@ -44,7 +44,7 @@ namespace Klyte.Commons.Interfaces
             KlyteMonoUtils.CreateUIElement(out UILabel titlebar, MainPanel.transform, $"{CommonProperties.Acronym}Title", new Vector4(0, 0, MainPanel.width - 150, 20));
             titlebar.position = default;
             titlebar.autoSize = false;
-            titlebar.text = $"{BasicIUserMod<U, C, T>.Instance.SimpleName} v{BasicIUserMod<U, C, T>.Version}";
+            titlebar.text = $"{BasicIUserMod<U, C, T>.Instance.SimpleName} v{BasicIUserMod<U, C, T>.FullVersion}";
             titlebar.textAlignment = UIHorizontalAlignment.Center;
             titlebar.relativePosition = new Vector3(75, 13);
 

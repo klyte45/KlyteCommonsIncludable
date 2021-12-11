@@ -9,7 +9,7 @@ namespace Klyte.Commons.Utils
         private readonly float m_randomizerFactor;
         private readonly PastelConfig m_pastelConfig;
 
-        public RandomPastelColorGenerator(int randomSeed, float randomizerFactor, PastelConfig pastelConfig)
+        public RandomPastelColorGenerator(uint randomSeed, float randomizerFactor, PastelConfig pastelConfig)
         {
             m_random = new Randomizer(randomSeed);
             m_randomizerFactor = randomizerFactor;

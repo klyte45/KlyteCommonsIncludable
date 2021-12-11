@@ -20,6 +20,26 @@
         K45_RemoveUnwantedIcon,
         K45_AbsoluteMode,
         K45_RelativeMode,
-        K45_MenuPanel_color
+        K45_MenuPanel_color,
+        K45_New,
+        K45_Delete,
+        K45_Lock,
+        K45_Unlock,
+        K45_QuestionMark,
+        K45_MoveCross,
+        K45_Settings,
+        K45_Plus,
+        K45_Minus,
+        K45_X,
+        K45_Up,
+        K45_Down,
+        K45_Left,
+        K45_Right,
+        K45_Layers,
+        K45_Import,
+        K45_Export,
+        K45_Steam,
+        K45_Dropper,
+        K45_PaintBucket
     }
 }

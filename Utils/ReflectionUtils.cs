@@ -277,6 +277,7 @@ namespace Klyte.Commons.Utils
         }
 
         internal static T GetPrivateField<T>(object prefabAI, string v) => (T) prefabAI.GetType().GetField(v).GetValue(prefabAI);
+        internal static object GetPrivateStaticField(string v, Type type) => type.GetField(v).GetValue(null);
 
 
         #region Called by reflection - Don't delete.
@@ -439,6 +440,199 @@ namespace Klyte.Commons.Utils
             Type targetType = instances.First();
             return targetType;
         }
+
+        public static bool CanMakeGenericTypeVia(Type openConstructedType, Type closedConstructedType)
+        {
+            if (openConstructedType == null)
+            {
+                throw new ArgumentNullException("openConstructedType");
+            }
+
+            if (closedConstructedType == null)
+            {
+                throw new ArgumentNullException("closedConstructedType");
+            }
+
+            if (openConstructedType.IsGenericParameter) // e.g.: T
+            {
+                // The open-constructed type is a generic parameter. 
+
+                // First, check if all special attribute constraints are respected.
+
+                var constraintAttributes = openConstructedType.GenericParameterAttributes;
+
+                if (constraintAttributes != GenericParameterAttributes.None)
+                {
+                    // e.g.: where T : struct
+                    if ((constraintAttributes & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0 &&
+                        !closedConstructedType.IsValueType)
+                    {
+                        return false;
+                    }
+
+                    // e.g.: where T : class
+                    if ((constraintAttributes & GenericParameterAttributes.ReferenceTypeConstraint) != 0 &&
+                        closedConstructedType.IsValueType)
+                    {
+                        return false;
+                    }
+
+                    // e.g.: where T : new()
+                    if ((constraintAttributes & GenericParameterAttributes.DefaultConstructorConstraint) != 0 &&
+                        closedConstructedType.GetConstructor(Type.EmptyTypes) == null)
+                    {
+                        return false;
+                    }
+
+                    // TODO: Covariance and contravariance?
+                }
+
+                // Then, check if all type constraints are respected.
+
+                // e.g.: where T : BaseType, IInterface1, IInterface2
+                foreach (var constraint in openConstructedType.GetGenericParameterConstraints())
+                {
+                    if (constraint.IsGenericType != closedConstructedType.BaseType.IsGenericType)
+                    {
+                        return false;
+                    }
+                    if (constraint.IsGenericType)
+                    {
+                        if (closedConstructedType.BaseType.GetGenericTypeDefinition() != constraint.GetGenericTypeDefinition())
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (!constraint.IsAssignableFrom(closedConstructedType))
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+            else if (openConstructedType.ContainsGenericParameters)
+            {
+                // The open-constructed type is not a generic parameter but contains generic parameters.
+                // It could be either a generic type or an array.
+
+                if (openConstructedType.IsGenericType) // e.g. Generic<T1, int, T2>
+                {
+                    // The open-constructed type is a generic type.
+
+                    var openConstructedGenericDefinition = openConstructedType.GetGenericTypeDefinition(); // e.g.: Generic<,,>
+                    var openConstructedGenericArguments = openConstructedType.GetGenericArguments(); // e.g.: { T1, int, T2 }
+
+                    // Check a list of possible candidate closed-constructed types:
+                    //  - the closed-constructed type itself
+                    //  - its base type, if any (i.e.: if the closed-constructed type is not object)
+                    //  - its implemented interfaces
+
+                    var inheritedClosedConstructedTypes = new List<Type>
+                    {
+                        closedConstructedType
+                    };
+
+                    if (closedConstructedType.BaseType != null)
+                    {
+                        inheritedClosedConstructedTypes.Add(closedConstructedType.BaseType);
+                    }
+
+                    inheritedClosedConstructedTypes.AddRange(closedConstructedType.GetInterfaces());
+
+                    foreach (var inheritedClosedConstructedType in inheritedClosedConstructedTypes)
+                    {
+                        if (inheritedClosedConstructedType.IsGenericType &&
+                            inheritedClosedConstructedType.GetGenericTypeDefinition() == openConstructedGenericDefinition)
+                        {
+                            // The inherited closed-constructed type and the open-constructed type share the same generic definition.
+
+                            var inheritedClosedConstructedGenericArguments = inheritedClosedConstructedType.GetGenericArguments(); // e.g.: { float, int, string }
+
+                            // For each open-constructed generic argument, recursively check if it
+                            // can be made into a closed-constructed type via the closed-constructed generic argument.
+
+                            for (int i = 0; i < openConstructedGenericArguments.Length; i++)
+                            {
+                                if (!CanMakeGenericTypeVia(openConstructedGenericArguments[i], inheritedClosedConstructedGenericArguments[i])) // !T1.IsAssignableFromGeneric(float)
+                                {
+                                    return false;
+                                }
+                            }
+
+                            // The inherited closed-constructed type matches the generic definition of 
+                            // the open-constructed type and each of its type arguments are assignable to each equivalent type
+                            // argument of the constraint.
+
+                            return true;
+                        }
+                    }
+
+                    // The open-constructed type contains generic parameters, but no
+                    // inherited closed-constructed type has a matching generic definition.
+
+                    return false;
+                }
+                else if (openConstructedType.IsArray) // e.g. T[]
+                {
+                    // The open-constructed type is an array.
+
+                    if (!closedConstructedType.IsArray ||
+                        closedConstructedType.GetArrayRank() != openConstructedType.GetArrayRank())
+                    {
+                        // Fail if the closed-constructed type isn't an array of the same rank.
+                        return false;
+                    }
+
+                    var openConstructedElementType = openConstructedType.GetElementType();
+                    var closedConstructedElementType = closedConstructedType.GetElementType();
+
+                    return CanMakeGenericTypeVia(openConstructedElementType, closedConstructedElementType);
+                }
+                else
+                {
+                    // I don't believe this can ever happen.
+
+                    throw new NotImplementedException("Open-constructed type contains generic parameters, but is neither an array nor a generic type.");
+                }
+            }
+            else
+            {
+                // The open-constructed type does not contain generic parameters,
+                // we can proceed to a regular closed-type check.
+
+                return openConstructedType.IsAssignableFrom(closedConstructedType);
+            }
+        }
+        public static bool IsAssignableToGenericType(Type givenType, Type genericType)
+        {
+            var interfaceTypes = givenType.GetInterfaces();
+
+            foreach (var it in interfaceTypes)
+            {
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                {
+                    return true;
+                }
+            }
+
+            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
+            {
+                return true;
+            }
+
+            Type baseType = givenType.BaseType;
+            if (baseType == null)
+            {
+                return false;
+            }
+
+            return IsAssignableToGenericType(baseType, genericType);
+        }
+
         #endregion
     }
 }

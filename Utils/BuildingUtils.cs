@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static ItemClass;
 
 namespace Klyte.Commons.Utils
 {
@@ -23,16 +22,10 @@ namespace Klyte.Commons.Utils
         public static ushort FindBuilding(Vector3 pos, float maxDistance, ItemClass.Service service, ItemClass.SubService subService, TransferManager.TransferReason[] allowedTypes, Building.Flags flagsRequired, Building.Flags flagsForbidden)
         {
             BuildingManager bm = Singleton<BuildingManager>.instance;
-            //if (allowedTypes == null || allowedTypes.Length == 0)
-            //{
-            //    return bm.FindBuilding(pos, maxDistance, service, subService, flagsRequired, flagsForbidden);
-            //}
-
-
-            int num = Mathf.Max((int) (((pos.x - maxDistance) / 64f) + 135f), 0);
-            int num2 = Mathf.Max((int) (((pos.z - maxDistance) / 64f) + 135f), 0);
-            int num3 = Mathf.Min((int) (((pos.x + maxDistance) / 64f) + 135f), 269);
-            int num4 = Mathf.Min((int) (((pos.z + maxDistance) / 64f) + 135f), 269);
+            int num = Mathf.Max((int)(((pos.x - maxDistance) / 64f) + 135f), 0);
+            int num2 = Mathf.Max((int)(((pos.z - maxDistance) / 64f) + 135f), 0);
+            int num3 = Mathf.Min((int)(((pos.x + maxDistance) / 64f) + 135f), 269);
+            int num4 = Mathf.Min((int)(((pos.z + maxDistance) / 64f) + 135f), 269);
             ushort result = 0;
             float currentDistance = maxDistance * maxDistance;
             for (int i = num2; i <= num4; i++)
@@ -88,7 +81,8 @@ namespace Klyte.Commons.Utils
                         //doErrorLog("CheckInfoCompatibility 5");
                         if (dist < lastNearest)
                         {
-                            result = buildingId;
+                            result = Building.FindParentBuilding(buildingId);
+                            if (result == 0) result = buildingId;
                             lastNearest = dist;
                             return true;
                         }
@@ -99,8 +93,8 @@ namespace Klyte.Commons.Utils
         }
 
 
-        public static ushort GetBuildingDistrict(uint bId) => GetBuildingDistrict(Singleton<BuildingManager>.instance.m_buildings.m_buffer[bId]);
-        public static ushort GetBuildingDistrict(Building b) => DistrictManager.instance.GetDistrict(b.m_position);
+        public static ushort GetBuildingDistrict(uint bId) => GetBuildingDistrict(ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[bId]);
+        public static ushort GetBuildingDistrict(ref Building b) => DistrictManager.instance.GetDistrict(b.m_position);
 
 
 
@@ -193,11 +187,9 @@ namespace Klyte.Commons.Utils
 
             BuildingManager bm = Singleton<BuildingManager>.instance;
 
-            while (bm.m_buildings.m_buffer[buildingId].m_parentBuilding > 0)
+            if (bm.m_buildings.m_buffer[buildingId].m_parentBuilding > 0)
             {
-                LogUtils.DoLog("getBuildingName(): building id {0} - parent = {1}", buildingId, bm.m_buildings.m_buffer[buildingId].m_parentBuilding);
-                buildingId = bm.m_buildings.m_buffer[buildingId].m_parentBuilding;
-                bm.m_buildings.m_buffer[buildingId] = bm.m_buildings.m_buffer[buildingId];
+                buildingId = Building.FindParentBuilding(buildingId);
             }
             InstanceID iid = default;
             iid.Building = buildingId;
@@ -206,12 +198,12 @@ namespace Klyte.Commons.Utils
 
             return bm.GetBuildingName(buildingId, iid);
         }
-        public static bool IsBuildingValidForStation(bool excludeCargo, BuildingManager bm, ushort tempBuildingId) => tempBuildingId > 0 && (
-    !excludeCargo
-    || !(bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is DepotAI || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is CargoStationAI)
-    || bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI is TransportStationAI
-    );
-      
+        public static bool IsBuildingValidForStation(bool excludeCargo, BuildingManager bm, ushort tempBuildingId)
+        {
+            var ai = bm.m_buildings.m_buffer[tempBuildingId].Info.m_buildingAI;
+            return tempBuildingId > 0 && ((!excludeCargo && (ai is DepotAI || ai is CargoStationAI)) || ai is TransportStationAI || ai is OutsideConnectionAI);
+        }
+
         #endregion
     }
 }

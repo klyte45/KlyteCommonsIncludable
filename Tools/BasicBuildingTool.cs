@@ -1,20 +1,21 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.UI;
+using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
 namespace Klyte.Commons
 {
 
-    public abstract class BasicBuildingTool<T> : BuildingTool where T : BasicBuildingTool<T>
+    public abstract class BaseBuildingTool<T> : BuildingTool where T : BaseBuildingTool<T>
     {
 
         protected override void Awake()
         {
             m_toolController = UnityEngine.Object.FindObjectOfType<ToolController>();
             base.enabled = false;
-            instance = (T) this;
+            instance = (T)this;
         }
 
         protected override void OnToolGUI(Event e)
@@ -118,7 +119,7 @@ namespace Klyte.Commons
 
         public override ToolBase.ToolErrors GetErrors() => ToolBase.ToolErrors.None;
 
-
+        public bool m_parentOnly = true;
 
         private void RaycastHoverInstance(Ray mouseRay)
         {
@@ -129,11 +130,14 @@ namespace Klyte.Commons
             var ray = new Segment3(origin, vector);
 
             BuildingManager.instance.RayCast(ray, ItemClass.Service.None, ItemClass.SubService.None, ItemClass.Layer.Default, Building.Flags.None, out _, out m_hoverBuilding);
-            var i = 0;
-            while (BuildingBuffer[m_hoverBuilding].m_parentBuilding != 0 && i < 10)
+            if (m_parentOnly)
             {
-                m_hoverBuilding = BuildingBuffer[m_hoverBuilding].m_parentBuilding;
-                i++;
+                var i = 0;
+                while (BuildingBuffer[m_hoverBuilding].m_parentBuilding != 0 && i < 10)
+                {
+                    m_hoverBuilding = BuildingBuffer[m_hoverBuilding].m_parentBuilding;
+                    i++;
+                }
             }
 
         }
@@ -143,16 +147,56 @@ namespace Klyte.Commons
             {
                 return;
             }
+            HoverBuilding(cameraInfo, toolColor, buildingId);
+            if (m_parentOnly)
+            {
+                var subBuilding = BuildingBuffer[buildingId].m_subBuilding;
+                while (subBuilding > 0)
+                {
+                    HoverBuilding(cameraInfo, toolColor, subBuilding);
+                    subBuilding = BuildingBuffer[subBuilding].m_subBuilding;
+                }
+            }
+        }
+
+        private static void HoverBuilding(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort buildingId)
+        {
             BuildingBuffer[buildingId].GetTotalPosition(out Vector3 pos, out Quaternion rot, out Vector3 size);
             var quad = new Quad3(
                (rot * new Vector3(-size.x, 0, size.z) / 2) + pos,
                (rot * new Vector3(-size.x, 0, -size.z) / 2) + pos,
                (rot * new Vector3(size.x, 0, -size.z) / 2) + pos,
                (rot * new Vector3(size.x, 0, size.z) / 2) + pos
-
             );
             Singleton<RenderManager>.instance.OverlayEffect.DrawQuad(cameraInfo, toolColor, quad, -1f, 1280f, false, true);
 
+            var nets = BuildingBuffer[buildingId].m_netNode;
+            var drawnSegments = new HashSet<ushort>();
+            var netManagerInstance = NetManager.instance;
+            while (nets > 0)
+            {
+                ref NetNode currNode = ref netManagerInstance.m_nodes.m_buffer[nets];
+                for (int i = 0; i < 8; i++)
+                {
+                    var segmentId = currNode.GetSegment(i);
+                    if (segmentId == 0)
+                    {
+                        break;
+                    }
+                    if (drawnSegments.Contains(segmentId))
+                    {
+                        continue;
+                    }
+                    ref NetSegment nextSegment = ref netManagerInstance.m_segments.m_buffer[segmentId];
+                    if (netManagerInstance.m_nodes.m_buffer[nextSegment.GetOtherNode(nets)].m_building != buildingId)
+                    {
+                        continue;
+                    }
+                    drawnSegments.Add(segmentId);
+                    RenderOverlayUtils.RenderNetSegmentOverlay(cameraInfo, toolColor, segmentId);
+                }
+                nets = currNode.m_nextBuildingNode;
+            }
         }
 
         private long ElapsedMilliseconds(long startTime)
