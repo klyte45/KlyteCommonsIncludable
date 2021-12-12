@@ -15,7 +15,7 @@ namespace Klyte.Commons.ModShared
         public override bool IsUuiAvailable { get; } = false;
         public override void RegisterMod<U, C, T>(BasicIUserMod<U, C, T> modInstance) => AddModButton<U, C, T>(modInstance);
 
-        protected override void TogglePanel(UIComponent component, UIMouseEventParameter eventParam)
+        private void TogglePanel(UIComponent component, UIMouseEventParameter eventParam)
         {
             if (m_modsPanel == null)
             {

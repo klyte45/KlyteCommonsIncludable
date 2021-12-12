@@ -36,8 +36,6 @@ namespace Klyte.Commons.ModShared
             m_container.gameObject.AddComponent<T>();
             Close();
         }
-
-        protected override void TogglePanel(UIComponent component, UIMouseEventParameter eventParam) => throw new System.NotImplementedException();
         internal override void ApplyButtonColor(bool useLowSaturationButton) => m_modButton.Button.color = Color.Lerp(useLowSaturationButton ? Color.gray : Color.white, m_modButton.IsPressed ? Color.white : Color.black, 0.5f);
         internal override void ResetPosition() { }
         internal override void Close()

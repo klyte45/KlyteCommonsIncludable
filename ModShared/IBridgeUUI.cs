@@ -40,7 +40,6 @@ namespace Klyte.Commons.ModShared
         }
 
         internal abstract void ResetPosition();
-        protected abstract void TogglePanel(UIComponent component, UIMouseEventParameter eventParam);
 
         internal abstract void ApplyButtonColor(bool useLowSaturationButton);
         internal abstract void Close();
