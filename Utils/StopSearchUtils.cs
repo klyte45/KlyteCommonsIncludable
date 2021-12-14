@@ -44,10 +44,10 @@ namespace Klyte.Commons.Utils
                                 && (info.m_class.m_service == service || info.m_class.m_service == service2)
                                 && (instance.m_nodes.m_buffer[nodeId].m_flags & (NetNode.Flags.Collapsed)) == NetNode.Flags.None
                                 && (instance.m_nodes.m_buffer[nodeId].m_flags & (NetNode.Flags.Created)) != NetNode.Flags.None
-                                && instance.m_nodes.m_buffer[nodeId].m_transportLine > 0
+                                && instance.m_nodes.m_buffer[nodeId].Info.m_netAI is TransportLineAI tlai
                                 && (allowUnderground || !info.m_netAI.IsUnderground())
-                                && (stopType == VehicleInfo.VehicleType.None || stopType == (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine]).Info.m_vehicleType)
-                                && (TransportManager.instance.m_lines.m_buffer[instance.m_nodes.m_buffer[nodeId].m_transportLine].m_flags & TransportLine.Flags.Complete) != TransportLine.Flags.None)
+                                && (stopType == VehicleInfo.VehicleType.None || stopType == tlai.m_vehicleType)
+                                )
                             {
                                 ref NetNode node = ref instance.m_nodes.m_buffer[nodeId];
                                 Vector3 nodePos = node.m_position;
