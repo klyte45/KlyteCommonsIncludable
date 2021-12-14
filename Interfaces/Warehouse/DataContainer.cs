@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -35,7 +36,16 @@ namespace Klyte.Commons.Interfaces
                 {
                     try
                     {
-                        var targetParameters = type.Assembly.GetTypes().Where(x => !x.IsAbstract && !x.IsInterface && !x.IsGenericType && ReflectionUtils.CanMakeGenericTypeVia(type.GetGenericArguments()[0], x)).ToArray();
+                        IEnumerable<Type> allTypes;
+                        try
+                        {
+                            allTypes = type.Assembly.GetTypes();
+                        }
+                        catch (ReflectionTypeLoadException r)
+                        {
+                            allTypes = r.Types.Where(k => !(k is null));
+                        }
+                        var targetParameters = allTypes.Where(x => !x.IsAbstract && !x.IsInterface && !x.IsGenericType && ReflectionUtils.CanMakeGenericTypeVia(type.GetGenericArguments()[0], x)).ToArray();
                         LogUtils.DoLog($"PARAMETER PARAMS FOR {type.GetGenericArguments()[0]} FOUND: [{string.Join(",", targetParameters.Select(x => x.ToString()).ToArray())}]");
                         foreach (var param in targetParameters)
                         {
