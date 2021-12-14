@@ -466,6 +466,7 @@ namespace Klyte.Commons.Interfaces
         public IEnumerable<ulong> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);
         public IEnumerable<string> IncompatibleDllModListAll => IncompatibleDllModListCommons.Union(IncompatibleDllModList);
 
+        public static SavedBool UseUuiIfAvailable { get; } = new SavedBool("K45_UseUuiIfAvailable", Settings.gameSettingsFile, true, true);
     }
 
 }

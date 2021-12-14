@@ -14,7 +14,8 @@ namespace Klyte.Commons.Utils
 
         public Dictionary<string, string> AuthorList
         {
-            get {
+            get
+            {
                 if (m_authorList == null)
                 {
                     m_authorList = LoadAuthors();
@@ -25,7 +26,8 @@ namespace Klyte.Commons.Utils
         private Dictionary<string, T> m_propsLoaded;
         public Dictionary<string, T> PrefabsLoaded
         {
-            get {
+            get
+            {
                 if (m_propsLoaded == null)
                 {
                     m_propsLoaded = GetInfos().Where(x => x?.name != null).GroupBy(x => GetListName(x)).Select(x => Tuple.New(x.Key, x.FirstOrDefault())).ToDictionary(x => x.First, x => x.Second);
@@ -79,6 +81,8 @@ namespace Klyte.Commons.Utils
     }
 
     public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }
+    public class NetIndexes : PrefabIndexesAbstract<NetInfo, NetIndexes> { }
+    public class TransportIndexes : PrefabIndexesAbstract<TransportInfo, TransportIndexes> { }
     public class BuildingIndexes : PrefabIndexesAbstract<BuildingInfo, BuildingIndexes> { }
     public class VehiclesIndexes : PrefabIndexesAbstract<VehicleInfo, VehiclesIndexes> { }
     public class TreeIndexes : PrefabIndexesAbstract<TreeInfo, TreeIndexes> { }
