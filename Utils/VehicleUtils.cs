@@ -14,7 +14,7 @@ namespace Klyte.Commons.Utils
     public class VehicleUtils
     {
         #region Vehicle Utils
-        public static VehicleInfo GetRandomModel(ref Randomizer r, IEnumerable<string> assetList, out string selectedModel)
+        public static VehicleInfo GetRandomModel(IEnumerable<string> assetList, out string selectedModel)
         {
             selectedModel = null;
             if (assetList.Count() == 0)
@@ -22,9 +22,9 @@ namespace Klyte.Commons.Utils
                 return null;
             }
 
-            selectedModel = assetList.ElementAt(r.Int32(0, assetList.Count() - 1));
+            selectedModel = assetList.ElementAt(SimulationManager.instance.m_randomizer.Int32(0, assetList.Count() - 1));
 
-            VehicleInfo saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel);
+            VehicleInfo saida = PrefabCollection<VehicleInfo>.FindLoaded(selectedModel ?? "");
             if (saida == null)
             {
                 LogUtils.DoLog("MODEL DOESN'T EXIST!");
@@ -48,7 +48,7 @@ namespace Klyte.Commons.Utils
                 int capacity = ReflectionUtils.GetGetFieldDelegate<AI, int>(fieldInfo)(ai);
                 try
                 {
-                    if (!noLoop)
+                    if (!noLoop && !(info.m_trailers is null))
                     {
                         foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                         {
@@ -121,15 +121,17 @@ namespace Klyte.Commons.Utils
             {
                 try
                 {
-                    foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
+                    if (!(info.m_trailers is null))
                     {
-                        if (trailer.m_info != null)
+                        foreach (VehicleInfo.VehicleTrailer trailer in info.m_trailers)
                         {
-                            GetCapacityRelative(trailer.m_info, trailer.m_info.m_vehicleAI, ref relativeParts, out int capacity, true);
-                            totalCapacity += capacity;
+                            if (trailer.m_info != null)
+                            {
+                                GetCapacityRelative(trailer.m_info, trailer.m_info.m_vehicleAI, ref relativeParts, out int capacity, true);
+                                totalCapacity += capacity;
+                            }
                         }
                     }
-
                     for (int i = 0; i < relativeParts.Keys.Count; i++)
                     {
                         relativeParts[relativeParts.Keys.ElementAt(i)] /= totalCapacity;
@@ -226,7 +228,7 @@ namespace Klyte.Commons.Utils
             return num;
         }
 
-        public static IEnumerator UpdateCapacityUnits(ThreadBase t)
+        public static IEnumerator UpdateCapacityUnits()
         {
             int count = 0;
             Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;

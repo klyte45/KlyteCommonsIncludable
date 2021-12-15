@@ -1,14 +1,13 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.UI;
-using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
 namespace Klyte.Commons
 {
 
-    public abstract class BaseBuildingTool<T> : BuildingTool where T : BaseBuildingTool<T>
+    public abstract class BaseVehicleTool<T> : DefaultTool where T : BaseVehicleTool<T>
     {
 
         protected override void Awake()
@@ -97,7 +96,7 @@ namespace Klyte.Commons
             if (!isInsideUI && Cursor.visible)
             {
                 Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-                m_hoverBuilding = 0;
+                m_hoverVehicle = 0;
                 RaycastHoverInstance(mouseRay);
             }
         }
@@ -119,7 +118,7 @@ namespace Klyte.Commons
 
         public override ToolBase.ToolErrors GetErrors() => ToolBase.ToolErrors.None;
 
-        public bool m_parentOnly = true;
+        public bool m_trailersAlso = true;
 
         private void RaycastHoverInstance(Ray mouseRay)
         {
@@ -129,92 +128,49 @@ namespace Klyte.Commons
             Vector3 vector = input.m_ray.origin + (normalized * input.m_length);
             var ray = new Segment3(origin, vector);
 
-            BuildingManager.instance.RayCast(ray, ItemClass.Service.None, ItemClass.SubService.None, ItemClass.Layer.Default, Building.Flags.None, out _, out m_hoverBuilding);
-            if (m_parentOnly)
-            {
-                var i = 0;
-                while (BuildingBuffer[m_hoverBuilding].m_parentBuilding != 0 && i < 10)
-                {
-                    m_hoverBuilding = BuildingBuffer[m_hoverBuilding].m_parentBuilding;
-                    i++;
-                }
-            }
+            VehicleManager.instance.RayCast(ray, 0, 0, out _, out m_hoverVehicle, out m_hoverParkedVehicle);
 
         }
-        public void RenderOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort buildingId)
+        public void RenderOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort vehicleId, bool parked)
         {
-            if (buildingId == 0)
+            if (vehicleId == 0)
             {
                 return;
             }
-            HoverBuilding(cameraInfo, toolColor, buildingId);
-            if (m_parentOnly)
+            if (m_trailersAlso && !parked)
             {
-                var subBuilding = BuildingBuffer[buildingId].m_subBuilding;
-                while (subBuilding > 0)
+                var subVehicle = VehicleBuffer[vehicleId].GetFirstVehicle(vehicleId);
+                while (subVehicle > 0)
                 {
-                    HoverBuilding(cameraInfo, toolColor, subBuilding);
-                    subBuilding = BuildingBuffer[subBuilding].m_subBuilding;
+                    HoverVehicle(cameraInfo, toolColor, subVehicle);
+                    subVehicle = VehicleBuffer[subVehicle].m_trailingVehicle;
+                }
+            }
+            else
+            {
+                if (parked)
+                {
+                    HoverParkedVehicle(cameraInfo, toolColor, vehicleId);
+                }
+                else
+                {
+                    HoverVehicle(cameraInfo, toolColor, vehicleId);
                 }
             }
         }
 
-        private static void HoverBuilding(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort buildingId)
-        {
-            BuildingBuffer[buildingId].GetTotalPosition(out Vector3 pos, out Quaternion rot, out Vector3 size);
-            var quad = new Quad3(
-               (rot * new Vector3(-size.x, 0, size.z) / 2) + pos,
-               (rot * new Vector3(-size.x, 0, -size.z) / 2) + pos,
-               (rot * new Vector3(size.x, 0, -size.z) / 2) + pos,
-               (rot * new Vector3(size.x, 0, size.z) / 2) + pos
-            );
-            Singleton<RenderManager>.instance.OverlayEffect.DrawQuad(cameraInfo, toolColor, quad, -1f, 1280f, false, true);
-
-            var nets = BuildingBuffer[buildingId].m_netNode;
-            var drawnSegments = new HashSet<ushort>();
-            var netManagerInstance = NetManager.instance;
-            while (nets > 0)
-            {
-                ref NetNode currNode = ref netManagerInstance.m_nodes.m_buffer[nets];
-                for (int i = 0; i < 8; i++)
-                {
-                    var segmentId = currNode.GetSegment(i);
-                    if (segmentId == 0)
-                    {
-                        break;
-                    }
-                    if (drawnSegments.Contains(segmentId))
-                    {
-                        continue;
-                    }
-                    ref NetSegment nextSegment = ref netManagerInstance.m_segments.m_buffer[segmentId];
-                    if (netManagerInstance.m_nodes.m_buffer[nextSegment.GetOtherNode(nets)].m_building != buildingId)
-                    {
-                        continue;
-                    }
-                    drawnSegments.Add(segmentId);
-                    RenderOverlayUtils.RenderNetSegmentOverlay(cameraInfo, toolColor, segmentId);
-                }
-                nets = currNode.m_nextBuildingNode;
-            }
-        }
+        private static void HoverVehicle(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort vehicleId) => VehicleBuffer[vehicleId].RenderOverlay(cameraInfo, vehicleId, toolColor);
+        private static void HoverParkedVehicle(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort vehicleId) => VehicleParkedBuffer[vehicleId].RenderOverlay(cameraInfo, vehicleId, toolColor);
 
         private long ElapsedMilliseconds(long startTime)
         {
             var timestamp = Stopwatch.GetTimestamp();
-            long num;
-            if (timestamp > startTime)
-            {
-                num = timestamp - startTime;
-            }
-            else
-            {
-                num = startTime - timestamp;
-            }
+            long num = timestamp > startTime ? timestamp - startTime : startTime - timestamp;
             return num / (Stopwatch.Frequency / 1000L);
         }
 
-        protected static Building[] BuildingBuffer => Singleton<BuildingManager>.instance.m_buildings.m_buffer;
+        protected static ref Vehicle[] VehicleBuffer => ref Singleton<VehicleManager>.instance.m_vehicles.m_buffer;
+        protected static ref VehicleParked[] VehicleParkedBuffer => ref Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer;
 
 
         public static T instance;
@@ -229,7 +185,8 @@ namespace Klyte.Commons
 
         public static Shader shaderSolid = Shader.Find("Custom/Props/Decal/Solid");
 
-        protected ushort m_hoverBuilding;
+        protected ushort m_hoverVehicle;
+        protected ushort m_hoverParkedVehicle;
 
         private bool m_prevRenderZones;
 

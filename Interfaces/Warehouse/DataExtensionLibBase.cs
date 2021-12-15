@@ -1,22 +1,25 @@
 ﻿using ICities;
-using Klyte.Commons.Interfaces;
+using Klyte.Commons.Libraries;
 using Klyte.Commons.Utils;
 using System;
 using System.Text;
 
-namespace Klyte.Commons.Libraries
+namespace Klyte.Commons.Interfaces
 {
-    public abstract class LibBaseData<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
-        where LIB : LibBaseData<LIB, DESC>, new()
+    public abstract class DataExtensionLibBase<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
+        where LIB : DataExtensionLibBase<LIB, DESC>, new()
         where DESC : class,ILibable
     {
         public abstract string SaveId { get; }
         public static LIB Instance
         {
-            get {
-                if (!DataContainer.instance.Instances.TryGetValue(typeof(LIB), out IDataExtension result) || result == null)
+            get
+            {
+                if (!DataContainer.instance.Instances.TryGetValue(typeof(LIB), out IDataExtension result) || result is null)
                 {
-                    DataContainer.instance.Instances[typeof(LIB)] = new LIB();
+                    var newItem = new LIB();
+                    newItem.AfterDeserialize(newItem);
+                    DataContainer.instance.Instances[typeof(LIB)] = newItem;
                 }
                 return DataContainer.instance.Instances[typeof(LIB)] as LIB;
             }
@@ -35,14 +38,18 @@ namespace Klyte.Commons.Libraries
                 content = ZipUtils.Unzip(data);
             }
 
-            return XmlUtils.DefaultXmlDeserialize<LIB>(content);
+            var result = XmlUtils.DefaultXmlDeserialize<LIB>(content);
+            AfterDeserialize(result);
+            return result;
         }
 
         public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((LIB)this, false));
         public virtual void OnReleased() { }
-
+        public virtual void AfterDeserialize(LIB instance) { }
         public virtual void LoadDefaults(ISerializableData serializableData) { }
 
-        protected override void Save() { }
+        public event Action EventDataChanged;
+
+        protected override void Save() => EventDataChanged?.Invoke();
     }
 }

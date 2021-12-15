@@ -15,10 +15,11 @@ namespace Klyte.Commons.i18n
     {
         internal static readonly string m_translateFilesPath = $"{FileUtils.BASE_FOLDER_PATH}__translations{Path.DirectorySeparatorChar}";
 
-        public static readonly string[] locales = new string[] { "en", "pt", "ko", "de", "cn", "pl", "nl", "fr", "es", "ru", "zh" };
+        public static readonly string[] locales = new string[] { "en", "pt", "ko", "de", "cn", "pl", "nl", "fr", "es", "ru", "zh", "ja" };
 
         public const string m_defaultPrefixInGame = "K45_";
         public const string m_defaultTestKey = "K45_TEST_UP";
+        public const string m_defaultTestValue = "OK_V2";
         public const string m_defaultModControllingKey = "K45_MOD_CONTROLLING_LOCALE";
 
         private const string m_lineSeparator = "\r\n";
@@ -36,8 +37,7 @@ namespace Klyte.Commons.i18n
 
         public void Awake()
         {
-            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
-            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultModControllingKey }] = CommonProperties.ModName;
+            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = m_defaultTestValue;
             foreach (string lang in locales)
             {
                 FileUtils.EnsureFolderCreation($"{m_translateFilesPath}{lang}");
@@ -83,7 +83,7 @@ namespace Klyte.Commons.i18n
         {
             if (FindObjectOfType<KlyteLocaleManager>() != null)
             {
-                m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
+                m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = m_defaultTestValue;
                 m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultModControllingKey }] = CommonProperties.ModName;
             }
 
@@ -94,7 +94,6 @@ namespace Klyte.Commons.i18n
 
             m_alreadyLoading = true;
             m_language = CurrentLanguageId.value;
-            m_localeStringsDictionary(m_localeManagerLocale(LocaleManager.instance))[new Locale.Key() { m_Identifier = m_defaultTestKey }] = "OK";
             ReadLanguage("en");
             string targetLanguage = m_language == "" ? LocaleManager.instance.language.Substring(0, 2) : m_language;
             if (m_language != "en" && locales.Contains(targetLanguage))

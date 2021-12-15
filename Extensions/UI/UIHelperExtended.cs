@@ -51,6 +51,7 @@ namespace Klyte.Commons.Extensions
             if (eventCallback != null && !string.IsNullOrEmpty(text))
             {
                 var uIButton = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kButtonTemplate)) as UIButton;
+                uIButton.transform.localScale = Vector3.one;
                 uIButton.text = text;
                 uIButton.eventClick += delegate (UIComponent c, UIMouseEventParameter sel)
                 {
@@ -70,8 +71,11 @@ namespace Klyte.Commons.Extensions
             if (!string.IsNullOrEmpty(text))
             {
                 var uICheckBox = root.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
+                uICheckBox.transform.localScale = Vector3.one;
                 uICheckBox.text = text;
                 uICheckBox.isChecked = defaultValue;
+                uICheckBox.label.disabledTextColor = Color.gray;
+                uICheckBox.disabledColor = Color.gray;
                 if (eventCallback != null)
                 {
                     uICheckBox.eventCheckChanged += delegate (UIComponent c, bool isChecked)
@@ -92,8 +96,11 @@ namespace Klyte.Commons.Extensions
             if (!string.IsNullOrEmpty(text))
             {
                 var uICheckBox = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
+                uICheckBox.transform.localScale = Vector3.one;
                 uICheckBox.label.isLocalized = true;
                 uICheckBox.label.localeID = text;
+                uICheckBox.label.disabledTextColor = Color.gray;
+                uICheckBox.disabledColor = Color.gray;
                 uICheckBox.isChecked = defaultValue;
                 if (eventCallback != null)
                 {
@@ -109,6 +116,7 @@ namespace Klyte.Commons.Extensions
         public UICheckBox AddCheckboxNoLabel(string name, OnCheckChanged eventCallback = null)
         {
             var uICheckBox = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kCheckBoxTemplate)) as UICheckBox;
+            uICheckBox.transform.localScale = Vector3.one;
             uICheckBox.width = uICheckBox.height;
             GameObject.Destroy(uICheckBox.label.gameObject);
             uICheckBox.name = name;
@@ -174,22 +182,27 @@ namespace Klyte.Commons.Extensions
 
         public static UIDropDown CloneBasicDropDown(string text, string[] options, OnDropdownSelectionChanged eventCallback, UIComponent parent, out UILabel label, bool limitLabelByPanelWidth = false)
         {
-            if (eventCallback != null && !string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
                 var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 label = uIPanel.Find<UILabel>("Label");
                 if (limitLabelByPanelWidth)
-                { KlyteMonoUtils.LimitWidth(label, (uint)uIPanel.width); }
+                { KlyteMonoUtils.LimitWidthAndBox(label, (uint)uIPanel.width); }
                 label.text = text;
                 UIDropDown uIDropDown = uIPanel.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
-                uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
+                if (!(eventCallback is null))
                 {
-                    eventCallback(sel);
-                };
+                    uIDropDown.eventSelectedIndexChanged += delegate (UIComponent c, int sel)
+                    {
+                        eventCallback(sel);
+                    };
+                }
+
                 return uIDropDown;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name");
             label = null;
             return null;
         }
@@ -204,12 +217,13 @@ namespace Klyte.Commons.Extensions
             if (eventCallback != null && !string.IsNullOrEmpty(text))
             {
                 container = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kDropdownTemplate)) as UIPanel;
+                container.transform.localScale = Vector3.one;
                 label = container.Find<UILabel>("Label");
                 label.localeID = text;
                 label.isLocalized = true;
                 if (limitLabelByPanelWidth)
                 {
-                    KlyteMonoUtils.LimitWidth(label, (uint)container.width);
+                    KlyteMonoUtils.LimitWidthAndBox(label, (uint)container.width);
                 }
                 UIDropDown uIDropDown = container.Find<UIDropDown>("Dropdown");
                 uIDropDown.items = options;
@@ -251,6 +265,7 @@ namespace Klyte.Commons.Extensions
             if (eventCallback != null)
             {
                 var uIPanel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kSliderTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 if (string.IsNullOrEmpty(text))
                 {
                     label = null;
@@ -342,6 +357,7 @@ namespace Klyte.Commons.Extensions
             if (!string.IsNullOrEmpty(text))
             {
                 parentPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kGroupTemplate)) as UIPanel;
+                parentPanel.transform.localScale = Vector3.one;
                 label = parentPanel.Find<UILabel>("Label");
                 label.text = text;
                 return new UIHelperExtension(parentPanel.Find("Content"));
@@ -355,6 +371,7 @@ namespace Klyte.Commons.Extensions
         public static UITextField AddTextfield(UIComponent parent, string text, string defaultContent, out UILabel label, out UIPanel panel)
         {
             panel = parent.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+            panel.transform.localScale = Vector3.one;
             label = panel.Find<UILabel>("Label");
             if (text != null)
             {
@@ -377,9 +394,22 @@ namespace Klyte.Commons.Extensions
                 UITextField uITextField = AddTextfield(m_root, text, defaultContent, out _, out _);
                 if (eventChangedCallback != null)
                 {
+                    bool alreadyCalling = false;
                     uITextField.eventTextChanged += delegate (UIComponent c, string sel)
                 {
+                    if (alreadyCalling)
+                    {
+                        LogUtils.DoErrorLog($"Recursive eventTextChanged call! {Environment.StackTrace}");
+                    }
+                    alreadyCalling = true;
+                    try
+                    {
                     eventChangedCallback?.Invoke(sel);
+                    }
+                    finally
+                    {
+                        alreadyCalling = false;
+                    }
                 };
                 }
                 if (eventSubmittedCallback != null)
@@ -402,6 +432,7 @@ namespace Klyte.Commons.Extensions
             {
                 var result = new UITextField[3];
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 uIPanel.Find<UILabel>("Label").text = name;
                 uIPanel.autoLayout = true;
                 uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
@@ -448,6 +479,7 @@ namespace Klyte.Commons.Extensions
             {
                 var result = new UITextField[4];
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 uIPanel.Find<UILabel>("Label").text = name;
                 uIPanel.autoLayout = true;
                 uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
@@ -498,6 +530,7 @@ namespace Klyte.Commons.Extensions
             {
                 var result = new UITextField[2];
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 uIPanel.Find<UILabel>("Label").text = name;
                 uIPanel.autoLayout = true;
                 uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
@@ -543,6 +576,7 @@ namespace Klyte.Commons.Extensions
             {
                 UITextField result;
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 uIPanel.Find<UILabel>("Label").text = name;
                 uIPanel.autoLayout = true;
                 uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
@@ -567,20 +601,22 @@ namespace Klyte.Commons.Extensions
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
             return null;
         }
-        public UITextField AddIntField(string name, float defaultValue, Action<int> eventSubmittedCallback, bool acceptNegative = true)
+        public UITextField AddIntField(string name, float defaultValue, Action<int> eventSubmittedCallback, out UILabel label, bool acceptNegative = true)
         {
             if ((eventSubmittedCallback != null) && !string.IsNullOrEmpty(name))
             {
                 UITextField result;
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(kTextfieldTemplate)) as UIPanel;
-                uIPanel.Find<UILabel>("Label").text = name;
+                uIPanel.transform.localScale = Vector3.one;
+                label = uIPanel.Find<UILabel>("Label");
+                label.text = name;
                 uIPanel.autoLayout = true;
                 uIPanel.autoLayoutDirection = LayoutDirection.Horizontal;
                 uIPanel.wrapLayout = false;
                 uIPanel.autoFitChildrenVertically = true;
                 result = uIPanel.Find<UITextField>("Text Field");
                 result.numericalOnly = true;
-                result.width = 60;
+                result.width = 100;
                 result.allowNegative = acceptNegative;
                 result.allowFloats = false;
 
@@ -594,7 +630,8 @@ namespace Klyte.Commons.Extensions
                 result.text = defaultValue.ToString();
                 return result;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create dropdown with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create int field with no name or no event");
+            label = null;
             return null;
         }
 
@@ -612,11 +649,11 @@ namespace Klyte.Commons.Extensions
             return null;
         }
 
-        public UILabel AddLabel(string name) => AddLabel(m_root, name, 700);
-        public static UILabel AddLabel(UIComponent parent, string name, float width)
+        public UILabel AddLabel(string name, float width = 700, bool fixedMinSize = false) => AddLabel(m_root, name, width, out _, fixedMinSize);
+        public static UILabel AddLabel(UIComponent parent, string name, float width, out UIPanel container, bool fixedMinSize = false)
         {
             KlyteMonoUtils.CreateUIElement(out UILabel label, parent.transform, name, new Vector4(0, 0, width, 40));
-            KlyteMonoUtils.LimitWidthAndBox(label, width);
+            KlyteMonoUtils.LimitWidthAndBox(label, width, out container, fixedMinSize);
             label.text = name;
             return label;
         }
@@ -624,6 +661,7 @@ namespace Klyte.Commons.Extensions
         public UITextureSprite AddNamedTexture(string name)
         {
             var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+            uIPanel.transform.localScale = Vector3.one;
             uIPanel.Find<UILabel>("Label").text = name;
             GameObject.Destroy(uIPanel.Find<UIDropDown>("Dropdown").gameObject);
 
@@ -643,6 +681,7 @@ namespace Klyte.Commons.Extensions
             if (eventCallback != null && !string.IsNullOrEmpty(name))
             {
                 container = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+                container.transform.localScale = Vector3.one;
                 container.name = "DropDownColorSelector";
                 title = container.Find<UILabel>("Label");
                 title.text = name;
@@ -672,14 +711,14 @@ namespace Klyte.Commons.Extensions
 
                 if (eventCallback != null)
                 {
-                    colorField.eventSelectedColorReleased += (cp, value) => eventCallback(value);
+                    colorField.eventSelectedColorChanged += (cp, value) => eventCallback(value);
                 }
 
                 colorField.selectedColor = defaultValue;
-
+                colorField.name = name;
                 return colorField;
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name or no event");
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Warning, "Cannot create colorPicker with no name");
             return null;
         }
 
@@ -688,6 +727,7 @@ namespace Klyte.Commons.Extensions
             if (eventCallback != null)
             {
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 uIPanel.name = "NumberedColorList";
                 if (string.IsNullOrEmpty(name))
                 {
@@ -715,6 +755,7 @@ namespace Klyte.Commons.Extensions
             if (eventCallback != null)
             {
                 var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+                uIPanel.transform.localScale = Vector3.one;
                 uIPanel.name = "NumberedColorList";
                 if (string.IsNullOrEmpty(name))
                 {
@@ -738,6 +779,7 @@ namespace Klyte.Commons.Extensions
         public void AddCheckboxOrdenatedList<T, U>(out T result, string name, Action<List<U>> eventCallback) where T : CheckboxOrdernatedList<U> where U : class, ICheckable
         {
             var uIPanel = m_root.AttachUIComponent(UITemplateManager.GetAsGameObject(UIHelperExtension.kDropdownTemplate)) as UIPanel;
+            uIPanel.transform.localScale = Vector3.one;
             uIPanel.name = "CheckboxOrdenatedList";
             uIPanel.autoFitChildrenHorizontally = true;
             uIPanel.autoFitChildrenVertically = true;
@@ -858,7 +900,7 @@ namespace Klyte.Commons.Extensions
             uipanel.padding = new RectOffset(10, 10, 10, 10);
             uipanel.size = new Vector2(newGroup.Self.size.x, 0f);
 
-            KlyteMonoUtils.LimitWidth(toggleLabel, uipanel.width, true);
+            KlyteMonoUtils.LimitWidthAndBox(toggleLabel, uipanel.width, true);
 
             parentPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
 
