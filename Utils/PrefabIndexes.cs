@@ -2,6 +2,7 @@ using ColossalFramework;
 using ColossalFramework.Globalization;
 using ColossalFramework.Packaging;
 using ColossalFramework.PlatformServices;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -72,12 +73,15 @@ namespace Klyte.Commons.Utils
             return list;
         }
 
-        public string[] BasicInputFiltering(string input) => PrefabsLoaded
-            .ToList()
-            .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf(x.Value + (AuthorList.TryGetValue(x.Value?.name.Split('.')[0], out string author) ? "\n" + author : ""), input, CompareOptions.IgnoreCase) >= 0)
-            .Select(x => x.Key)
-            .OrderBy((x) => x)
-            .ToArray();
+        public IEnumerator BasicInputFiltering(string input, Wrapper<string[]> result)
+        {
+            yield return result.Value = PrefabsLoaded
+              .ToList()
+              .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf(x.Value + (AuthorList.TryGetValue(x.Value?.name.Split('.')[0], out string author) ? "\n" + author : ""), input, CompareOptions.IgnoreCase) >= 0)
+              .Select(x => x.Key)
+              .OrderBy((x) => x)
+              .ToArray();
+        }
     }
 
     public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }
