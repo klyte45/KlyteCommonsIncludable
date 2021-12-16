@@ -19,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20211014";
+        public const string VERSION = "20211216";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -241,8 +241,37 @@ public void Start()
 
             m_mainPanel.enabled = true;
 
-
+            FontHack();
             #endregion
+        }
+
+        private void FontHack()
+        {
+            var labels = Component.FindObjectsOfType<UILabel>().GroupBy(x => x.font).Select(x => x.First()).ToList();
+            var testString = string.Join("", new string[0x500].Select((x, i) =>
+            {
+                try
+                {
+                    return char.ConvertFromUtf32(i);
+                }
+                catch
+                {
+                    return "";
+                }
+            }).ToArray());
+            foreach (var label in labels)
+            {
+                var orText = label.text;
+                Debug.LogWarning("Font: " + label.font.baseFont.name + " | Original text: " + orText);
+                try
+                {
+                    label.text = testString;
+                }
+                finally
+                {
+                    label.text = orText;
+                }
+            }
         }
 
         private void BindEvents()
