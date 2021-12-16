@@ -18,7 +18,7 @@ namespace Klyte.Commons.Interfaces
                 if (m_bridgeUUI is null)
                 {
                     m_bridgeUUI = BasicIUserModSimplified<U, C>.UseUuiIfAvailable
-                        ? PluginUtils.GetImplementationTypeForMod<BridgeUUI, BridgeUUIFallback, IBridgeUUI>(gameObject, "UnifiedUILib", "2.1.12")
+                        ? PluginUtils.GetImplementationTypeForMod<BridgeUUIFallback, IBridgeUUI>(gameObject, "UnifiedUILib", "2.1.12", "Klyte.Commons.ModShared.BridgeUUI")
                         : gameObject.AddComponent<BridgeUUIFallback>();
                 }
                 return m_bridgeUUI;
