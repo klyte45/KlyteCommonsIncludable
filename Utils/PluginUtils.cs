@@ -25,7 +25,7 @@ namespace Klyte.Commons.Utils
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance)?.Name);
 
 
-        public static I GetImplementationTypeForMod<O, F, I>(GameObject objTarget, string dllName, string dllMinVersion) where O : MonoBehaviour, I where F : MonoBehaviour, I
+        public static I GetImplementationTypeForMod<F, I>(GameObject objTarget, string dllName, string dllMinVersion, string nonFallbackClassName) where F : MonoBehaviour, I where I : Component
         {
             if (Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
@@ -36,8 +36,9 @@ namespace Klyte.Commons.Utils
             {
                 try
                 {
-                    LogUtils.DoWarnLog($"Using {typeof(O).Name} as implementation of {typeof(I).Name}");
-                    return objTarget.AddComponent<O>();
+                    var targetType = typeof(I).Assembly.GetType(nonFallbackClassName);
+                    LogUtils.DoWarnLog($"Using {targetType?.Name} as implementation of {typeof(I).Name}");
+                    return objTarget.AddComponent(targetType) as I;
                 }
                 catch (Exception e)
                 {
