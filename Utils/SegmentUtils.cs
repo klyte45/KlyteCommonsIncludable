@@ -556,9 +556,16 @@ namespace Klyte.Commons.Utils
         }
         public static bool GetAddressStreetAndNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset, out int number, out string streetName)
         {
-            number = GetNumberAt(targetLength, targetSegmentId, invertStart, metersOffset, out bool startAsEnd);
             streetName = NetManager.instance.GetSegmentName(targetSegmentId)?.ToString();
+            number = CalculateBuildingAddressNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, invertStart, metersOffset);
+            return true;
+        }
+
+        public static int CalculateBuildingAddressNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset)
+        {
+            int number;
             float angleTg = VectorUtils.XZ(targetPosition).GetAngleToPoint(VectorUtils.XZ(midPosBuilding));
+            number = GetNumberAt(targetLength, targetSegmentId, invertStart, metersOffset, out bool startAsEnd);
             if (angleTg == 90 || angleTg == 270)
             {
                 angleTg += Math.Sign(targetPosition.z - midPosBuilding.z);
@@ -584,8 +591,10 @@ namespace Klyte.Commons.Utils
             {
                 number |= 1;
             }
-            return true;
+
+            return number;
         }
+
         public static void GetNearestSegment(Vector3 sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId)
         {
             NetManager.instance.GetClosestSegments(sidewalk, m_closestSegsFind, out int found);
