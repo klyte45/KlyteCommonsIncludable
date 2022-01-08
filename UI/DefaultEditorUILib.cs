@@ -384,6 +384,24 @@ namespace Klyte.Commons.UI
             return sprite;
 
         }
+        public static UILabel AddLabelInEditorRow(UIComponent component, bool reduceSize = true, float width = 40, float? height = null)
+        {
+            if (reduceSize)
+            {
+                component.minimumSize -= new Vector2(0, width);
+                component.width -= width;
+            }
+            var label = component.GetComponentInParent<UIPanel>().AddUIComponent<UILabel>();
+            label.autoSize = false;
+            label.textScale = 0.75f;
+            label.width = width;
+            label.height = height ?? component.height;
+            label.zOrder = component.zOrder + 1;
+            label.wordWrap = true;
+            label.processMarkup = true;
+            return label;
+
+        }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, bool defaultState = false)
         {
@@ -448,6 +466,7 @@ namespace Klyte.Commons.UI
                     : result.items.Contains(textField.text)
                         ? OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? ""
                         : OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                result.selectedIndex = -1;
                 result.isVisible = false;
             }
 
@@ -503,6 +522,7 @@ namespace Klyte.Commons.UI
             result.eventItemMouseUp += (x, y) =>
             {
                 textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                result.selectedIndex = -1;
                 result.isVisible = false;
             };
             result.eventMouseWheel += (x, y) => y.Use();
@@ -524,7 +544,7 @@ namespace Klyte.Commons.UI
                 result.EnsureVisible(result.selectedIndex);
                 if (selectAll)
                 {
-                    textField.SelectAll();
+                    textField.MoveToEnd();
                 }
             }
         }
