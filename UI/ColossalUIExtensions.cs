@@ -1,5 +1,7 @@
-﻿using ColossalFramework.UI;
+﻿using ColossalFramework.Globalization;
+using ColossalFramework.UI;
 using Klyte.Commons.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,5 +18,11 @@ namespace Klyte.Commons.UI
             }
             return new Dictionary<T, int>();
         }
+
+        public static Tuple<string, T>[] GetDropdownOptions<T>(string localeKey) where T : struct => Enum.GetValues(typeof(T)).Cast<T>().Select(x => Tuple.New(Locale.Get(localeKey, x.ToString()), x)).ToArray();
+        public static Tuple<string, int>[] GetDropdownOptions(string[] localeKeys) => localeKeys.Select((x, i) => Tuple.New(Locale.Get(x), i)).ToArray();
+        public static Tuple<string, int>[] GetDropdownOptionsUnlocalized(string[] values) => values.Select((x, i) => Tuple.New(x, i)).ToArray();
+        public static Tuple<string, T>[] GetDropdownOptions<T>(this T[] options, string localeKey) where T : struct => options.Select(x => Tuple.New(Locale.Get(localeKey, x.ToString()), x)).ToArray();
+
     }
 }
