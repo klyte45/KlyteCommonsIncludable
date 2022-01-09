@@ -11,18 +11,11 @@ namespace Klyte.Commons.Utils
         public static string Prefix { get; } = "Klyte";
 
         public static string GetDefaultSpriteNameFor<E>(E value, bool noBorder = false) where E : Enum => GetDefaultSpriteNameFor(value.ToString(), noBorder);
-        public static string GetDefaultSpriteNameFor(string value, bool noBorder = false)
-        {
-            if (value.StartsWith("__"))
-            {
-                return $"{value.ToString().Substring(2)}{(noBorder ? TextureAtlasUtils.NoBorderSuffix : "")}";
-            }
-            if (value.StartsWith("K45_"))
-            {
-                return $"{value}{(noBorder ? TextureAtlasUtils.NoBorderSuffix : "")}";
-            }
-            return $"K45_{Prefix}_{value}{(noBorder ? TextureAtlasUtils.NoBorderSuffix : "")}";
-        }
+        public static string GetDefaultSpriteNameFor(string value, bool noBorder = false) => value.StartsWith("__")
+                ? $"{value.ToString().Substring(2)}{(noBorder ? TextureAtlasUtils.NoBorderSuffix : "")}"
+                : value.StartsWith("K45_")
+                    ? $"{value}{(noBorder ? TextureAtlasUtils.NoBorderSuffix : "")}"
+                    : $"K45_{Prefix}_{value}{(noBorder ? TextureAtlasUtils.NoBorderSuffix : "")}";
 
         public static byte[] LoadResourceData(string name)
         {
@@ -31,12 +24,14 @@ namespace Klyte.Commons.Utils
             var stream = (UnmanagedMemoryStream)Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
             if (stream == null)
             {
-                LogUtils.DoLog("Could not find resource: " + name);
+                LogUtils.DoWarnLog("Could not find resource: " + name);
                 return null;
             }
 
-            var read = new BinaryReader(stream);
-            return read.ReadBytes((int)stream.Length);
+            using (var read = new BinaryReader(stream))
+            {
+                return read.ReadBytes((int)stream.Length);
+            }
         }
 
         public static string LoadResourceString(string name)
@@ -50,8 +45,10 @@ namespace Klyte.Commons.Utils
                 return null;
             }
 
-            var read = new StreamReader(stream);
-            return read.ReadToEnd();
+            using (var read = new StreamReader(stream))
+            {
+                return read.ReadToEnd();
+            }
         }
         public static IEnumerable<string> LoadResourceStringLines(string name)
         {

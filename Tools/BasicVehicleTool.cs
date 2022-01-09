@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Klyte.Commons
 {
 
-    public abstract class BasicVehicleTool<T> : DefaultTool where T : BasicVehicleTool<T>
+    public abstract class BaseVehicleTool<T> : DefaultTool where T : BaseVehicleTool<T>
     {
 
         protected override void Awake()

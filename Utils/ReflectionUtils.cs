@@ -15,13 +15,13 @@ namespace Klyte.Commons.Utils
         #region Extract Properties
         public static void GetPropertyDelegates<CL, PT>(string propertyName, out Action<CL, PT> setter, out Func<CL, PT> getter)
         {
-            setter = (Action<CL, PT>) Delegate.CreateDelegate(typeof(Action<CL, PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetSetMethod());
-            getter = (Func<CL, PT>) Delegate.CreateDelegate(typeof(Func<CL, PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod());
+            setter = (Action<CL, PT>)Delegate.CreateDelegate(typeof(Action<CL, PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetSetMethod());
+            getter = (Func<CL, PT>)Delegate.CreateDelegate(typeof(Func<CL, PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod());
         }
         public static void GetStaticPropertyDelegates<CL, PT>(string propertyName, out Action<PT> setter, out Func<PT> getter)
         {
-            setter = (Action<PT>) Delegate.CreateDelegate(typeof(Action<PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).GetSetMethod());
-            getter = (Func<PT>) Delegate.CreateDelegate(typeof(Func<PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).GetGetMethod());
+            setter = (Action<PT>)Delegate.CreateDelegate(typeof(Action<PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).GetSetMethod());
+            getter = (Func<PT>)Delegate.CreateDelegate(typeof(Func<PT>), null, typeof(CL).GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).GetGetMethod());
         }
 
         #endregion
@@ -32,7 +32,7 @@ namespace Klyte.Commons.Utils
                 MethodInfo method = o.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
                 if (method != null)
                 {
-                    return (T) method.Invoke(o, paramList);
+                    return (T)method.Invoke(o, paramList);
                 }
             }
             return default;
@@ -46,7 +46,7 @@ namespace Klyte.Commons.Utils
                 MethodInfo method = t.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
                 if (method != null)
                 {
-                    return (T) method.Invoke(null, paramList);
+                    return (T)method.Invoke(null, paramList);
                 }
             }
             return default;
@@ -94,7 +94,7 @@ namespace Klyte.Commons.Utils
             LambdaExpression lambda =
                 Expression.Lambda(typeof(Func<TSource, TValue>), resultExpression, sourceParameter);
 
-            var compiled = (Func<TSource, TValue>) lambda.Compile();
+            var compiled = (Func<TSource, TValue>)lambda.Compile();
             return compiled;
         }
 
@@ -177,7 +177,7 @@ namespace Klyte.Commons.Utils
             LambdaExpression lambda = Expression.Lambda(typeof(Action<TSource, TValue>),
                                                         setFieldMethodCallExpression, sourceParameter, valueParameter);
 
-            var result = (Action<TSource, TValue>) lambda.Compile();
+            var result = (Action<TSource, TValue>)lambda.Compile();
             return result;
         }
 
@@ -235,7 +235,7 @@ namespace Klyte.Commons.Utils
             LambdaExpression lambda = Expression.Lambda(typeof(Action<TSource, TValue>),
                                                         setFieldMethodCallExpression, sourceParameter, valueParameter);
 
-            var result = (Action<TSource, TValue>) lambda.Compile();
+            var result = (Action<TSource, TValue>)lambda.Compile();
             return result;
         }
 
@@ -276,7 +276,7 @@ namespace Klyte.Commons.Utils
             return result;
         }
 
-        internal static T GetPrivateField<T>(object prefabAI, string v) => (T) prefabAI.GetType().GetField(v).GetValue(prefabAI);
+        internal static T GetPrivateField<T>(object prefabAI, string v) => (T)prefabAI.GetType().GetField(v).GetValue(prefabAI);
         internal static object GetPrivateStaticField(string v, Type type) => type.GetField(v).GetValue(null);
 
 
@@ -375,7 +375,10 @@ namespace Klyte.Commons.Utils
             {
                 try
                 { return x?.GetTypes(); }
-                catch { return new Type[0]; }
+                catch (ReflectionTypeLoadException r)
+                {
+                    return r.Types.Where(k => !(k is null));
+                }
             })
                                          let y = t.BaseType
                                          where t.IsClass && y != null && ((!typeTarg.IsGenericType && y == typeTarg) || (y.IsGenericType && y.GetGenericTypeDefinition() == typeTarg))
@@ -411,7 +414,10 @@ namespace Klyte.Commons.Utils
             {
                 try
                 { return x?.GetTypes(); }
-                catch { return new Type[0]; }
+                catch (ReflectionTypeLoadException r)
+                {
+                    return r.Types.Where(k => !(k is null));
+                }
             })
                                          let y = t.GetInterfaces()
                                          where t.IsClass && y.Contains(interfaceType) && !t.IsAbstract
@@ -428,8 +434,18 @@ namespace Klyte.Commons.Utils
         public static Type GetImplementationForGenericType(Type typeOr, params Type[] typeArgs)
         {
             Type typeTarg = typeOr.MakeGenericType(typeArgs);
+            IEnumerable<Type> allTypes;
+            try
+            {
+                allTypes = Assembly.GetAssembly(typeOr).GetTypes();
+            }
+            catch (ReflectionTypeLoadException r)
+            {
+                allTypes = r.Types.Where(k => !(k is null));
+            }
 
-            IEnumerable<Type> instances = (from t in Assembly.GetAssembly(typeOr).GetTypes()
+
+            IEnumerable<Type> instances = (from t in allTypes
                                            where t.IsClass && !t.IsAbstract && typeTarg.IsAssignableFrom(t) && !t.IsGenericType
                                            select t);
             if (instances.Count() != 1)

@@ -38,15 +38,9 @@ namespace Klyte.Commons.Utils
         {
             var result = new List<ushort>();
             var resultNodes = new List<ushort>();
-            ushort edgeNode;
-            if (startSegment)
-            {
-                edgeNode = NetManager.instance.m_segments.m_buffer[segmentID].m_startNode;
-            }
-            else
-            {
-                edgeNode = NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
-            }
+            ushort edgeNode = startSegment
+                ? NetManager.instance.m_segments.m_buffer[segmentID].m_startNode
+                : NetManager.instance.m_segments.m_buffer[segmentID].m_endNode;
             resultNodes.Add(edgeNode);
             CalculatePathNet(segmentID, segmentID, edgeNode, startSegment, ref result, ref resultNodes, requireSameDirection, requireSameSizeAndType);
             nodes = resultNodes.ToArray();
@@ -142,7 +136,6 @@ namespace Klyte.Commons.Utils
         public static List<ushort> GetSegmentOrderRoad(ushort segmentID, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out bool startRef, out bool endRef, out ushort[] nodes)
         {
             NetSegment.Flags flags = NetManager.instance.m_segments.m_buffer[segmentID].m_flags;
-            var nodeList = new List<ushort>();
             if (segmentID != 0 && flags != NetSegment.Flags.None)
             {
                 List<ushort> path = CalculatePathNet(segmentID, false, requireSameDirection, requireSameSizeAndType, out nodes);
@@ -334,10 +327,10 @@ namespace Klyte.Commons.Utils
         {
             if (accessSegments.Count > 1)
             {
-                NetSegment seg0 = NetManager.instance.m_segments.m_buffer[accessSegments[0]];
-                NetSegment seg1 = NetManager.instance.m_segments.m_buffer[accessSegments[1]];
-                NetSegment segN2 = NetManager.instance.m_segments.m_buffer[accessSegments[accessSegments.Count - 2]];
-                NetSegment segN1 = NetManager.instance.m_segments.m_buffer[accessSegments[accessSegments.Count - 1]];
+                ref NetSegment seg0 = ref NetManager.instance.m_segments.m_buffer[accessSegments[0]];
+                ref NetSegment seg1 = ref NetManager.instance.m_segments.m_buffer[accessSegments[1]];
+                ref NetSegment segN2 = ref NetManager.instance.m_segments.m_buffer[accessSegments[accessSegments.Count - 2]];
+                ref NetSegment segN1 = ref NetManager.instance.m_segments.m_buffer[accessSegments[accessSegments.Count - 1]];
                 nodeStartS = seg1.m_startNode == seg0.m_endNode || seg1.m_endNode == seg0.m_endNode;
                 nodeStartE = segN2.m_startNode == segN1.m_endNode || segN2.m_endNode == segN1.m_endNode;
                 if (localAdjust)
@@ -391,19 +384,12 @@ namespace Klyte.Commons.Utils
         {
             public ComparableRoad(ushort segmentId, bool startNode)
             {
-                NetSegment segment = NetManager.instance.m_segments.m_buffer[segmentId];
-                if (startNode)
-                {
-                    nodeReference = segment.m_startNode;
-                }
-                else
-                {
-                    nodeReference = segment.m_endNode;
-                }
+                ref NetSegment segment = ref NetManager.instance.m_segments.m_buffer[segmentId];
+                nodeReference = startNode ? segment.m_startNode : segment.m_endNode;
 
                 bool entering = startNode != ((NetManager.instance.m_segments.m_buffer[segmentId].m_flags & NetSegment.Flags.Invert) != 0);
 
-                NetNode node = NetManager.instance.m_nodes.m_buffer[nodeReference];
+                ref NetNode node = ref NetManager.instance.m_nodes.m_buffer[nodeReference];
                 isPassing = false;
                 segmentReference = 0;
                 for (int i = 0; i < 7; i++)
@@ -438,7 +424,7 @@ namespace Klyte.Commons.Utils
                         ushort segment1 = node.GetSegment(i);
                         if (segment1 > 0 && segment1 != segmentId)
                         {
-                            NetSegment segment1Obj = NetManager.instance.m_segments.m_buffer[segment1];
+                            ref NetSegment segment1Obj = ref NetManager.instance.m_segments.m_buffer[segment1];
                             bool isSegment1StartNode = segment1Obj.m_startNode == nodeReference;
                             bool isSegment1Entering = isSegment1StartNode != ((NetManager.instance.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != 0);
 
@@ -461,7 +447,7 @@ namespace Klyte.Commons.Utils
                             }
                             else
                             {
-                                NetSegment segmentRefObj = NetManager.instance.m_segments.m_buffer[segmentReference];
+                                ref NetSegment segmentRefObj = ref NetManager.instance.m_segments.m_buffer[segmentReference];
                                 if (!(segmentRefObj.Info.GetAI() is RoadBaseAI roadAi))
                                 {
                                     continue;
@@ -497,7 +483,7 @@ namespace Klyte.Commons.Utils
                 }
                 if (segmentReference > 0)
                 {
-                    NetSegment segmentRefObj = NetManager.instance.m_segments.m_buffer[segmentReference];
+                    ref NetSegment segmentRefObj = ref NetManager.instance.m_segments.m_buffer[segmentReference];
                     NetInfo infoRef = segmentRefObj.Info;
                     isHighway = infoRef.GetAI() is RoadBaseAI aiRef && aiRef.m_highwayRules;
                     width = infoRef.m_halfWidth * 2;
@@ -546,8 +532,8 @@ namespace Klyte.Commons.Utils
 
         public static byte GetCardinalDirection(ComparableRoad startRef, ComparableRoad endRef)
         {
-            NetNode nodeS = NetManager.instance.m_nodes.m_buffer[startRef.nodeReference];
-            NetNode nodeE = NetManager.instance.m_nodes.m_buffer[endRef.nodeReference];
+            ref NetNode nodeS = ref NetManager.instance.m_nodes.m_buffer[startRef.nodeReference];
+            ref NetNode nodeE = ref NetManager.instance.m_nodes.m_buffer[endRef.nodeReference];
 
             byte cardinalDirection = CardinalPoint.GetCardinalPoint(VectorUtils.XZ(nodeS.m_position).GetAngleToPoint(VectorUtils.XZ(nodeE.m_position))).GetCardinalIndex8();
             return cardinalDirection;
@@ -570,15 +556,22 @@ namespace Klyte.Commons.Utils
         }
         public static bool GetAddressStreetAndNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset, out int number, out string streetName)
         {
-            number = GetNumberAt(targetLength, targetSegmentId, invertStart, metersOffset, out bool startAsEnd);
             streetName = NetManager.instance.GetSegmentName(targetSegmentId)?.ToString();
+            number = CalculateBuildingAddressNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, invertStart, metersOffset);
+            return true;
+        }
+
+        public static int CalculateBuildingAddressNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset)
+        {
+            int number;
             float angleTg = VectorUtils.XZ(targetPosition).GetAngleToPoint(VectorUtils.XZ(midPosBuilding));
+            number = GetNumberAt(targetLength, targetSegmentId, invertStart, metersOffset, out bool startAsEnd);
             if (angleTg == 90 || angleTg == 270)
             {
                 angleTg += Math.Sign(targetPosition.z - midPosBuilding.z);
             }
 
-            NetSegment targSeg = NetManager.instance.m_segments.m_buffer[targetSegmentId];
+            ref NetSegment targSeg = ref NetManager.instance.m_segments.m_buffer[targetSegmentId];
             Vector3 startSeg = NetManager.instance.m_nodes.m_buffer[targSeg.m_startNode].m_position;
             Vector3 endSeg = NetManager.instance.m_nodes.m_buffer[targSeg.m_endNode].m_position;
 
@@ -598,8 +591,10 @@ namespace Klyte.Commons.Utils
             {
                 number |= 1;
             }
-            return true;
+
+            return number;
         }
+
         public static void GetNearestSegment(Vector3 sidewalk, out Vector3 targetPosition, out float targetLength, out ushort targetSegmentId)
         {
             NetManager.instance.GetClosestSegments(sidewalk, m_closestSegsFind, out int found);
@@ -616,7 +611,7 @@ namespace Klyte.Commons.Utils
                 for (int i = 0; i < found; i++)
                 {
                     ushort segId = m_closestSegsFind[i];
-                    NetSegment seg = NetManager.instance.m_segments.m_buffer[segId];
+                    ref NetSegment seg = ref NetManager.instance.m_segments.m_buffer[segId];
                     if (!(seg.Info.GetAI() is RoadBaseAI))
                     {
                         continue;
@@ -649,12 +644,12 @@ namespace Klyte.Commons.Utils
                 roadSegments.Reverse();
             }
             int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
-            NetSegment targSeg = NetManager.instance.m_segments.m_buffer[targetSegmentId];
+            ref NetSegment targSeg = ref NetManager.instance.m_segments.m_buffer[targetSegmentId];
             ushort targetNode = startNode ? targSeg.m_startNode : targSeg.m_endNode;
-            NetSegment preSeg = default;
+            ref NetSegment preSeg = ref NetManager.instance.m_segments.m_buffer[0]; ;
             if (targetSegmentIdIdx > 0)
             {
-                preSeg = NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx - 1]];
+                preSeg = ref NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx - 1]];
             }
             if (preSeg.m_endNode != targetNode && preSeg.m_startNode != targetNode)
             {
@@ -680,18 +675,18 @@ namespace Klyte.Commons.Utils
             //doLog("roadSegments = [{0}] ", string.Join(",", roadSegments.Select(x => x.ToString()).ToArray()));
             int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
             //doLog($"targSeg = {targetSegmentIdIdx} ({targetSegmentId})");
-            NetSegment targSeg = NetManager.instance.m_segments.m_buffer[targetSegmentId];
-            NetSegment preSeg = default;
-            NetSegment posSeg = default;
+            ref NetSegment targSeg = ref NetManager.instance.m_segments.m_buffer[targetSegmentId];
+            ref NetSegment preSeg = ref NetManager.instance.m_segments.m_buffer[0];
+            ref NetSegment posSeg = ref NetManager.instance.m_segments.m_buffer[0];
             //doLog("PreSeg");
             if (targetSegmentIdIdx > 0)
             {
-                preSeg = NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx - 1]];
+                preSeg = ref NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx - 1]];
             }
             //doLog("PosSeg");
             if (targetSegmentIdIdx < roadSegments.Count - 1)
             {
-                posSeg = NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx + 1]];
+                posSeg = ref NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx + 1]];
             }
             //doLog("startAsEnd");
             startAsEnd = (targetSegmentIdIdx > 0 && (preSeg.m_endNode == targSeg.m_endNode || preSeg.m_startNode == targSeg.m_endNode)) || (targetSegmentIdIdx < roadSegments.Count && (posSeg.m_endNode == targSeg.m_startNode || posSeg.m_startNode == targSeg.m_startNode));

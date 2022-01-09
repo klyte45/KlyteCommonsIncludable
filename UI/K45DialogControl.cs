@@ -19,7 +19,7 @@ namespace Klyte.Commons.Utils
     internal class K45DialogControl : UICustomControl
     {
         public const string PANEL_ID = "K45Dialog";
-        public const string VERSION = "20211014";
+        public const string VERSION = "20211216";
         private const string TEXT_INPUT_ID = "TextInput";
         private const string DD_INPUT_ID = "DropDownInput";
         private const string TUTORIAL_FOLDER_NAME = "Tutorial";
@@ -241,8 +241,37 @@ public void Start()
 
             m_mainPanel.enabled = true;
 
-
+            FontHack();
             #endregion
+        }
+
+        private void FontHack()
+        {
+            var labels = Component.FindObjectsOfType<UILabel>().GroupBy(x => x.font).Select(x => x.First()).ToList();
+            var testString = string.Join("", new string[0x500].Select((x, i) =>
+            {
+                try
+                {
+                    return char.ConvertFromUtf32(i);
+                }
+                catch
+                {
+                    return "";
+                }
+            }).ToArray());
+            foreach (var label in labels)
+            {
+                var orText = label.text;
+                Debug.LogWarning("Font: " + label.font.baseFont.name + " | Original text: " + orText);
+                try
+                {
+                    label.text = testString;
+                }
+                finally
+                {
+                    label.text = orText;
+                }
+            }
         }
 
         private void BindEvents()
@@ -581,7 +610,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
 
@@ -594,37 +623,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
-            }
-        }
-
-        private static void ShowErrorPanelNotFound()
-        {
-            UIComponent uIComponent = UIView.library.ShowModal("ExceptionPanel");
-            if (!(uIComponent is null))
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                BindPropertyByKey component = uIComponent.GetComponent<BindPropertyByKey>();
-                if (!(component is null))
-                {
-                    string title = $"Mod not loaded";
-                    string text = $"THIS IS NOT AN ERROR!!!!!!!!\nSeems the mod \"{CommonProperties.ModName.Replace("&", "and")}\" was not completely loaded. Restart your game to make it be full loaded!\nTHIS IS NOT AN ERROR!!!!!!!!";
-                    string img = "IconMessage";
-                    component.SetProperties(TooltipHelper.Format(new string[]
-                    {
-                            "title",
-                            title,
-                            "message",
-                            text,
-                            "img",
-                            img
-                    }));
-                }
-            }
-            else
-            {
-                LogUtils.DoWarnLog("PANEL NOT FOUND!!!!");
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
 
@@ -656,7 +655,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
 
@@ -742,7 +741,7 @@ public void Start()
             }
             else
             {
-                ShowErrorPanelNotFound();
+                LogUtils.DoErrorLog($"Panel wasn't found! {Environment.StackTrace}");
             }
         }
         #endregion
@@ -867,7 +866,7 @@ public void Start()
 
         public void OnDestroy()
         {
-            LogUtils.DoWarnLog("PANEL REMOVED");
+            LogUtils.DoWarnLog($"K45 PANEL REMOVED @ {Environment.StackTrace}");
             UIDynamicPanelsRedirector.RemovePanel();
     }
     }
