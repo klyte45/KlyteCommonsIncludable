@@ -150,7 +150,10 @@ namespace Klyte.Commons.UI
             KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
             field.eventMouseWheel += RollFloat;
         }
+        [Obsolete("Use version with specific option list", true)]
         public static void AddDropdown(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange) => AddDropdown(title, out dropdown, out _, parentHelper, options, onChange);
+
+        [Obsolete("Use version with specific option list", true)]
         public static void AddDropdown(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange)
         {
             dropdown = (UIDropDown)parentHelper.AddDropdown(title, options, 0, onChange);
@@ -161,6 +164,39 @@ namespace Klyte.Commons.UI
             dropdown.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
             dropdown.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
         }
+        public static void AddEmptyDropdown(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, OnDropdownSelectionChanged onChange) => AddEmptyDropdown(title, out dropdown, out _, parentHelper, onChange);
+        public static void AddEmptyDropdown(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, OnDropdownSelectionChanged onChange)
+        {
+            dropdown = (UIDropDown)parentHelper.AddDropdown(title, new string[0], 0, onChange);
+            label = dropdown.parent.GetComponentInChildren<UILabel>();
+            label.padding.top = 10;
+            KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
+            dropdown.width = (parentHelper.Self.width / 2) - 10;
+            dropdown.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
+            dropdown.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
+        }
+
+        public static void AddDropdown<T>(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, Tuple<string, T>[] options, Action<T> onChange) => AddDropdown(title, out dropdown, out _, parentHelper, options, onChange);
+        public static void AddDropdown<T>(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, Tuple<string, T>[] options, Action<T> onChange)
+        {
+            void defaultOnChange(int x)
+            {
+                if (x >= 0)
+                {
+                    onChange(options[x].Second);
+                }
+            }
+            dropdown = (UIDropDown)parentHelper.AddDropdown(title, options.Select(x => x.First).ToArray(), 0, onChange is null ? null : (OnDropdownSelectionChanged)defaultOnChange);
+            dropdown.objectUserData = options;
+            label = dropdown.parent.GetComponentInChildren<UILabel>();
+            label.padding.top = 10;
+            KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
+            dropdown.width = (parentHelper.Self.width / 2) - 10;
+            dropdown.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
+            dropdown.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
+        }
+
+
         public static void AddTextField(string title, out UITextField textField, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null) => AddTextField(title, out textField, out UILabel label, parentHelper, onSubmit, defaultValue, onChanged);
         public static void AddTextField(string title, out UITextField textField, out UILabel label, UIHelperExtension parentHelper, OnTextSubmitted onSubmit, string defaultValue = null, OnTextChanged onChanged = null)
         {
@@ -301,7 +337,7 @@ namespace Klyte.Commons.UI
             }
 
 
-            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out libFilesDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().ToArray(), (x) => { });
+            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out libFilesDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().Select(x => Tuple.New(x, x)).ToArray(), (x) => { });
             libFilesDD.width -= 80;
             var locDD = libFilesDD;
             UIPanel parent = libFilesDD.GetComponentInParent<UIPanel>();
@@ -604,5 +640,4 @@ namespace Klyte.Commons.UI
         }
         #endregion
     }
-
 }

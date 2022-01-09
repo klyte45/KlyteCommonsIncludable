@@ -13,6 +13,20 @@ namespace Klyte.Commons.Utils
 {
     public class SegmentUtils
     {
+        public enum MileageStartSource
+        {
+            FROM_N = 0,
+            FROM_NE = 45,
+            FROM_E = 90,
+            FROM_SE = 135,
+            FROM_S = 180,
+            FROM_SW = 225,
+            FROM_W = 270,
+            FROM_NW = 315,
+            FROM_CITYCENTER = -1,
+            DEFAULT = -2,
+        }
+
         #region Segment Utils
         public static void UpdateSegmentNamesView()
         {
@@ -530,12 +544,28 @@ namespace Klyte.Commons.Utils
             public override string ToString() => $"[n{nodeReference} s{segmentReference} h:{isHighway} p:{isPassing} w{width} l{lanes}]";
         }
 
-        public static byte GetCardinalDirection(ComparableRoad startRef, ComparableRoad endRef)
+        public static byte GetCardinalDirection(ComparableRoad startRef, ComparableRoad endRef, MileageStartSource axis)
         {
             ref NetNode nodeS = ref NetManager.instance.m_nodes.m_buffer[startRef.nodeReference];
             ref NetNode nodeE = ref NetManager.instance.m_nodes.m_buffer[endRef.nodeReference];
 
-            byte cardinalDirection = CardinalPoint.GetCardinalPoint(VectorUtils.XZ(nodeS.m_position).GetAngleToPoint(VectorUtils.XZ(nodeE.m_position))).GetCardinalIndex8();
+            var angle = VectorUtils.XZ(nodeS.m_position).GetAngleToPoint(VectorUtils.XZ(nodeE.m_position));
+            byte cardinalDirection;
+            if (axis < 0)
+            {
+                cardinalDirection = CardinalPoint.GetCardinalPoint(angle).GetCardinalIndex8();
+            }
+            else
+            {
+                var axisInt = ((int)axis) % 180;
+
+                if (Mathf.Abs(angle - axisInt) > 90)
+                {
+                    axisInt += 180;
+                }
+
+                cardinalDirection = CardinalPoint.GetCardinalPoint(axisInt).GetCardinalIndex8();
+            }
             return cardinalDirection;
         }
 
@@ -552,20 +582,20 @@ namespace Klyte.Commons.Utils
                 streetName = string.Empty;
                 return false;
             }
-            return GetAddressStreetAndNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, false, 0, out number, out streetName);
+            return GetAddressStreetAndNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, MileageStartSource.DEFAULT, 0, out number, out streetName);
         }
-        public static bool GetAddressStreetAndNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset, out int number, out string streetName)
+        public static bool GetAddressStreetAndNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, MileageStartSource startSource, int metersOffset, out int number, out string streetName)
         {
             streetName = NetManager.instance.GetSegmentName(targetSegmentId)?.ToString();
-            number = CalculateBuildingAddressNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, invertStart, metersOffset);
+            number = CalculateBuildingAddressNumber(targetPosition, targetSegmentId, targetLength, midPosBuilding, startSource, metersOffset);
             return true;
         }
 
-        public static int CalculateBuildingAddressNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, bool invertStart, int metersOffset)
+        public static int CalculateBuildingAddressNumber(Vector3 targetPosition, ushort targetSegmentId, float targetLength, Vector3 midPosBuilding, MileageStartSource startSource, int metersOffset)
         {
             int number;
             float angleTg = VectorUtils.XZ(targetPosition).GetAngleToPoint(VectorUtils.XZ(midPosBuilding));
-            number = GetNumberAt(targetLength, targetSegmentId, invertStart, metersOffset, out bool startAsEnd);
+            number = GetNumberAt(targetLength, targetSegmentId, startSource, metersOffset, out bool startAsEnd);
             if (angleTg == 90 || angleTg == 270)
             {
                 angleTg += Math.Sign(targetPosition.z - midPosBuilding.z);
@@ -635,42 +665,37 @@ namespace Klyte.Commons.Utils
             }
         }
 
-
-        public static int GetDistanceFromStart(ushort targetSegmentId, bool startNode, bool invertStart = false, int metersOffset = 0)
-        {
-            List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _, out _);
-            if (invertStart)
-            {
-                roadSegments.Reverse();
-            }
-            int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
-            ref NetSegment targSeg = ref NetManager.instance.m_segments.m_buffer[targetSegmentId];
-            ushort targetNode = startNode ? targSeg.m_startNode : targSeg.m_endNode;
-            ref NetSegment preSeg = ref NetManager.instance.m_segments.m_buffer[0]; ;
-            if (targetSegmentIdIdx > 0)
-            {
-                preSeg = ref NetManager.instance.m_segments.m_buffer[roadSegments[targetSegmentIdIdx - 1]];
-            }
-            if (preSeg.m_endNode != targetNode && preSeg.m_startNode != targetNode)
-            {
-                targetSegmentIdIdx++;
-            }
-            float distanceFromStart = 0;
-            for (int i = 0; i < targetSegmentIdIdx; i++)
-            {
-                distanceFromStart += NetManager.instance.m_segments.m_buffer[roadSegments[i]].m_averageLength;
-            }
-            return (int)Math.Round(distanceFromStart) + metersOffset;
-        }
-
-        internal static int GetNumberAt(float targetLength, ushort targetSegmentId, bool invertStart, int metersOffset, out bool startAsEnd)
+        internal static int GetNumberAt(float targetLength, ushort targetSegmentId, MileageStartSource startSource, int metersOffset, out bool startAsEnd, Vector3 cityCenter = default)
         {
             //doLog($"targets = S:{targetSegmentId} P:{targetPosition} D:{targetDirection.magnitude} L:{targetLength}");
 
             List<ushort> roadSegments = GetSegmentOrderRoad(targetSegmentId, false, false, false, out _, out _, out _);
-            if (invertStart)
+            if (startSource != MileageStartSource.DEFAULT)
             {
-                roadSegments.Reverse();
+                if (startSource == MileageStartSource.FROM_CITYCENTER)
+                {
+                    if ((NetManager.instance.m_segments.m_buffer[roadSegments[0]].m_middlePosition - cityCenter).sqrMagnitude > (NetManager.instance.m_segments.m_buffer[roadSegments.Last()].m_middlePosition - cityCenter).sqrMagnitude)
+                    {
+                        roadSegments.Reverse();
+                    }
+                }
+                else
+                {
+                    var angle0 = Mathf.Abs(NetManager.instance.m_segments.m_buffer[roadSegments[0]].m_middlePosition.GetAngleXZ() - (float)startSource);
+                    var angleE = Mathf.Abs(NetManager.instance.m_segments.m_buffer[roadSegments.Last()].m_middlePosition.GetAngleXZ() - (float)startSource);
+                    if (angle0 > 180)
+                    {
+                        angle0 = 360 - angle0;
+                    }
+                    if (angleE > 180)
+                    {
+                        angleE = 360 - angleE;
+                    }
+                    if (angleE < angle0)
+                    {
+                        roadSegments.Reverse();
+                    }
+                }
             }
             //doLog("roadSegments = [{0}] ", string.Join(",", roadSegments.Select(x => x.ToString()).ToArray()));
             int targetSegmentIdIdx = roadSegments.IndexOf(targetSegmentId);
