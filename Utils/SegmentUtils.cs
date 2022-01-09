@@ -553,13 +553,13 @@ namespace Klyte.Commons.Utils
             byte cardinalDirection;
             if (axis < 0)
             {
-                cardinalDirection = CardinalPoint.GetCardinalPoint(angle).GetCardinalIndex8();
+                cardinalDirection = CardinalPoint.GetCardinalPoint(angle + (NetManager.instance.m_segments.m_buffer[startRef.segmentReference].m_startNode == startRef.nodeReference ? 0 : 180)).GetCardinalIndex8();
             }
             else
             {
                 var axisInt = ((int)axis) % 180;
-
-                if (Mathf.Abs(angle - axisInt) > 90)
+                var abs = (angle - axisInt + 720) % 360;
+                if ((abs < 180) != (NetManager.instance.m_segments.m_buffer[startRef.segmentReference].m_startNode == startRef.nodeReference))
                 {
                     axisInt += 180;
                 }
