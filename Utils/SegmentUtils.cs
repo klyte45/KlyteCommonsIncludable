@@ -389,107 +389,115 @@ namespace Klyte.Commons.Utils
                 return null;
             }
             //doLog($"[{segmentId}-> sd {requireSameDirection} rsst {requireSameSizeAndType} la {localAdjust}] segs = [{string.Join(",", accessSegments.Select(x => x.ToString()).ToArray())}]; start={nodeStartS}; end={nodeStartE}");
-            startRef = new ComparableRoad(accessSegments[0], nodeStartS);
-            endRef = new ComparableRoad(accessSegments[accessSegments.Count - 1], nodeStartE);
+            startRef = new ComparableRoad(accessSegments[0], nodeStartS, true);
+            endRef = new ComparableRoad(accessSegments[accessSegments.Count - 1], nodeStartE, true);
             return accessSegments.Select(x => Tuple.New(x, NetManager.instance.m_segments.m_buffer[x].m_averageLength));
         }
 
         public struct ComparableRoad
         {
-            public ComparableRoad(ushort segmentId, bool startNode)
+            public ComparableRoad(ushort segmentId, bool startNode, bool itself = false)
             {
                 ref NetSegment segment = ref NetManager.instance.m_segments.m_buffer[segmentId];
                 nodeReference = startNode ? segment.m_startNode : segment.m_endNode;
 
-                bool entering = startNode != ((NetManager.instance.m_segments.m_buffer[segmentId].m_flags & NetSegment.Flags.Invert) != 0);
-
-                ref NetNode node = ref NetManager.instance.m_nodes.m_buffer[nodeReference];
-                isPassing = false;
-                segmentReference = 0;
-                for (int i = 0; i < 7; i++)
+                if (itself)
                 {
-                    ushort segment1 = node.GetSegment(i);
-                    if (segment1 > 0 && segment1 != segmentId)
-                    {
-                        for (int j = i + 1; j < 8; j++)
-                        {
-                            ushort segment2 = node.GetSegment(j);
-                            if (segment2 > 0 && segment2 != segmentId)
-                            {
-                                isPassing = IsSameName(segment1, segment2, true);
-                                if (isPassing)
-                                {
-                                    segmentReference = segment1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (isPassing)
-                        {
-                            break;
-                        }
-                    }
+                    segmentReference = segmentId;
+                    isPassing = false;
                 }
-                if (!isPassing)
+                else
                 {
+                    bool entering = startNode != ((NetManager.instance.m_segments.m_buffer[segmentId].m_flags & NetSegment.Flags.Invert) != 0);
 
+                    ref NetNode node = ref NetManager.instance.m_nodes.m_buffer[nodeReference];
+                    isPassing = false;
+                    segmentReference = 0;
                     for (int i = 0; i < 7; i++)
                     {
                         ushort segment1 = node.GetSegment(i);
                         if (segment1 > 0 && segment1 != segmentId)
                         {
-                            ref NetSegment segment1Obj = ref NetManager.instance.m_segments.m_buffer[segment1];
-                            bool isSegment1StartNode = segment1Obj.m_startNode == nodeReference;
-                            bool isSegment1Entering = isSegment1StartNode != ((NetManager.instance.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != 0);
-
-                            if (!(segment1Obj.Info.GetAI() is RoadBaseAI seg1Ai))
+                            for (int j = i + 1; j < 8; j++)
                             {
-                                continue;
+                                ushort segment2 = node.GetSegment(j);
+                                if (segment2 > 0 && segment2 != segmentId)
+                                {
+                                    isPassing = IsSameName(segment1, segment2, true);
+                                    if (isPassing)
+                                    {
+                                        segmentReference = segment1;
+                                        break;
+                                    }
+                                }
                             }
-
-                            bool isSegment1TwoWay = segment1Obj.Info.m_hasBackwardVehicleLanes && segment1Obj.Info.m_hasForwardVehicleLanes;
-
-                            if (!isSegment1TwoWay && isSegment1Entering == entering)
+                            if (isPassing)
                             {
-                                LogUtils.DoLog($"IGNORED: {segment1} (Tw=>{isSegment1TwoWay},entering=>{entering},s1entering=>{isSegment1Entering})");
-                                continue;
+                                break;
                             }
+                        }
+                    }
+                    if (!isPassing)
+                    {
 
-                            if (segmentReference == 0)
+                        for (int i = 0; i < 7; i++)
+                        {
+                            ushort segment1 = node.GetSegment(i);
+                            if (segment1 > 0 && segment1 != segmentId)
                             {
-                                segmentReference = segment1;
-                            }
-                            else
-                            {
-                                ref NetSegment segmentRefObj = ref NetManager.instance.m_segments.m_buffer[segmentReference];
-                                if (!(segmentRefObj.Info.GetAI() is RoadBaseAI roadAi))
+                                ref NetSegment segment1Obj = ref NetManager.instance.m_segments.m_buffer[segment1];
+                                bool isSegment1StartNode = segment1Obj.m_startNode == nodeReference;
+                                bool isSegment1Entering = isSegment1StartNode != ((NetManager.instance.m_segments.m_buffer[segment1].m_flags & NetSegment.Flags.Invert) != 0);
+
+                                if (!(segment1Obj.Info.GetAI() is RoadBaseAI seg1Ai))
                                 {
                                     continue;
                                 }
-                                if (!roadAi.m_highwayRules && seg1Ai.m_highwayRules)
+
+                                bool isSegment1TwoWay = segment1Obj.Info.m_hasBackwardVehicleLanes && segment1Obj.Info.m_hasForwardVehicleLanes;
+
+                                if (!isSegment1TwoWay && isSegment1Entering == entering)
+                                {
+                                    LogUtils.DoLog($"IGNORED: {segment1} (Tw=>{isSegment1TwoWay},entering=>{entering},s1entering=>{isSegment1Entering})");
+                                    continue;
+                                }
+
+                                if (segmentReference == 0)
                                 {
                                     segmentReference = segment1;
-                                    continue;
                                 }
-                                if (roadAi.m_highwayRules && !seg1Ai.m_highwayRules)
+                                else
                                 {
-                                    continue;
-                                }
-                                int laneCount1 = (segment1Obj.Info.m_forwardVehicleLaneCount + segment1Obj.Info.m_backwardVehicleLaneCount);
-                                int laneCountRef = (segmentRefObj.Info.m_forwardVehicleLaneCount + segmentRefObj.Info.m_backwardVehicleLaneCount);
-                                if (laneCount1 > laneCountRef)
-                                {
-                                    segmentReference = segment1;
-                                    continue;
-                                }
-                                if (laneCount1 < laneCountRef)
-                                {
-                                    continue;
-                                }
-                                if (segment1Obj.Info.m_halfWidth > segmentRefObj.Info.m_halfWidth)
-                                {
-                                    segmentReference = segment1;
-                                    continue;
+                                    ref NetSegment segmentRefObj = ref NetManager.instance.m_segments.m_buffer[segmentReference];
+                                    if (!(segmentRefObj.Info.GetAI() is RoadBaseAI roadAi))
+                                    {
+                                        continue;
+                                    }
+                                    if (!roadAi.m_highwayRules && seg1Ai.m_highwayRules)
+                                    {
+                                        segmentReference = segment1;
+                                        continue;
+                                    }
+                                    if (roadAi.m_highwayRules && !seg1Ai.m_highwayRules)
+                                    {
+                                        continue;
+                                    }
+                                    int laneCount1 = (segment1Obj.Info.m_forwardVehicleLaneCount + segment1Obj.Info.m_backwardVehicleLaneCount);
+                                    int laneCountRef = (segmentRefObj.Info.m_forwardVehicleLaneCount + segmentRefObj.Info.m_backwardVehicleLaneCount);
+                                    if (laneCount1 > laneCountRef)
+                                    {
+                                        segmentReference = segment1;
+                                        continue;
+                                    }
+                                    if (laneCount1 < laneCountRef)
+                                    {
+                                        continue;
+                                    }
+                                    if (segment1Obj.Info.m_halfWidth > segmentRefObj.Info.m_halfWidth)
+                                    {
+                                        segmentReference = segment1;
+                                        continue;
+                                    }
                                 }
                             }
                         }
@@ -559,7 +567,7 @@ namespace Klyte.Commons.Utils
             {
                 var axisInt = ((int)axis) % 180;
                 var abs = (angle - axisInt + 720) % 360;
-                if ((abs < 180) != (NetManager.instance.m_segments.m_buffer[startRef.segmentReference].m_startNode == startRef.nodeReference))
+                if ((abs > 90) && abs < 270)
                 {
                     axisInt += 180;
                 }
