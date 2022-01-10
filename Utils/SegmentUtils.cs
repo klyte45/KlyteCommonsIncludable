@@ -379,18 +379,22 @@ namespace Klyte.Commons.Utils
             return accessSegments;
         }
 
-        public static IEnumerable<Tuple<ushort, float>> GetSegmentRoadEdges(ushort segmentId, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out ComparableRoad startRef, out ComparableRoad endRef, out ushort[] nodes)
+        public static IEnumerable<Tuple<ushort, float>> GetSegmentRoadEdges(ushort segmentId, bool requireSameDirection, bool requireSameSizeAndType, bool localAdjust, out ComparableRoad startRef, out ComparableRoad endRef, out ComparableRoad beforeStartRef, out ComparableRoad afterEndRef, out ushort[] nodes)
         {
             List<ushort> accessSegments = GetSegmentOrderRoad(segmentId, requireSameDirection, requireSameSizeAndType, localAdjust, out bool nodeStartS, out bool nodeStartE, out nodes);
             if (accessSegments == null)
             {
                 startRef = default;
                 endRef = default;
+                beforeStartRef = default;
+                afterEndRef = default;
                 return null;
             }
             //doLog($"[{segmentId}-> sd {requireSameDirection} rsst {requireSameSizeAndType} la {localAdjust}] segs = [{string.Join(",", accessSegments.Select(x => x.ToString()).ToArray())}]; start={nodeStartS}; end={nodeStartE}");
             startRef = new ComparableRoad(accessSegments[0], nodeStartS, true);
             endRef = new ComparableRoad(accessSegments[accessSegments.Count - 1], nodeStartE, true);
+            beforeStartRef = new ComparableRoad(accessSegments[0], nodeStartS);
+            afterEndRef = new ComparableRoad(accessSegments[accessSegments.Count - 1], nodeStartE);
             return accessSegments.Select(x => Tuple.New(x, NetManager.instance.m_segments.m_buffer[x].m_averageLength));
         }
 
