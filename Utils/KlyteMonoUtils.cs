@@ -70,6 +70,7 @@ namespace Klyte.Commons.Utils
             uiItem.height = 28;
             uiItem.padding = new RectOffset(5, 5, 5, 5);
         }
+        [Obsolete("Use extension", true)]
         public static Color ContrastColor(Color color, bool grayAsWhite = false)
         {
             if (color == default)

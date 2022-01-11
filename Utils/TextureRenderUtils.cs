@@ -2,7 +2,6 @@
 using ColossalFramework.Math;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensions;
-using Klyte.Commons.Redirectors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,7 +87,7 @@ namespace Klyte.Commons.Utils
                 var texText = new Texture2D((int)textDimensions.x, (int)textDimensions.y, TextureFormat.ARGB32, false);
                 texText.SetPixels(new Color[(int)(textDimensions.x * textDimensions.y)]);
 
-                Color contrastColor = KlyteMonoUtils.ContrastColor(bgColor);
+                Color contrastColor = bgColor.ContrastColor();
 
                 Vector2 position = RenderSprite(atlas, spriteName, contrastColor, tex, textureScale);
                 RenderSprite(atlas, spriteName, bgColor, tex, null, tex.height - (int)(borderWidth * 2), null, new Vector2((textScale / 2) - 0.5f, (textScale / 2) - 0.5f), (a, b) =>
