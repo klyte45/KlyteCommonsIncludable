@@ -45,13 +45,12 @@ namespace Klyte.Commons.LiteUI
                 lastValue = lastValue ?? value.ToString();
                 GUI.SetNextControlName(id);
                 lastValue = GUILayout.TextField(lastValue);
-                lastFocusedFieldId = focusedFieldId;              
+                lastFocusedFieldId = focusedFieldId;
             }
             else
             {
                 GUI.SetNextControlName(id);
                 GUILayout.TextField(value.ToString());
-                lastFocusedFieldId = null;
             }
 
             return value;

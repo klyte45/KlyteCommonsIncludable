@@ -100,12 +100,19 @@ namespace Klyte.Commons.LiteUI
             Windows.Remove(this);
         }
 
+        private Color bgColor;
+        private Color titleBar;
+        private Color titleBarHover;
         public void OnGUI()
         {
             if (skin == null)
             {
+                bgColor = CommonProperties.ModColor.SetBrightness(.30f);
+                titleBar = CommonProperties.ModColor.SetBrightness(.60f);
+                titleBarHover = CommonProperties.ModColor.SetBrightness(1);
+
                 BgTexture = new Texture2D(1, 1);
-                BgTexture.SetPixel(0, 0, Color.black);
+                BgTexture.SetPixel(0, 0, new Color(bgColor.r, bgColor.g, bgColor.b, 0.9f));
                 BgTexture.Apply();
 
                 ResizeNormalTexture = new Texture2D(1, 1);
@@ -125,11 +132,11 @@ namespace Klyte.Commons.LiteUI
                 CloseHoverTexture.Apply();
 
                 MoveNormalTexture = new Texture2D(1, 1);
-                MoveNormalTexture.SetPixel(0, 0, CommonProperties.ModColor);
+                MoveNormalTexture.SetPixel(0, 0, titleBar);
                 MoveNormalTexture.Apply();
 
                 MoveHoverTexture = new Texture2D(1, 1);
-                MoveHoverTexture.SetPixel(0, 0, CommonProperties.ModColor * 1.2f);
+                MoveHoverTexture.SetPixel(0, 0, titleBarHover);
                 MoveHoverTexture.Apply();
 
                 skin = ScriptableObject.CreateInstance<GUISkin>();
@@ -162,6 +169,7 @@ namespace Klyte.Commons.LiteUI
                 skin.settings.doubleClickSelectsWord = GUI.skin.settings.doubleClickSelectsWord;
                 skin.settings.selectionColor = GUI.skin.settings.selectionColor;
                 skin.settings.tripleClickSelectsLine = GUI.skin.settings.tripleClickSelectsLine;
+                skin.label.richText = true;
 
                 highlightstyle = new GUIStyle(GUI.skin.button)
                 {
@@ -354,7 +362,7 @@ namespace Klyte.Commons.LiteUI
             }
 
             GUI.DrawTexture(new Rect(0.0f, 0.0f, windowRect.width, 20.0f), moveTex, ScaleMode.StretchToFill);
-            GUI.contentColor = CommonProperties.ModColor.ContrastColor();
+            GUI.contentColor = titleBar.ContrastColor();
             GUI.Label(new Rect(8.0f, 0.0f, windowRect.width, 20.0f), Title);
             GUI.contentColor = Color.white;
         }

@@ -372,7 +372,7 @@ namespace Klyte.Commons.UI
                      DESC newEntry = XmlUtils.DefaultXmlDeserialize<DESC>(getContentToSave() ?? "");
                      if (newEntry != default)
                      {
-                         LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text, ref newEntry);
+                         LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text,  newEntry);
                          locDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
                          locDD.selectedValue = saveTxt.text;
                      }

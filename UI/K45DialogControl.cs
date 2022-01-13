@@ -670,7 +670,7 @@ public void Start()
                 help_currentPage = startPage,
                 help_fullPathName = fullPathName,
                 help_featureName = featureName,
-                help_formatsEntries = new string[] { featureName }.Union(formatsEntries).ToArray(),
+                help_formatsEntries = new string[] { featureName }.Concat(formatsEntries).ToArray(),
             };
             if (Dispatcher.mainSafe != Dispatcher.currentSafe)
             {

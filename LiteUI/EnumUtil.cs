@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Klyte.Commons.Utils;
+using System;
 
 namespace Klyte.Commons.LiteUI
 {
@@ -13,14 +14,7 @@ namespace Klyte.Commons.LiteUI
         {
             Type enumType = value.GetType();
             bool signed = Enum.GetUnderlyingType(enumType).IsSignedInteger();
-            if (signed)
-            {
-                return (ulong)(value as IConvertible).ToInt64(null);
-            }
-            else
-            {
-                return (value as IConvertible).ToUInt64(null);
-            }
+            return signed ? (ulong)(value as IConvertible).ToInt64(null) : (value as IConvertible).ToUInt64(null);
         }
     }
 }

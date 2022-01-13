@@ -1,8 +1,8 @@
-﻿namespace Klyte.Commons.LiteUI
-{
-    using ColossalFramework.UI;
-    using UnityEngine;
+﻿using ColossalFramework.UI;
+using UnityEngine;
 
+namespace Klyte.Commons.LiteUI
+{
     public static class UIScaler
     {
         private static bool TryGetScreenResolution(out Vector2 resolution)

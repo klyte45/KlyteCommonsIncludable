@@ -170,7 +170,7 @@ namespace Klyte.Commons.Utils
                     int referIdx = path.IndexOf(refer);
                     if (referIdx != 0)
                     {
-                        path = path.GetRange(referIdx, path.Count - referIdx).Union(path.Take(referIdx)).ToList();
+                        path = path.GetRange(referIdx, path.Count - referIdx).Concat(path.Take(referIdx)).ToList();
                     }
                 }
                 else

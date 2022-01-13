@@ -163,7 +163,7 @@ namespace Klyte.Commons.UI
             {
                 m_dataArray = ReferenceData
             };
-            LibBaseFile<L, I>.Instance.Add(text, ref newItem);
+            LibBaseFile<L, I>.Instance.Add(text,  newItem);
             K45DialogControl.ShowModal(new K45DialogControl.BindProperties
             {
                 title = Locale.Get(LocaleExportTitle),
@@ -325,7 +325,7 @@ namespace Klyte.Commons.UI
         }
         private void OnAddItemOnList(UIComponent component, UIMouseEventParameter eventParam)
         {
-            ReferenceData = ReferenceData.Union(new D[] { new D
+            ReferenceData = ReferenceData.Concat(new D[] { new D
             {
                 SaveName = "New rule",
             } }).ToArray();
