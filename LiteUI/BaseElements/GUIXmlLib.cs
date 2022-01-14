@@ -19,6 +19,8 @@ namespace Klyte.Commons.LiteUI
         private Texture ImportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Import");
         private Texture ExportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Export");
 
+        public string DeleteI18n { get; set; } = "K45_WTS_PROPEDIT_CONFIGDELETE_MESSAGE";
+
         public FooterBarStatus Status { get; private set; }
         private void RestartLibraryFilterCoroutine()
         {
@@ -49,20 +51,20 @@ namespace Klyte.Commons.LiteUI
                 var selectLayout = GUILayout.SelectionGrid(-1, librarySearchResults.Value, 1, GUILayout.Width(areaRect.width - 25));
                 if (selectLayout >= 0)
                 {
-
                     OnSelect(XmlUtils.TransformViaXml<S, T>(LibBaseFile<L, S>.Instance.Get(librarySearchResults.Value[selectLayout])));
                     Status = FooterBarStatus.Normal;
                 }
             });
         }
 
-        public void DrawFooter(Rect area, GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent) => GUIKlyteCommons.DoInArea(area,
+        public void Draw(Rect area, GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent, Action<GUIStyle> onNormalDraw = null)
+            => GUIKlyteCommons.DoInArea(area,
                 (x) => GUIKlyteCommons.DoInHorizontal(() =>
                 {
                     switch (Status)
                     {
                         case FooterBarStatus.AskingToRemove:
-                            GUILayout.Label(string.Format(Locale.Get("K45_WTS_PROPEDIT_CONFIGDELETE_MESSAGE"), getCurrent().SaveName));
+                            GUILayout.Label(string.Format(Locale.Get(DeleteI18n), getCurrent().SaveName));
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
                             {
@@ -117,49 +119,77 @@ namespace Klyte.Commons.LiteUI
                             break;
 
                         case FooterBarStatus.Normal:
-                            var currentHover = FooterBarStatus.Normal;
-                            if (GUILayout.Button(ImportTex, GUILayout.MaxHeight(20)))
-                            {
-                                Status = FooterBarStatus.AskingToImport;
-                                footerInputVal = "";
-                            }
-                            if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
-                            {
-                                currentHover = FooterBarStatus.AskingToImport;
-                                libraryFilter = "";
-                                librarySearchResults.Value = new string[0];
-                                RestartLibraryFilterCoroutine();
-                            }
-                            if (GUILayout.Button(ExportTex, GUILayout.MaxHeight(20)))
-                            {
-                                Status = FooterBarStatus.AskingToExport;
-                                footerInputVal = "";
-                            }
-                            if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
-                            {
-                                currentHover = FooterBarStatus.AskingToExport;
-                            }
-                            switch (currentHover)
-                            {
-                                case FooterBarStatus.AskingToImport:
-                                    GUILayout.Label(Locale.Get("K45_WTS_SEGMENT_IMPORTDATA"));
-                                    break;
-                                case FooterBarStatus.AskingToExport:
-                                    GUILayout.Label(Locale.Get("K45_WTS_SEGMENT_EXPORTDATA"));
-                                    break;
-                                default:
-                                    GUILayout.Label("", GUILayout.Width(200));
-                                    break;
-                            }
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(Locale.Get("K45_WTS_SEGMENT_REMOVEITEM"), removeButtonStyle))
-                            {
-                                Status = FooterBarStatus.AskingToRemove;
-                            }
-                            GUILayout.FlexibleSpace();
+                            onNormalDraw?.Invoke(removeButtonStyle);
                             break;
                     }
                 }));
+
+        private FooterBarStatus m_currentHover;
+        public void FooterDraw(GUIStyle removeButtonStyle)
+        {
+            GUI.SetNextControlName(GetHashCode() + "_IMPORT");
+            if (GUILayout.Button(ImportTex, GUILayout.MaxHeight(20)))
+            {
+                GoToImport();
+            }
+            if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+            {
+                m_currentHover = FooterBarStatus.AskingToImport;
+            }
+            GUI.SetNextControlName(GetHashCode() + "_EXPORT");
+            if (GUILayout.Button(ExportTex, GUILayout.MaxHeight(20)))
+            {
+                GoToExport();
+            }
+            if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+            {
+                m_currentHover = FooterBarStatus.AskingToExport;
+            }
+            DrawLabel(() => DrawRemoveButton(removeButtonStyle));
+        }
+
+        public void DrawLabel(Action drawDefault)
+        {
+            switch (m_currentHover)
+            {
+                case FooterBarStatus.AskingToImport:
+                    GUILayout.Label(Locale.Get("K45_WTS_SEGMENT_IMPORTDATA"));
+                    break;
+                case FooterBarStatus.AskingToExport:
+                    GUILayout.Label(Locale.Get("K45_WTS_SEGMENT_EXPORTDATA"));
+                    break;
+                default:
+                    GUILayout.Label("", GUILayout.Width(150));
+                    drawDefault?.Invoke();
+                    break;
+            }
+            GUILayout.FlexibleSpace();
+        }
+
+        private void DrawRemoveButton(GUIStyle removeButtonStyle)
+        {
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(Locale.Get("K45_WTS_SEGMENT_REMOVEITEM"), removeButtonStyle))
+            {
+                GoToRemove();
+            }
+        }
+
+        public void GoToRemove() => Status = FooterBarStatus.AskingToRemove;
+        public void GoToExport()
+        {
+            Status = FooterBarStatus.AskingToExport;
+            footerInputVal = "";
+        }
+
+        public void GoToImport()
+        {
+            Status = FooterBarStatus.AskingToImport;
+            libraryFilter = "";
+            librarySearchResults.Value = new string[0];
+            RestartLibraryFilterCoroutine();
+        }
+
         internal void ResetStatus() => Status = FooterBarStatus.Normal;
 
         private string footerInputVal = "";

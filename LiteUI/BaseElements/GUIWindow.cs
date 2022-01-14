@@ -112,7 +112,7 @@ namespace Klyte.Commons.LiteUI
                 titleBarHover = CommonProperties.ModColor.SetBrightness(1);
 
                 BgTexture = new Texture2D(1, 1);
-                BgTexture.SetPixel(0, 0, new Color(bgColor.r, bgColor.g, bgColor.b, 0.9f));
+                BgTexture.SetPixel(0, 0, new Color(bgColor.r, bgColor.g, bgColor.b, 1));
                 BgTexture.Apply();
 
                 ResizeNormalTexture = new Texture2D(1, 1);
