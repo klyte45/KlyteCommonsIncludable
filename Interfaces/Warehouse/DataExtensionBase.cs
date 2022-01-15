@@ -14,24 +14,27 @@ namespace Klyte.Commons.Interfaces
 
         public static U Instance
         {
-            get {
+            get
+            {
                 if (!DataContainer.instance.Instances.TryGetValue(typeof(U), out IDataExtension result) || result == null)
                 {
                     DataContainer.instance.Instances[typeof(U)] = new U();
                 }
                 return DataContainer.instance.Instances[typeof(U)] as U;
             }
-            protected set
-            {
-                DataContainer.instance.Instances[typeof(U)] = XmlUtils.CloneViaXml(value);
-            }
+            protected set => DataContainer.instance.Instances[typeof(U)] = XmlUtils.CloneViaXml(value);
         }
 
+        public virtual bool IsLegacyCompatOnly { get; } = false;
 
         public IDataExtension Deserialize(Type type, byte[] data)
         {
             string content = data[0] == '<' ? Encoding.UTF8.GetString(data) : ZipUtils.Unzip(data);
-            if (CommonProperties.DebugMode) LogUtils.DoLog($"Deserializing {typeof(U)}:\n{content}");
+            if (CommonProperties.DebugMode)
+            {
+                LogUtils.DoLog($"Deserializing {typeof(U)}:\n{content}");
+            }
+
             var result = XmlUtils.DefaultXmlDeserialize<U>(content);
             AfterDeserialize(result);
             return result;
@@ -39,9 +42,17 @@ namespace Klyte.Commons.Interfaces
 
         public byte[] Serialize()
         {
+            if (IsLegacyCompatOnly)
+            {
+                return null;
+            }
             BeforeSerialize();
             var xml = XmlUtils.DefaultXmlSerialize((U)this, CommonProperties.DebugMode);
-            if (CommonProperties.DebugMode) LogUtils.DoLog($"Serializing  {typeof(U)}:\n{xml}");
+            if (CommonProperties.DebugMode)
+            {
+                LogUtils.DoLog($"Serializing  {typeof(U)}:\n{xml}");
+            }
+
             return ZipUtils.Zip(xml);
         }
 

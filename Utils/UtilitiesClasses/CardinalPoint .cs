@@ -44,10 +44,7 @@ public struct CardinalPoint
         }
         return m_cardinal16[0];
     }
-    public static string GetCardinalPoint16LocalizedShort(float angle)
-    {
-        return Locale.Get("K45_CMNS_CARDINALPOINT_SHORT", GetCardinalPoint16_internal(angle));
-    }
+    public static string GetCardinalPoint16LocalizedShort(float angle) => Locale.Get("K45_CMNS_CARDINALPOINT_SHORT", GetCardinalPoint16_internal(angle));
 
 
 
@@ -415,6 +412,7 @@ public struct CardinalPoint
 
 
     public override string ToString() => InternalValue.ToString();
+    public string ToStringLocalized8() => Locale.Get("K45_CMNS_CARDINALPOINT_SHORT", InternalValue.ToString());
 
     public static CardinalPoint GetCardinal2D(Vector2 p1, Vector2 p2)
     {
