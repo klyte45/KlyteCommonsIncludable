@@ -7,7 +7,7 @@ using UnityEngine;
 
 public struct CardinalPoint
 {
-    private static readonly string[] m_cardinal16 = new string[]
+    public static readonly string[] m_cardinal16 = new string[]
     {
         "N",
         "NNE",
