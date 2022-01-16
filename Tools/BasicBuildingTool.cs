@@ -17,7 +17,6 @@ namespace Klyte.Commons
             base.enabled = false;
             instance = (T)this;
         }
-
         protected override void OnToolGUI(Event e)
         {
             if (UIView.HasModalInput() || UIView.HasInputFocus())

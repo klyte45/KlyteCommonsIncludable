@@ -22,6 +22,7 @@ namespace Klyte.Commons.Libraries
             }
         }
 
+        public bool IsLegacyCompatOnly { get; } = false;
 
         public IDataExtension Deserialize(Type type, byte[] data)
         {

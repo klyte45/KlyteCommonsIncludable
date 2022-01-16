@@ -18,7 +18,7 @@ namespace Klyte.Commons.ModShared
 
         private Func<bool> UseLowSaturationButtonFunc;
 
-        public sealed override void RegisterMod<U, C, T>(BasicIUserMod<U, C, T> modInstance)
+        public override void RegisterMod<U, C, T>(BasicIUserMod<U, C, T> modInstance)
         {
             UseLowSaturationButtonFunc = () => BasicIUserMod<U, C, T>.UseLowSaturationButton;
 
@@ -30,7 +30,8 @@ namespace Klyte.Commons.ModShared
              onToggle: (value) => { if (value) { Open(); } else { Close(); } },
              onToolChanged: null,
              icon: KlyteResourceLoader.LoadTexture($"UI.Images.%{modInstance.IconName}.png"),
-             hotkeys: new UUIHotKeys { });
+             hotkeys: new UUIHotKeys { }
+             );
 
             m_container = UIView.Find("TSBar").AttachUIComponent(CreateContainer(modInstance, 875, 550).gameObject) as UIPanel;
             m_container.gameObject.AddComponent<T>();
