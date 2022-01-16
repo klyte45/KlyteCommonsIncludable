@@ -409,15 +409,16 @@ namespace Klyte.Commons.Interfaces
         {
             try
             {
-                Dictionary<ulong, string> notes = SearchIncompatibilities();
+                Dictionary<ulong, Tuple<string, string>> notes = SearchIncompatibilities();
                 if (notes != null && notes.Count > 0)
                 {
                     string title = $"{SimpleName} - Incompatibility report";
                     string text;
                     unchecked
                     {
-                        text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the <color>{SimpleName}</color> work properly." +
-                            $"\n\n{string.Join("\n", notes.Select(x => $"\t -{x.Value} (id: {(x.Key == (ulong)-1 ? "<LOCAL>" : x.Key.ToString())})").ToArray())}" +
+                        text = $"Some conflicting mods were found active. Disable or unsubscribe them to make the <color yellow>{SimpleName}</color> work properly.\n\n" +
+                           string.Join("\n\n", notes.Select(x => $"\t -{x.Value.First} (id: {(x.Key == (ulong)-1 ? "<LOCAL>" : x.Key.ToString())})\n" +
+                            $"\t\t<color yellow>WHY?</color> {x.Value.Second ?? "This DLL have a name of an incompatible mod, but it's installed locally. Ignore this warning if you know what you are doing."}").ToArray()) +
                             $"\n\nDisable or unsubscribe them at main menu and try again!";
                     }
                     ShowModal(new BindProperties()
@@ -428,6 +429,7 @@ namespace Klyte.Commons.Interfaces
                         messageAlign = UIHorizontalAlignment.Left,
                         title = title,
                         message = text,
+                        useFullWindowWidth = true
                     }, (x) => true);
                 }
             }
@@ -450,22 +452,23 @@ namespace Klyte.Commons.Interfaces
             }
         }
 
-        public Dictionary<ulong, string> SearchIncompatibilities() => IncompatibleModList.Count == 0 ? null : PluginUtils.VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
+        public Dictionary<ulong, Tuple<string, string>> SearchIncompatibilities() => IncompatibleModList.Count == 0 ? null : PluginUtils.VerifyModsEnabled(IncompatibleModList, IncompatibleDllModList);
         public void OnViewStart() => ExtraOnViewStartActions();
 
         protected virtual void ExtraOnViewStartActions() { }
 
-        protected virtual List<ulong> IncompatibleModList { get; } = new List<ulong>();
+        protected virtual Dictionary<ulong, string> IncompatibleModList { get; } = new Dictionary<ulong, string>();
         protected virtual List<string> IncompatibleDllModList { get; } = new List<string>();
 
-        private List<ulong> IncompatibleModListCommons { get; } = new List<ulong>();
+        private Dictionary<ulong, string> IncompatibleModListCommons { get; } = new Dictionary<ulong, string>();
         private List<string> IncompatibleDllModListCommons { get; } = new List<string>();
         protected virtual List<ulong> AutomaticUnsubMods { get; } = new List<ulong>();
 
 
-        public IEnumerable<ulong> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);
+        public IEnumerable<KeyValuePair<ulong, string>> IncompatibleModListAll => IncompatibleModListCommons.Union(IncompatibleModList);
         public IEnumerable<string> IncompatibleDllModListAll => IncompatibleDllModListCommons.Union(IncompatibleDllModList);
 
+        public static SavedBool UseUuiIfAvailable { get; } = new SavedBool("K45_UseUuiIfAvailable", Settings.gameSettingsFile, true, true);
     }
 
 }

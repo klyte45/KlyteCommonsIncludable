@@ -43,16 +43,7 @@ namespace Klyte.Commons.Utils
         private static GameObject CreateTabInternal(UITabstrip stripMain, string sprite, string text, string objectName, bool scroll, UITextureAtlas textureAtlas, Vector2? nullableSize, bool isHorizontal)
         {
             Vector2 size = nullableSize ?? (isHorizontal ? new Vector2(sprite.IsNullOrWhiteSpace() ? 100 : stripMain.height, stripMain.height) : new Vector2(stripMain.width, 40));
-            UIButton tab = CreateTabTemplate(out UISprite logo, size, textureAtlas);
-            if (sprite.IsNullOrWhiteSpace())
-            {
-                tab.text = text;
-            }
-            else
-            {
-                logo.spriteName = sprite;
-                tab.tooltip = text;
-            }
+            UIButton tab = CreateTabButton(sprite, text, textureAtlas, size);
 
             KlyteMonoUtils.CreateUIElement(out UIPanel contentContainer, null);
             contentContainer.name = "Container";
@@ -70,6 +61,22 @@ namespace Klyte.Commons.Utils
             }
 
             return go;
+        }
+
+        public static UIButton CreateTabButton(string sprite, string text, UITextureAtlas textureAtlas, Vector2 size)
+        {
+            UIButton tab = CreateTabTemplate(out UISprite logo, size, textureAtlas);
+            if (sprite.IsNullOrWhiteSpace())
+            {
+                tab.text = text;
+            }
+            else
+            {
+                logo.spriteName = sprite;
+                tab.tooltip = text;
+            }
+
+            return tab;
         }
     }
 
