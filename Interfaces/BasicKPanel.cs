@@ -28,12 +28,14 @@ namespace Klyte.Commons.Interfaces
             m_controlContainer.name = $"{CommonProperties.Acronym}PanelParent";
 
             KlyteMonoUtils.CreateUIElement(out UIPanel _mainPanel, m_controlContainer.transform, $"{CommonProperties.Acronym}Panel", new Vector4(0, 0, PanelWidth, PanelHeight));
-            MainPanel = _mainPanel;
-            MainPanel.minimumSize = new Vector2(220, 50);
-            MainPanel.backgroundSprite = "MenuPanel2";
+            if (PanelWidth + PanelHeight > 0)
+            {
+                MainPanel = _mainPanel;
+                MainPanel.minimumSize = new Vector2(220, 50);
+                MainPanel.backgroundSprite = "MenuPanel2";
 
-            CreateTitleBar();
-
+                CreateTitleBar();
+            }
             AwakeActions();
         }
 
