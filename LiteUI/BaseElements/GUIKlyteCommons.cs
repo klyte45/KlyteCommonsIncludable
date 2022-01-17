@@ -9,6 +9,8 @@ namespace Klyte.Commons.LiteUI
 {
     public static class GUIKlyteCommons
     {
+        public const string v_null = "<color=#FF00FF>--NULL--</color>";
+        public const string v_empty = "<color=#888888>--EMPTY--</color>";
         public static readonly Texture2D darkGreenTexture;
         public static readonly Texture2D greenTexture;
         public static readonly Texture2D darkRedTexture;
@@ -30,27 +32,28 @@ namespace Klyte.Commons.LiteUI
             return texture;
         }
         public static Texture GetByNameFromDefaultAtlas(string name) => UIView.GetAView().defaultAtlas.sprites.Where(x => x.name == name).FirstOrDefault().texture;
-        public static void AddVector3Field(Vector3Xml input, string i18nEntry, string baseFieldName, float totalWidth)
-            => DoInHorizontal(() =>
-                {
-                    GUILayout.Label(Locale.Get(i18nEntry), GUILayout.Width(totalWidth / 4));
-                    GUILayout.FlexibleSpace();
-                    input.X = GUIFloatField.FloatField(baseFieldName + "X", input.X);
-                    input.Y = GUIFloatField.FloatField(baseFieldName + "Y", input.Y);
-                    input.Z = GUIFloatField.FloatField(baseFieldName + "Z", input.Z);
-                });
-        public static void AddVector3Field(ref Vector3 input, string i18nEntry, string baseFieldName, float totalWidth)
+        public static void AddVector3Field(Vector3Xml input, string i18nEntry, string baseFieldName)
         {
-            var localInput = input;
-            DoInHorizontal(() =>
+            using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(Locale.Get(i18nEntry), GUILayout.Width(totalWidth / 4));
+                GUILayout.Label(Locale.Get(i18nEntry));
                 GUILayout.FlexibleSpace();
-                localInput.x = GUIFloatField.FloatField(baseFieldName + "X", localInput.x);
-                localInput.y = GUIFloatField.FloatField(baseFieldName + "Y", localInput.y);
-                localInput.z = GUIFloatField.FloatField(baseFieldName + "Z", localInput.z);
-            });
-            input = localInput;
+                input.X = GUIFloatField.FloatField(baseFieldName + "X", input.X);
+                input.Y = GUIFloatField.FloatField(baseFieldName + "Y", input.Y);
+                input.Z = GUIFloatField.FloatField(baseFieldName + "Z", input.Z);
+            };
+        }
+
+        public static void AddVector3Field(ref Vector3 input, string i18nEntry, string baseFieldName)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nEntry));
+                GUILayout.FlexibleSpace();
+                input.x = GUIFloatField.FloatField(baseFieldName + "X", input.x);
+                input.y = GUIFloatField.FloatField(baseFieldName + "Y", input.y);
+                input.z = GUIFloatField.FloatField(baseFieldName + "Z", input.z);
+            };
         }
 
         public static void DoInArea(Rect size, Action<Rect> action)

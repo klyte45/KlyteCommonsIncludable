@@ -2,6 +2,7 @@ using ColossalFramework;
 using ColossalFramework.Globalization;
 using ColossalFramework.Packaging;
 using ColossalFramework.PlatformServices;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,7 +10,11 @@ using System.Linq;
 
 namespace Klyte.Commons.Utils
 {
-    public abstract class PrefabIndexesAbstract<T, I> : Singleton<I> where T : PrefabInfo where I : PrefabIndexesAbstract<T, I>
+    public interface IPrefabIndexes
+    {
+        public Dictionary<string, IIndexedPrefabData> PrefabsData { get; }
+    }
+    public abstract class PrefabIndexesAbstract<T, I> : Singleton<I>, IPrefabIndexes where T : PrefabInfo where I : PrefabIndexesAbstract<T, I>
     {
         private Dictionary<string, string> m_authorList;
 
@@ -25,6 +30,7 @@ namespace Klyte.Commons.Utils
             }
         }
         private Dictionary<string, T> m_propsLoaded;
+        [Obsolete("Use the list with full details")]
         public Dictionary<string, T> PrefabsLoaded
         {
             get
@@ -36,6 +42,21 @@ namespace Klyte.Commons.Utils
                 return m_propsLoaded;
             }
         }
+
+        private Dictionary<string, IIndexedPrefabData> m_prefabsData;
+        public Dictionary<string, IIndexedPrefabData> PrefabsData
+        {
+            get
+            {
+                if (m_prefabsData is null)
+                {
+                    var prefabMapping = PackageManager.FilterAssets(new Package.AssetType[] { UserAssetType.CustomAssetMetaData }).Select(x => Tuple.New(x.fullName, x)).ToDictionary(x => x.First, x => x.Second);
+                    m_prefabsData = GetInfos().Where(x => x?.name != null).Select(x => new IndexedPrefabData<T>(prefabMapping.TryGetValue(x.name, out Package.Asset asset) ? asset : null, x)).ToDictionary(x => x.PrefabName, x => (IIndexedPrefabData)x);
+                }
+                return m_prefabsData;
+            }
+        }
+
         public static string GetListName(T x) => x?.GetUncheckedLocalizedTitle();
 
         private Dictionary<string, string> LoadAuthors()
@@ -75,13 +96,66 @@ namespace Klyte.Commons.Utils
 
         public IEnumerator BasicInputFiltering(string input, Wrapper<string[]> result)
         {
-            yield return result.Value = PrefabsLoaded
-              .ToList()
-              .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf(x.Value + (AuthorList.TryGetValue(x.Value?.name.Split('.')[0], out string author) ? "\n" + author : ""), input, CompareOptions.IgnoreCase) >= 0)
-              .Select(x => x.Key)
+            yield return result.Value = PrefabsData.Values
+              .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf($"{x.DisplayName}\n{x.Author?.personaName}\n{x.PrefabName}", input, CompareOptions.IgnoreCase) >= 0)
+              .Select(x => x.DisplayName)
               .OrderBy((x) => x)
               .ToArray();
         }
+
+        public IEnumerator BasicInputFilteringDetailed(string input, Wrapper<IIndexedPrefabData[]> result)
+        {
+            yield return result.Value = PrefabsData.Values
+              .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf($"{x.DisplayName}\n{x.Author?.personaName}\n{x.PrefabName}", input, CompareOptions.IgnoreCase) >= 0)
+              .ToArray();
+        }
+
+
+
+    }
+
+    public interface IIndexedPrefabData
+    {
+        string DisplayName { get; }
+        string PrefabName { get; }
+        Friend Author { get; }
+        ulong WorkshopId { get; }
+        Type GetPrefabType();
+    }
+    public class IndexedPrefabData<T> : IIndexedPrefabData where T : PrefabInfo
+    {
+        public IndexedPrefabData(Package.Asset src, T prefab)
+        {
+            if (prefab is null)
+            {
+                return;
+            }
+
+            Prefab = prefab;
+            PrefabName = prefab.name;
+            DisplayName = prefab.GetUncheckedLocalizedTitle();
+            if (!(src is null))
+            {
+                WorkshopId = src.package.GetPublishedFileID().AsUInt64;
+                if (ulong.TryParse(src.package.packageAuthor.Substring("steamid:".Length), out ulong authorID))
+                {
+                    Author = new Friend(new UserID(authorID));
+                }
+            }
+            else
+            {
+                WorkshopId = ~0ul;
+            }
+        }
+
+        public string DisplayName { get; private set; }
+        public string PrefabName { get; private set; }
+        public Friend Author { get; private set; }
+        public ulong WorkshopId { get; private set; }
+
+        public T Prefab { get; private set; }
+
+        public Type GetPrefabType() => Prefab.GetType();
     }
 
     public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }
