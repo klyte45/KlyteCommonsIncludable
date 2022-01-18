@@ -19,7 +19,12 @@ namespace Klyte.Commons.LiteUI
         private Texture ImportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Import");
         private Texture ExportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Export");
 
-        public string DeleteI18n { get; set; } = "K45_WTS_PROPEDIT_CONFIGDELETE_MESSAGE";
+        public string DeleteQuestionI18n { get; set; } = "";
+        public string ImportI18n { get; set; } = "";
+        public string ExportI18n { get; set; } = "";
+        public string DeleteButtonI18n { get; set; } = "";
+        public string NameAskingI18n { get; set; } = "";
+        public string NameAskingOverwriteI18n { get; set; } = "";
 
         public FooterBarStatus Status { get; private set; }
         private void RestartLibraryFilterCoroutine()
@@ -64,7 +69,7 @@ namespace Klyte.Commons.LiteUI
                     switch (Status)
                     {
                         case FooterBarStatus.AskingToRemove:
-                            GUILayout.Label(string.Format(Locale.Get(DeleteI18n), getCurrent().SaveName));
+                            GUILayout.Label(string.Format(Locale.Get(DeleteQuestionI18n), getCurrent().SaveName));
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
                             {
@@ -83,7 +88,7 @@ namespace Klyte.Commons.LiteUI
                             }
                             break;
                         case FooterBarStatus.AskingToExport:
-                            GUILayout.Label(Locale.Get("K45_WTS_EXPORTDATA_NAMEASKING"));
+                            GUILayout.Label(Locale.Get(NameAskingI18n));
                             footerInputVal = GUILayout.TextField(footerInputVal, GUILayout.Width(150));
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button(Locale.Get("SAVE")))
@@ -105,7 +110,7 @@ namespace Klyte.Commons.LiteUI
                             }
                             break;
                         case FooterBarStatus.AskingToExportOverwrite:
-                            GUILayout.Label(string.Format(Locale.Get("K45_WTS_EXPORTDATA_NAMEASKING_OVERWRITE")));
+                            GUILayout.Label(string.Format(Locale.Get(NameAskingOverwriteI18n)));
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
                             {
@@ -127,6 +132,7 @@ namespace Klyte.Commons.LiteUI
         private FooterBarStatus m_currentHover;
         public void FooterDraw(GUIStyle removeButtonStyle)
         {
+            var hoverSomething = false;
             GUI.SetNextControlName(GetHashCode() + "_IMPORT");
             if (GUILayout.Button(ImportTex, GUILayout.MaxHeight(20)))
             {
@@ -135,6 +141,7 @@ namespace Klyte.Commons.LiteUI
             if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
             {
                 m_currentHover = FooterBarStatus.AskingToImport;
+                hoverSomething = true;
             }
             GUI.SetNextControlName(GetHashCode() + "_EXPORT");
             if (GUILayout.Button(ExportTex, GUILayout.MaxHeight(20)))
@@ -144,6 +151,11 @@ namespace Klyte.Commons.LiteUI
             if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
             {
                 m_currentHover = FooterBarStatus.AskingToExport;
+                hoverSomething = true;
+            }
+            if (!hoverSomething)
+            {
+                m_currentHover = default;
             }
             DrawLabel(() => DrawRemoveButton(removeButtonStyle));
         }
@@ -153,10 +165,10 @@ namespace Klyte.Commons.LiteUI
             switch (m_currentHover)
             {
                 case FooterBarStatus.AskingToImport:
-                    GUILayout.Label(Locale.Get("K45_WTS_SEGMENT_IMPORTDATA"));
+                    GUILayout.Label(Locale.Get(ImportI18n));
                     break;
                 case FooterBarStatus.AskingToExport:
-                    GUILayout.Label(Locale.Get("K45_WTS_SEGMENT_EXPORTDATA"));
+                    GUILayout.Label(Locale.Get(ExportI18n));
                     break;
                 default:
                     GUILayout.Label("", GUILayout.Width(150));
@@ -169,7 +181,7 @@ namespace Klyte.Commons.LiteUI
         private void DrawRemoveButton(GUIStyle removeButtonStyle)
         {
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(Locale.Get("K45_WTS_SEGMENT_REMOVEITEM"), removeButtonStyle))
+            if (GUILayout.Button(Locale.Get(DeleteButtonI18n), removeButtonStyle))
             {
                 GoToRemove();
             }
