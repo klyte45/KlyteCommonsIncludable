@@ -12,7 +12,7 @@ namespace Klyte.Commons.Utils
 {
     public interface IPrefabIndexes
     {
-        public Dictionary<string, IIndexedPrefabData> PrefabsData { get; }
+        Dictionary<string, IIndexedPrefabData> PrefabsData { get; }
     }
     public abstract class PrefabIndexesAbstract<T, I> : Singleton<I>, IPrefabIndexes where T : PrefabInfo where I : PrefabIndexesAbstract<T, I>
     {

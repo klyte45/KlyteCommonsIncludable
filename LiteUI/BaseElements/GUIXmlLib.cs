@@ -60,6 +60,10 @@ namespace Klyte.Commons.LiteUI
                     Status = FooterBarStatus.Normal;
                 }
             });
+            if (GUILayout.Button(Locale.Get("CANCEL")))
+            {
+                Status = FooterBarStatus.Normal;
+            }
         }
 
         public void Draw(Rect area, GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent, Action<GUIStyle> onNormalDraw = null)
@@ -165,16 +169,16 @@ namespace Klyte.Commons.LiteUI
             switch (m_currentHover)
             {
                 case FooterBarStatus.AskingToImport:
-                    GUILayout.Label(Locale.Get(ImportI18n));
+                    GUILayout.Label(Locale.Get(ImportI18n), GUILayout.Width(300), GUILayout.ExpandHeight(true));
                     break;
                 case FooterBarStatus.AskingToExport:
-                    GUILayout.Label(Locale.Get(ExportI18n));
+                    GUILayout.Label(Locale.Get(ExportI18n), GUILayout.Width(300), GUILayout.ExpandHeight(true));
                     break;
                 default:
-                    GUILayout.Label("", GUILayout.Width(150));
-                    drawDefault?.Invoke();
+                    GUILayout.Label("", GUILayout.Width(300), GUILayout.ExpandHeight(true));
                     break;
             }
+            drawDefault?.Invoke();
             GUILayout.FlexibleSpace();
         }
 
