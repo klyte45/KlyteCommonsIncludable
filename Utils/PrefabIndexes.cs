@@ -121,6 +121,7 @@ namespace Klyte.Commons.Utils
         Friend Author { get; }
         ulong WorkshopId { get; }
         Type GetPrefabType();
+        PrefabInfo Info { get; }
     }
     public class IndexedPrefabData<T> : IIndexedPrefabData where T : PrefabInfo
     {
@@ -156,6 +157,7 @@ namespace Klyte.Commons.Utils
         public T Prefab { get; private set; }
 
         public Type GetPrefabType() => Prefab.GetType();
+        public PrefabInfo Info => Prefab;
     }
 
     public class PropIndexes : PrefabIndexesAbstract<PropInfo, PropIndexes> { }

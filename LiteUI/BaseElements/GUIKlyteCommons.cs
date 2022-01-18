@@ -32,27 +32,38 @@ namespace Klyte.Commons.LiteUI
             return texture;
         }
         public static Texture GetByNameFromDefaultAtlas(string name) => UIView.GetAView().defaultAtlas.sprites.Where(x => x.name == name).FirstOrDefault().texture;
-        public static void AddVector3Field(Vector3Xml input, string i18nEntry, string baseFieldName)
+        public static bool AddVector3Field(Vector3Xml input, string i18nEntry, string baseFieldName)
         {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(Locale.Get(i18nEntry));
                 GUILayout.FlexibleSpace();
-                input.X = GUIFloatField.FloatField(baseFieldName + "X", input.X);
-                input.Y = GUIFloatField.FloatField(baseFieldName + "Y", input.Y);
-                input.Z = GUIFloatField.FloatField(baseFieldName + "Z", input.Z);
+
+                var x = GUIFloatField.FloatField(baseFieldName + "X", input.X);
+                var y = GUIFloatField.FloatField(baseFieldName + "Y", input.Y);
+                var z = GUIFloatField.FloatField(baseFieldName + "Z", input.Z);
+                var changed = x != input.X || y != input.Y || z != input.Z;
+                input.X = x;
+                input.Y = y;
+                input.Z = z;
+                return changed;
             };
         }
 
-        public static void AddVector3Field(ref Vector3 input, string i18nEntry, string baseFieldName)
+        public static bool AddVector3Field(ref Vector3 input, string i18nEntry, string baseFieldName)
         {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(Locale.Get(i18nEntry));
                 GUILayout.FlexibleSpace();
-                input.x = GUIFloatField.FloatField(baseFieldName + "X", input.x);
-                input.y = GUIFloatField.FloatField(baseFieldName + "Y", input.y);
-                input.z = GUIFloatField.FloatField(baseFieldName + "Z", input.z);
+                var x = GUIFloatField.FloatField(baseFieldName + "X", input.x);
+                var y = GUIFloatField.FloatField(baseFieldName + "Y", input.y);
+                var z = GUIFloatField.FloatField(baseFieldName + "Z", input.z);
+                var changed = x != input.x || y != input.y || z != input.z;
+                input.x = x;
+                input.y = y;
+                input.z = z;
+                return changed;
             };
         }
 
