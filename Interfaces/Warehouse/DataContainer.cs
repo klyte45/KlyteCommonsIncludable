@@ -188,11 +188,14 @@ namespace Klyte.Commons.Interfaces
 
         public void OnReleased()
         {
-            foreach (IDataExtension item in instance.Instances?.Values)
+            if (!(instance?.Instances is null))
             {
-                item?.OnReleased();
+                foreach (IDataExtension item in instance.Instances?.Values)
+                {
+                    item?.OnReleased();
+                }
+                instance.Instances = null;
             }
-            instance.Instances = null;
         }
         #endregion
     }
