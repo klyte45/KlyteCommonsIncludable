@@ -14,8 +14,8 @@ namespace Klyte.Commons.Interfaces
         public static T Instance { get; private set; }
         public UIPanel MainPanel { get; private set; }
 
-        public abstract float PanelWidth { get; }
-        public abstract float PanelHeight { get; }
+        public virtual float PanelWidth { get; } = 825;
+        public virtual float PanelHeight { get; } = 500;
 
         #region Awake
         public void Awake()
@@ -29,11 +29,13 @@ namespace Klyte.Commons.Interfaces
 
             KlyteMonoUtils.CreateUIElement(out UIPanel _mainPanel, m_controlContainer.transform, $"{CommonProperties.Acronym}Panel", new Vector4(0, 0, PanelWidth, PanelHeight));
             MainPanel = _mainPanel;
-            MainPanel.minimumSize = new Vector2(220, 50);
-            MainPanel.backgroundSprite = "MenuPanel2";
+            if (PanelWidth + PanelHeight > 0)
+            {
+                MainPanel.minimumSize = new Vector2(220, 50);
+                MainPanel.backgroundSprite = "MenuPanel2";
 
-            CreateTitleBar();
-
+                CreateTitleBar();
+            }
             AwakeActions();
         }
 
@@ -58,6 +60,20 @@ namespace Klyte.Commons.Interfaces
 
             KlyteMonoUtils.CreateUIElement(out UISprite logo, MainPanel.transform, $"{CommonProperties.Acronym}Logo", new Vector4(22, 5f, 32, 32));
             logo.spriteName = BasicIUserMod<U, C, T>.Instance.IconName;
+
+            if (BasicIUserMod<U, C, T>.Instance.IsUui())
+            {
+                AddDragHandle(logo);
+                AddDragHandle(titlebar);
+            }
+        }
+
+        private void AddDragHandle(UIComponent src)
+        {
+            var dh = src.AddUIComponent<UIDragHandle>();
+            dh.target = m_controlContainer;
+            dh.size = src.size;
+            dh.relativePosition = Vector3.zero;
         }
         #endregion
     }

@@ -8,9 +8,11 @@ namespace Klyte.Commons.Interfaces
 {
     public abstract class DataExtensionLibBase<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
         where LIB : DataExtensionLibBase<LIB, DESC>, new()
-        where DESC : class,ILibable
+        where DESC : class, ILibable
     {
         public abstract string SaveId { get; }
+
+        public bool IsLegacyCompatOnly { get; } = false;
         public static LIB Instance
         {
             get
@@ -43,7 +45,8 @@ namespace Klyte.Commons.Interfaces
             return result;
         }
 
-        public byte[] Serialize() => ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((LIB)this, false));
+        public byte[] Serialize() => !IsLegacyCompatOnly ? ZipUtils.Zip(XmlUtils.DefaultXmlSerialize((LIB)this, false)) : null;
+
         public virtual void OnReleased() { }
         public virtual void AfterDeserialize(LIB instance) { }
         public virtual void LoadDefaults(ISerializableData serializableData) { }

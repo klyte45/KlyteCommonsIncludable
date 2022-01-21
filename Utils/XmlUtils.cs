@@ -6,13 +6,16 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Utils
 {
-    public class XmlUtils
+    public static class XmlUtils
     {
         #region XML Utils
 
+        static XmlUtils() => typeof(XmlSerializer).GetField("generationThreshold", (System.Reflection.BindingFlags)0x143F).SetValue(null, -1);
+
         public static T CloneViaXml<T>(T input) => XmlUtils.DefaultXmlDeserialize<T>(XmlUtils.DefaultXmlSerialize(input));
+        public static U TransformViaXml<T, U>(T input) => XmlUtils.DefaultXmlDeserialize<U>(XmlUtils.DefaultXmlSerialize(input));
         public static T DefaultXmlDeserialize<T>(string s, Action<string, Exception> OnException = null)
-        { 
+        {
             var xmlser = new XmlSerializer(typeof(T));
             return DefaultXmlDeserializeImpl<T>(s, xmlser, OnException);
         }

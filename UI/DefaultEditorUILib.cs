@@ -8,6 +8,7 @@ using Klyte.Commons.Libraries;
 using Klyte.Commons.UI.SpriteNames;
 using Klyte.Commons.Utils;
 using System;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -149,7 +150,43 @@ namespace Klyte.Commons.UI
             KlyteMonoUtils.LimitWidthAndBox(field.parent.GetComponentInChildren<UILabel>(), (parentHelper.Self.width / 2) - 10, true);
             field.eventMouseWheel += RollFloat;
         }
+        public static void AddEmptyDropdown(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, OnDropdownSelectionChanged onChange) => AddEmptyDropdown(title, out dropdown, out _, parentHelper, onChange);
+        public static void AddEmptyDropdown(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, OnDropdownSelectionChanged onChange)
+        {
+            dropdown = (UIDropDown)parentHelper.AddDropdown(title, new string[0], 0, onChange);
+            label = dropdown.parent.GetComponentInChildren<UILabel>();
+            label.padding.top = 10;
+            KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
+            dropdown.width = (parentHelper.Self.width / 2) - 10;
+            dropdown.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
+            dropdown.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
+        }
+        public static void AddDropdown<T>(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, Tuple<string, T>[] options, Action<T> onChange) => AddDropdown(title, out dropdown, out _, parentHelper, options, onChange);
+        public static void AddDropdown<T>(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, Tuple<string, T>[] options, Action<T> onChange)
+        {
+            UIDropDown thisDD = null;
+            void defaultOnChange(int x)
+            {
+                if (x >= 0)
+                {
+                    onChange((thisDD.objectUserData as Tuple<string, T>[])[x].Second);
+                }
+            }
+            thisDD = dropdown = (UIDropDown)parentHelper.AddDropdown(title, options.Select(x => x.First).ToArray(), 0, onChange is null ? null : (OnDropdownSelectionChanged)defaultOnChange);
+            dropdown.objectUserData = options;
+            label = dropdown.parent.GetComponentInChildren<UILabel>();
+            label.padding.top = 10;
+            KlyteMonoUtils.LimitWidthAndBox(label, (parentHelper.Self.width / 2) - 10);
+            dropdown.width = (parentHelper.Self.width / 2) - 10;
+            dropdown.GetComponentInParent<UIPanel>().autoLayoutDirection = LayoutDirection.Horizontal;
+            dropdown.GetComponentInParent<UIPanel>().autoFitChildrenVertically = true;
+        }
+
+
+        [Obsolete("Use version with specific option list", true)]
         public static void AddDropdown(string title, out UIDropDown dropdown, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange) => AddDropdown(title, out dropdown, out _, parentHelper, options, onChange);
+
+        [Obsolete("Use version with specific option list", true)]
         public static void AddDropdown(string title, out UIDropDown dropdown, out UILabel label, UIHelperExtension parentHelper, string[] options, OnDropdownSelectionChanged onChange)
         {
             dropdown = (UIDropDown)parentHelper.AddDropdown(title, options, 0, onChange);
@@ -300,7 +337,7 @@ namespace Klyte.Commons.UI
             }
 
 
-            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out libFilesDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().ToArray(), (x) => { });
+            AddDropdown(Locale.Get("K45_CMNS_LOAD_FROM_LIB"), out libFilesDD, parentHelper, LibBaseFile<LIB, DESC>.Instance.List().Select(x => Tuple.New(x, x)).ToArray(), (x) => { });
             libFilesDD.width -= 80;
             var locDD = libFilesDD;
             UIPanel parent = libFilesDD.GetComponentInParent<UIPanel>();
@@ -335,7 +372,7 @@ namespace Klyte.Commons.UI
                      DESC newEntry = XmlUtils.DefaultXmlDeserialize<DESC>(getContentToSave() ?? "");
                      if (newEntry != default)
                      {
-                         LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text, ref newEntry);
+                         LibBaseFile<LIB, DESC>.Instance.Add(saveTxt.text,  newEntry);
                          locDD.items = LibBaseFile<LIB, DESC>.Instance.List().ToArray();
                          locDD.selectedValue = saveTxt.text;
                      }
@@ -383,6 +420,24 @@ namespace Klyte.Commons.UI
             return sprite;
 
         }
+        public static UILabel AddLabelInEditorRow(UIComponent component, bool reduceSize = true, float width = 40, float? height = null)
+        {
+            if (reduceSize)
+            {
+                component.minimumSize -= new Vector2(0, width);
+                component.width -= width;
+            }
+            var label = component.GetComponentInParent<UIPanel>().AddUIComponent<UILabel>();
+            label.autoSize = false;
+            label.textScale = 0.75f;
+            label.width = width;
+            label.height = height ?? component.height;
+            label.zOrder = component.zOrder + 1;
+            label.wordWrap = true;
+            label.processMarkup = true;
+            return label;
+
+        }
 
         public static void AddCheckboxLocale(string localeId, out UICheckBox checkbox, UIHelperExtension helper, OnCheckChanged onCheckChanged, bool defaultState = false)
         {
@@ -428,7 +483,7 @@ namespace Klyte.Commons.UI
             }
         }
 
-        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string, string[]> FilterFunc, Func<string, int, string[], string> OnSelectItem)
+        public static UIListBox ConfigureListSelectionPopupForUITextField(UITextField textField, Func<string, Wrapper<string[]>, IEnumerator> FilterFunc, Func<string, int, string[], string> OnSelectItem)
         {
             var selectorPanel = textField.parent as UIPanel;
             selectorPanel.autoLayout = true;
@@ -442,18 +497,12 @@ namespace Klyte.Commons.UI
 
             void OnSubmit()
             {
-                if (result.selectedIndex >= 0)
-                {
-                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
-                }
-                else if (result.items.Contains(textField.text))
-                {
-                    textField.text = OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? "";
-                }
-                else
-                {
-                    textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
-                }
+                textField.text = result.selectedIndex >= 0
+                    ? OnSelectItem(textField.text, result.selectedIndex, result.items) ?? ""
+                    : result.items.Contains(textField.text)
+                        ? OnSelectItem(textField.text, Array.IndexOf(result.items, textField.text), result.items) ?? ""
+                        : OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                result.selectedIndex = -1;
                 result.isVisible = false;
             }
 
@@ -468,21 +517,13 @@ namespace Klyte.Commons.UI
                 OnSubmit();
             };
             result.eventItemDoubleClicked += (x, t) => OnSubmit();
+
+
+
             textField.eventGotFocus += (x, t) =>
             {
-                var items = FilterFunc(textField.text);
-                if (items == null)
-                {
-                    result.isVisible = false;
-                }
-                else
-                {
-                    result.isVisible = true;
-                    result.items = items;
-                    result.selectedIndex = Array.IndexOf(result.items, textField.text);
-                    result.EnsureVisible(result.selectedIndex);
-                    textField.SelectAll();
-                }
+                textField.StopAllCoroutines();
+                textField.StartCoroutine(FilterRunner(textField, result, FilterFunc, true));
             };
             textField.eventLostFocus += (x, t) =>
             {
@@ -505,17 +546,8 @@ namespace Klyte.Commons.UI
                     {
                         if (Event.current.isKey && textField.hasFocus)
                         {
-                            var items = FilterFunc(y);
-                            if (items == null)
-                            {
-                                result.isVisible = false;
-                            }
-                            else
-                            {
-                                result.isVisible = true;
-                                result.items = items;
-                                result.Invalidate();
-                            }
+                            textField.StopAllCoroutines();
+                            textField.StartCoroutine(FilterRunner(textField, result, FilterFunc, false));
                         }
                     }
                     finally
@@ -526,15 +558,36 @@ namespace Klyte.Commons.UI
             result.eventItemMouseUp += (x, y) =>
             {
                 textField.text = OnSelectItem(textField.text, result.selectedIndex, result.items) ?? "";
+                result.selectedIndex = -1;
                 result.isVisible = false;
             };
             result.eventMouseWheel += (x, y) => y.Use();
             return result;
         }
+        private static IEnumerator FilterRunner(UITextField textField, UIListBox result, Func<string, Wrapper<string[]>, IEnumerator> FilterFunc, bool selectAll)
+        {
+            var items = new Wrapper<string[]>();
+            yield return FilterFunc(textField.text, items);
+            if (items.Value == null)
+            {
+                result.isVisible = false;
+            }
+            else
+            {
+                result.isVisible = true;
+                result.items = items.Value;
+                result.selectedIndex = Array.IndexOf(result.items, textField.text);
+                result.EnsureVisible(result.selectedIndex);
+                if (selectAll)
+                {
+                    textField.MoveToEnd();
+                }
+            }
+        }
 
-        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UIListBox listPopup, Func<string, Wrapper<string[]>, IEnumerator> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
             => AddFilterableInput(name, helper, out inputField, out _, out listPopup, OnFilterChanged, OnValueChanged, popupHeight);
-        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UILabel lbl, out UIListBox listPopup, Func<string, string[]> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
+        public static void AddFilterableInput(string name, UIHelperExtension helper, out UITextField inputField, out UILabel lbl, out UIListBox listPopup, Func<string, Wrapper<string[]>, IEnumerator> OnFilterChanged, Func<string, int, string[], string> OnValueChanged, float popupHeight = 290)
         {
             AddTextField(name, out inputField, out lbl, helper, null);
             inputField.submitOnFocusLost = true;
@@ -587,5 +640,4 @@ namespace Klyte.Commons.UI
         }
         #endregion
     }
-
 }

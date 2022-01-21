@@ -1,13 +1,11 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Math;
-using Klyte.Commons.Utils;
 using UnityEngine;
 
 namespace Klyte.Commons
 {
     public static class RenderOverlayUtils
     {
-
         public static void RenderNetSegmentOverlay(RenderManager.CameraInfo cameraInfo, Color toolColor, ushort netSegment)
         {
             NetSegment[] segmentBuffer = Singleton<NetManager>.instance.m_segments.m_buffer;
@@ -16,7 +14,6 @@ namespace Klyte.Commons
             {
                 return;
             }
-            NetInfo info = segmentBuffer[netSegment].Info;
             var startNode = segmentBuffer[netSegment].m_startNode;
             var endNode = segmentBuffer[netSegment].m_endNode;
             var smoothStart = (nodeBuffer[startNode].m_flags & NetNode.Flags.Middle) != NetNode.Flags.None;
@@ -25,7 +22,8 @@ namespace Klyte.Commons
             bezier.a = nodeBuffer[startNode].m_position;
             bezier.d = nodeBuffer[endNode].m_position;
             NetSegment.CalculateMiddlePoints(bezier.a, segmentBuffer[netSegment].m_startDirection, bezier.d, segmentBuffer[netSegment].m_endDirection, smoothStart, smoothEnd, out bezier.b, out bezier.c);
-            Singleton<RenderManager>.instance.OverlayEffect.DrawBezier(cameraInfo, toolColor, bezier, info.m_halfWidth * 4f / 3f, 100000f, -100000f, -1f, 1280f, false, true);
-        }      
+            NetInfo info = segmentBuffer[netSegment].Info;
+            bezier.RenderBezier(new RenderExtension.OverlayData(cameraInfo) { Width = info.m_halfWidth * 2F, Cut = true, Color = toolColor });
+        }
     }
 }

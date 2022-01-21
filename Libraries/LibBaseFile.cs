@@ -1,6 +1,7 @@
 ﻿using ColossalFramework.Globalization;
 using Klyte.Commons.Interfaces;
 using Klyte.Commons.Utils;
+using System.Collections;
 using System.IO;
 
 namespace Klyte.Commons.Libraries
@@ -22,7 +23,7 @@ namespace Klyte.Commons.Libraries
             }
         }
         protected abstract string XmlName { get; }
-
+        
         public static void Reload() => m_instance = null;
         private static string DefaultXmlFileBasePath => CommonProperties.ModRootFolder;
         public string DefaultXmlFileBaseFullPath => $"{DefaultXmlFileBasePath}{Path.DirectorySeparatorChar}{XmlName}.xml";
