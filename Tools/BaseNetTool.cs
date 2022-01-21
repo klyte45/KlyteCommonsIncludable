@@ -42,6 +42,11 @@ namespace Klyte.Commons
 
         protected override void OnToolUpdate()
         {
+            if (Event.current.keyCode == KeyCode.Escape)
+            {
+                ToolsModifierControl.SetTool<DefaultTool>();
+                Event.current.Use();
+            }
             var isInsideUI = m_toolController.IsInsideUI;
             if (m_leftClickTime == 0L && Input.GetMouseButton(0) && !isInsideUI)
             {
@@ -106,7 +111,7 @@ namespace Klyte.Commons
         protected virtual void OnRightDrag() { }
         protected virtual void OnRightMouseUp() { }
         protected virtual void OnRightDragStop() { }
-        protected virtual void OnRightClick() { }
+        protected virtual void OnRightClick() => ToolsModifierControl.SetTool<DefaultTool>();
         protected virtual void OnRightMouseDown() { }
         protected virtual void OnLeftDrag() { }
         protected virtual void OnLeftMouseUp() { }
