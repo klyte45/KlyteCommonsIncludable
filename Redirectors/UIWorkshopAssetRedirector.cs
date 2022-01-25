@@ -53,7 +53,7 @@ namespace Klyte.Commons.Redirectors
             if (bundledAnyFile)
             {
                 var tagsField = (__instance.GetType().GetField("m_Tags", RedirectorUtils.allFlags));
-                tagsField.SetValue(__instance, (tagsField.GetValue(__instance) as string[]).Union(new string[] { CommonProperties.ModName, $"K45 {CommonProperties.Acronym}" }).Distinct().ToArray());
+                tagsField.SetValue(__instance, (tagsField.GetValue(__instance) as string[]).Concat(new string[] { CommonProperties.ModName, $"K45 {CommonProperties.Acronym}" }).Distinct().ToArray());
             }
 
         }

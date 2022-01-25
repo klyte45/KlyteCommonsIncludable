@@ -35,5 +35,27 @@ namespace Klyte.Commons.Utils
         }
 
         public static Color32 FromRGB(int value) => new Color32((byte)((value & 0xFF0000) >> 16), (byte)((value & 0xFF00) >> 8), (byte)((value & 0xFF)), 0xFF);
+
+        public static Color ContrastColor(this Color color, bool grayAsWhite = false)
+        {
+            if (color == default)
+            {
+                return Color.black;
+            }
+            // Counting the perceptive luminance - human eye favors green color... 
+            float a = (0.299f * color.r) + (0.587f * color.g) + (0.114f * color.b);
+
+            float d;
+            if (a > 0.5)
+            {
+                d = 0; // bright colors - black font
+            }
+            else
+            {
+                d = grayAsWhite ? 0.5f : 1; // dark colors - white font
+            }
+
+            return new Color(d, d, d, 1);
+        }
     }
 }

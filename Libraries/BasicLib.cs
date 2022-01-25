@@ -1,6 +1,11 @@
-﻿using Klyte.Commons.Interfaces;
+﻿using ColossalFramework;
+using ColossalFramework.Globalization;
+using Klyte.Commons.Interfaces;
+using Klyte.Commons.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
 using static Klyte.Commons.Utils.XmlUtils;
@@ -23,20 +28,18 @@ namespace Klyte.Commons.Libraries
         protected Dictionary<string, DESC> m_savedDescriptorsSerialized = new Dictionary<string, DESC>();
 
 
-        public void Add(string indexName, ref DESC descriptor)
+        public void Add(string indexName, DESC descriptor)
         {
-            descriptor.SaveName = indexName;
-            m_savedDescriptorsSerialized[indexName] = descriptor;
+            var targetDescriptor = CloneViaXml(descriptor);
+            targetDescriptor.SaveName = indexName;
+            m_savedDescriptorsSerialized[indexName] = targetDescriptor;
 
 
             Save();
         }
 
 
-        public DESC Get(string indexName)
-        {
-            return m_savedDescriptorsSerialized.TryGetValue(indexName ?? "", out DESC val) ? val : null;
-        }
+        public DESC Get(string indexName) => m_savedDescriptorsSerialized.TryGetValue(indexName ?? "", out DESC val) ? val : null;
 
         public IEnumerable<string> List() => m_savedDescriptorsSerialized.Keys;
         public IEnumerable<string> ListWhere(Func<DESC, bool> filter) => m_savedDescriptorsSerialized.Where(x => filter(x.Value)).Select(x => x.Key);
@@ -53,5 +56,13 @@ namespace Klyte.Commons.Libraries
             }
         }
         protected abstract void Save();
+        public IEnumerator BasicInputFiltering(string input, Wrapper<string[]> result)
+        {
+            yield return result.Value =
+             m_savedDescriptorsSerialized.Keys
+              .Where((x) => input.IsNullOrWhiteSpace() ? true : LocaleManager.cultureInfo.CompareInfo.IndexOf(x, input, CompareOptions.IgnoreCase) >= 0)
+              .OrderBy((x) => x)
+              .ToArray();
+        }
     }
 }

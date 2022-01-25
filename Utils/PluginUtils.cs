@@ -11,21 +11,22 @@ namespace Klyte.Commons.Utils
     public static class PluginUtils
     {
 
-        public static Dictionary<ulong, string> VerifyModsEnabled(List<ulong> modIds, List<string> modsDlls) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
+        public static Dictionary<ulong, Tuple<string, string>> VerifyModsEnabled(Dictionary<ulong, string> modIds, List<string> modsDlls) =>
+            Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
             && pi.isEnabled
             && (
-                (modIds?.Contains(pi.publishedFileID.AsUInt64) ?? false)
+                (modIds?.Keys.Contains(pi.publishedFileID.AsUInt64) ?? false)
              || (modsDlls != null && pi.GetAssemblies().Where(x => modsDlls.Contains(x.GetName().Name)).Count() > 0)
             )
-        ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance).Name);
+        ).ToDictionary(x => x.publishedFileID.AsUInt64, x => Tuple.New(((IUserMod)x.userModInstance).Name, x.publishedFileID.AsUInt64 != ~0UL && modIds.TryGetValue(x.publishedFileID.AsUInt64, out string message) ? message : null));
         public static Dictionary<ulong, string> VerifyModsSubscribed(List<ulong> modIds) => Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
             && (modIds?.Contains(pi.publishedFileID.AsUInt64) ?? false)
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance)?.Name);
 
 
-        public static I GetImplementationTypeForMod<O, F, I>(GameObject objTarget, string dllName, string dllMinVersion) where O : MonoBehaviour, I where F : MonoBehaviour, I
+        public static I GetImplementationTypeForMod<F, I>(GameObject objTarget, string dllName, string dllMinVersion, string nonFallbackClassName) where F : MonoBehaviour, I where I : Component
         {
             if (Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
@@ -36,8 +37,9 @@ namespace Klyte.Commons.Utils
             {
                 try
                 {
-                    LogUtils.DoWarnLog($"Using {typeof(O).Name} as implementation of {typeof(I).Name}");
-                    return objTarget.AddComponent<O>();
+                    var targetType = typeof(I).Assembly.GetType(nonFallbackClassName);
+                    LogUtils.DoWarnLog($"Using {targetType?.Name} as implementation of {typeof(I).Name}");
+                    return objTarget.AddComponent(targetType) as I;
                 }
                 catch (Exception e)
                 {

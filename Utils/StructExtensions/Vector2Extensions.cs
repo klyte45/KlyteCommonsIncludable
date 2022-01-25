@@ -29,5 +29,16 @@ namespace Klyte.Commons.Utils
                 return 360 - ((Mathf.Atan(ca / co) * Mathf.Rad2Deg + 180 + 360) % 360);
             }
         }
+
+        public static Vector2 Turn90(this Vector2 v, bool isClockWise) => isClockWise ? new Vector2(v.y, -v.x) : new Vector2(-v.y, v.x);
+        public static Vector2 TurnDeg(this Vector2 vector, float turnAngle, bool isClockWise) => vector.TurnRad(turnAngle * Mathf.Deg2Rad, isClockWise);
+        public static Vector2 TurnRad(this Vector2 vector, float turnAngle, bool isClockWise)
+        {
+            turnAngle = isClockWise ? -turnAngle : turnAngle;
+            var newX = vector.x * Mathf.Cos(turnAngle) - vector.y * Mathf.Sin(turnAngle);
+            var newY = vector.x * Mathf.Sin(turnAngle) + vector.y * Mathf.Cos(turnAngle);
+            return new Vector2(newX, newY);
+        }
+
     }
 }
