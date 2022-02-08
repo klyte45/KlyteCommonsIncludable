@@ -68,6 +68,7 @@ namespace Klyte.Commons.LiteUI
             };
         }
 
+        #region Utility UI structures
         public static void ButtonSelector(float totalWidth, string label, string buttonText, Action action)
         {
             using (new GUILayout.HorizontalScope(GUILayout.Width(totalWidth - 10)))
@@ -83,6 +84,31 @@ namespace Klyte.Commons.LiteUI
                 }
             };
         }
+        public static bool CreateItemVerticalList(Rect sideListArea, ref Vector2 scrollPosition, int currentSelection, string[] sideList, string addButtonText, GUIStyle addButtonStyle, out int newSelection)
+        {
+            var result = false;
+            using (new GUILayout.AreaScope(sideListArea))
+            {
+                using (var scroll = new GUILayout.ScrollViewScope(scrollPosition))
+                {
+                    newSelection = currentSelection;
+                    var newListSel = GUILayout.SelectionGrid(currentSelection, sideList, 1, new GUIStyle(GUI.skin.button) { wordWrap = true });
+                    if (newListSel >= 0 && newListSel < sideList.Length)
+                    {
+                        newSelection = newListSel;
+                    }
+
+                    if (GUILayout.Button(addButtonText, addButtonStyle, GUILayout.ExpandWidth(true)))
+                    {
+                        result = true;
+                        newSelection = sideList.Length;
+                    }
+                    scrollPosition = scroll.scrollPosition;
+                }
+            }
+            return result;
+        }
+        #endregion
 
         [Obsolete("Use Scope", true)]
         public static void DoInArea(Rect size, Action<Rect> action)

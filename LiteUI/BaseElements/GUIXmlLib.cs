@@ -62,10 +62,6 @@ namespace Klyte.Commons.LiteUI
                 }
                 libraryScroll = scroll.scrollPosition;
             };
-            if (GUILayout.Button(Locale.Get("CANCEL")))
-            {
-                Status = FooterBarStatus.Normal;
-            }
         }
 
         public void Draw(Rect area, GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent, Action<GUIStyle> onNormalDraw = null)
