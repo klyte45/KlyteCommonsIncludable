@@ -42,7 +42,7 @@ namespace Klyte.Commons.LiteUI
 
         public void DrawImportView(Rect areaRect, Action<T> OnSelect)
         {
-            GUIKlyteCommons.DoInHorizontal(() =>
+            using (new GUILayout.HorizontalScope())
             {
                 var newFilterVal = GUILayout.TextField(libraryFilter);
                 if (newFilterVal != libraryFilter)
@@ -50,8 +50,9 @@ namespace Klyte.Commons.LiteUI
                     libraryFilter = newFilterVal;
                     RestartLibraryFilterCoroutine();
                 }
-            });
-            GUIKlyteCommons.DoInScroll(ref libraryScroll, () =>
+            };
+
+            using (var scroll = new GUILayout.ScrollViewScope(libraryScroll))
             {
                 var selectLayout = GUILayout.SelectionGrid(-1, librarySearchResults.Value, 1, GUILayout.Width(areaRect.width - 25));
                 if (selectLayout >= 0)
@@ -59,7 +60,8 @@ namespace Klyte.Commons.LiteUI
                     OnSelect(XmlUtils.TransformViaXml<S, T>(LibBaseFile<L, S>.Instance.Get(librarySearchResults.Value[selectLayout])));
                     Status = FooterBarStatus.Normal;
                 }
-            });
+                libraryScroll = scroll.scrollPosition;
+            };
             if (GUILayout.Button(Locale.Get("CANCEL")))
             {
                 Status = FooterBarStatus.Normal;
@@ -67,8 +69,10 @@ namespace Klyte.Commons.LiteUI
         }
 
         public void Draw(Rect area, GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent, Action<GUIStyle> onNormalDraw = null)
-            => GUIKlyteCommons.DoInArea(area,
-                (x) => GUIKlyteCommons.DoInHorizontal(() =>
+        {
+            using (new GUILayout.AreaScope(area))
+            {
+                using (new GUILayout.HorizontalScope())
                 {
                     switch (Status)
                     {
@@ -131,7 +135,9 @@ namespace Klyte.Commons.LiteUI
                             onNormalDraw?.Invoke(removeButtonStyle);
                             break;
                     }
-                }));
+                }
+            }
+        }
 
         private FooterBarStatus m_currentHover;
         public void FooterDraw(GUIStyle removeButtonStyle)
@@ -191,7 +197,11 @@ namespace Klyte.Commons.LiteUI
             }
         }
 
-        public void GoToRemove() => Status = FooterBarStatus.AskingToRemove;
+        public void GoToRemove()
+        {
+            Status = FooterBarStatus.AskingToRemove;
+        }
+
         public void GoToExport()
         {
             Status = FooterBarStatus.AskingToExport;
@@ -206,7 +216,10 @@ namespace Klyte.Commons.LiteUI
             RestartLibraryFilterCoroutine();
         }
 
-        internal void ResetStatus() => Status = FooterBarStatus.Normal;
+        internal void ResetStatus()
+        {
+            Status = FooterBarStatus.Normal;
+        }
 
         private string footerInputVal = "";
     }

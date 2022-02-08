@@ -32,6 +32,7 @@ namespace Klyte.Commons.LiteUI
             return texture;
         }
         public static Texture GetByNameFromDefaultAtlas(string name) => UIView.GetAView().defaultAtlas.sprites.Where(x => x.name == name).FirstOrDefault().texture;
+
         public static bool AddVector3Field(Vector3Xml input, string i18nEntry, string baseFieldName)
         {
             using (new GUILayout.HorizontalScope())
@@ -67,6 +68,23 @@ namespace Klyte.Commons.LiteUI
             };
         }
 
+        public static void ButtonSelector(float totalWidth, string label, string buttonText, Action action)
+        {
+            using (new GUILayout.HorizontalScope(GUILayout.Width(totalWidth - 10)))
+            {
+                GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
+                if (buttonText == "")
+                {
+                    buttonText = v_empty;
+                }
+                if (GUILayout.Button(buttonText ?? v_null))
+                {
+                    action();
+                }
+            };
+        }
+
+        [Obsolete("Use Scope", true)]
         public static void DoInArea(Rect size, Action<Rect> action)
         {
             GUILayout.BeginArea(size);
@@ -83,6 +101,7 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.EndArea();
             }
         }
+        [Obsolete("Use Scope", true)]
         public static void DoInScroll(ref Vector2 scrollPos, Action action)
         {
             scrollPos = GUILayout.BeginScrollView(scrollPos);
@@ -99,6 +118,7 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.EndScrollView();
             }
         }
+        [Obsolete("Use Scope", true)]
         public static void DoInScroll(ref Vector2 scrollPos, bool alwaysShowHorizontal, bool alwaysShowVertical, Action action, params GUILayoutOption[] options)
         {
             scrollPos = GUILayout.BeginScrollView(scrollPos, alwaysShowHorizontal, alwaysShowVertical, options);
@@ -115,6 +135,7 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.EndScrollView();
             }
         }
+        [Obsolete("Use Scope", true)]
         public static void DoInHorizontal(Action action, params GUILayoutOption[] options)
         {
             GUILayout.BeginHorizontal(options);
@@ -131,6 +152,7 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.EndHorizontal();
             }
         }
+        [Obsolete("Use Scope", true)]
         public static void DoInVertical(Action action, params GUILayoutOption[] options)
         {
             GUILayout.BeginVertical(options);
