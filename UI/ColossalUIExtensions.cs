@@ -24,5 +24,19 @@ namespace Klyte.Commons.UI
         public static Tuple<string, int>[] GetDropdownOptionsUnlocalized(string[] values) => values.Select((x, i) => Tuple.New(x, i)).ToArray();
         public static Tuple<string, T>[] GetDropdownOptions<T>(this T[] options, string localeKey) where T : struct => options.Select(x => Tuple.New(Locale.Get(localeKey, x.ToString()), x)).ToArray();
 
+        public static int GetCurrentIndexFor<T>(this UIDropDown dd, T value)
+            => dd.objectUserData is Tuple<string, T>[] tupleArray
+                ? tupleArray.Select((x, i) => Tuple.New(x.Second, i)).Where(x => Equals(x.First, value)).FirstOrDefault()?.Second ?? -1
+                : -1;
+
+        public static void SetSelection<T>(this UIDropDown dd, T value)
+            => dd.selectedIndex = dd.GetCurrentIndexFor(value);
+
+
+        public static T GetSelection<T>(this UIDropDown dd)
+            => dd.objectUserData is Tuple<string, T>[] tupleArray && dd.selectedIndex >= 0
+                ? tupleArray[dd.selectedIndex].Second
+                : default;
+
     }
 }
