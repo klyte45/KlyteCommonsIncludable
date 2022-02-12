@@ -40,6 +40,8 @@
         K45_Export,
         K45_Steam,
         K45_Dropper,
-        K45_PaintBucket
+        K45_PaintBucket,
+        K45_Download,
+        K45_DiskDrive
     }
 }

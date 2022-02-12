@@ -108,6 +108,14 @@ namespace Klyte.Commons.LiteUI
             }
             return result;
         }
+
+        public static void SquareTextureButton(Texture2D icon, string tooltip, Action onClick, bool condition = true)
+        {
+            if (condition && GUILayout.Button(new GUIContent(icon, tooltip), GUILayout.Width(30), GUILayout.Height(30)))
+            {
+                onClick();
+            }
+        }
         #endregion
 
         [Obsolete("Use Scope", true)]
@@ -161,6 +169,7 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.EndScrollView();
             }
         }
+        
         [Obsolete("Use Scope", true)]
         public static void DoInHorizontal(Action action, params GUILayoutOption[] options)
         {

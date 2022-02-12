@@ -150,7 +150,10 @@ namespace Klyte.Commons.LiteUI
                 skin.horizontalScrollbarThumb = new GUIStyle(GUI.skin.horizontalScrollbarThumb);
                 skin.horizontalSlider = new GUIStyle(GUI.skin.horizontalSlider);
                 skin.horizontalSliderThumb = new GUIStyle(GUI.skin.horizontalSliderThumb);
-                skin.label = new GUIStyle(GUI.skin.label);
+                skin.label = new GUIStyle(GUI.skin.label)
+                {
+                    richText = true
+                };
                 skin.scrollView = new GUIStyle(GUI.skin.scrollView);
                 skin.textArea = new GUIStyle(GUI.skin.textArea);
                 skin.textField = new GUIStyle(GUI.skin.textField);
