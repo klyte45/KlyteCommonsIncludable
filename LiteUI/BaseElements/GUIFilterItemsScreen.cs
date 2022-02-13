@@ -8,8 +8,9 @@ namespace Klyte.Commons.LiteUI
     public class GUIFilterItemsScreen<S> where S : Enum
     {
         public delegate IEnumerator DoFilter(string input, Action<string[]> setOptions);
+        public delegate float ExtraFiltersFunc(out bool hasChanged);
 
-        public GUIFilterItemsScreen(string title, MonoBehaviour targetObjCoroutines, DoFilter filter, Action<int, string> onSelect, Action<S> setState, S normalState, S activeState, Func<float> otherFilters = null, bool acceptsNull = false, bool acceptsEmpty = false)
+        public GUIFilterItemsScreen(string title, MonoBehaviour targetObjCoroutines, DoFilter filter, Action<int, string> onSelect, Action<S> setState, S normalState, S activeState, ExtraFiltersFunc otherFilters = null, bool acceptsNull = false, bool acceptsEmpty = false)
         {
             m_filterAction = filter;
             m_onSelect = onSelect;
@@ -31,7 +32,7 @@ namespace Klyte.Commons.LiteUI
         private readonly MonoBehaviour m_targetObjCoroutines;
         private readonly bool m_acceptsNull;
         private readonly bool m_acceptsEmpty;
-        private readonly Func<float> m_otherFilters;
+        private readonly ExtraFiltersFunc m_otherFilters;
         private readonly string m_title;
         private GUIStyle m_titleLabelStyle;
 
@@ -61,7 +62,7 @@ namespace Klyte.Commons.LiteUI
         public void DrawSelectorView(float height)
         {
             bool dirtyInput = false;
-            using (new GUILayout.HorizontalScope( GUILayout.Height(8)))
+            using (new GUILayout.HorizontalScope(GUILayout.Height(8)))
             {
                 if (m_titleLabelStyle is null)
                 {
@@ -70,7 +71,7 @@ namespace Klyte.Commons.LiteUI
                         alignment = TextAnchor.MiddleCenter
                     };
                 }
-                GUILayout.Label(m_title, m_titleLabelStyle);
+                GUILayout.Label(m_title + $"<{height}>", m_titleLabelStyle);
             }
             using (new GUILayout.HorizontalScope())
             {
@@ -81,12 +82,14 @@ namespace Klyte.Commons.LiteUI
                     m_searchText = newInput;
                 }
             }
-            if (dirtyInput)
+            bool hasChanged = false;
+            var usedHeight = m_otherFilters?.Invoke(out hasChanged) ?? 0;
+            if (dirtyInput || hasChanged)
             {
+
                 RestartFilterCoroutine();
             }
-            var otherFilterHeight = m_otherFilters?.Invoke() ?? 0;
-            using (var scroll = new GUILayout.ScrollViewScope(m_searchResultPanelScroll, GUILayout.Height(height - 77 - otherFilterHeight)))
+            using (var scroll = new GUILayout.ScrollViewScope(m_searchResultPanelScroll, GUILayout.Height(height - 72 - usedHeight)))
             {
                 var selectFont = GUILayout.SelectionGrid(-1, m_stringCachedResultList, 1, new GUIStyle(GUI.skin.button)
                 {
@@ -99,7 +102,7 @@ namespace Klyte.Commons.LiteUI
                 }
                 m_searchResultPanelScroll = scroll.scrollPosition;
             };
-            using (new GUILayout.HorizontalScope())
+            using (new GUILayout.HorizontalScope(GUILayout.Height(12)))
             {
                 if (m_acceptsNull && GUILayout.Button(GUIKlyteCommons.v_null))
                 {
