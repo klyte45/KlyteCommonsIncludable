@@ -84,6 +84,18 @@ namespace Klyte.Commons.LiteUI
                 }
             };
         }
+        public static void ButtonSelectorDisabled(float totalWidth, string label, string buttonText, Action action)
+        {
+            using (new GUILayout.HorizontalScope(GUILayout.Width(totalWidth - 10)))
+            {
+                GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
+                if (buttonText == "")
+                {
+                    buttonText = v_empty;
+                }
+                GUILayout.Label(buttonText ?? v_null);
+            };
+        }
         public static bool CreateItemVerticalList(Rect sideListArea, ref Vector2 scrollPosition, int currentSelection, string[] sideList, string addButtonText, GUIStyle addButtonStyle, out int newSelection)
         {
             var result = false;
