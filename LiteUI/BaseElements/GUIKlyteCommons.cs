@@ -169,7 +169,6 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.EndScrollView();
             }
         }
-        
         [Obsolete("Use Scope", true)]
         public static void DoInHorizontal(Action action, params GUILayoutOption[] options)
         {
