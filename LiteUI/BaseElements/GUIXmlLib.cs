@@ -40,7 +40,7 @@ namespace Klyte.Commons.LiteUI
             yield return LibBaseFile<L, S>.Instance.BasicInputFiltering(libraryFilter, librarySearchResults);
         }
 
-        public void DrawImportView(Rect areaRect, Action<T> OnSelect)
+        public void DrawImportView(Vector2 areaRect, Action<T> OnSelect)
         {
             using (new GUILayout.HorizontalScope())
             {
@@ -54,7 +54,7 @@ namespace Klyte.Commons.LiteUI
 
             using (var scroll = new GUILayout.ScrollViewScope(libraryScroll))
             {
-                var selectLayout = GUILayout.SelectionGrid(-1, librarySearchResults.Value, 1, GUILayout.Width(areaRect.width - 25));
+                var selectLayout = GUILayout.SelectionGrid(-1, librarySearchResults.Value, 1, GUILayout.Width(areaRect.x - 25));
                 if (selectLayout >= 0)
                 {
                     OnSelect(XmlUtils.TransformViaXml<S, T>(LibBaseFile<L, S>.Instance.Get(librarySearchResults.Value[selectLayout])));

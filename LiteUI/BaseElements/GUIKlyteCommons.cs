@@ -69,9 +69,15 @@ namespace Klyte.Commons.LiteUI
         }
 
         #region Utility UI structures
-        public static void ButtonSelector(float totalWidth, string label, string buttonText, Action action)
+
+        public static void ButtonSelector(float totalWidth, string label, string buttonText, Action action, bool enabled = true)
         {
-            using (new GUILayout.HorizontalScope(GUILayout.Width(totalWidth - 10)))
+            if (!enabled)
+            {
+                ButtonSelectorDisabled(totalWidth, label, buttonText);
+                return;
+            }
+            using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
                 if (buttonText == "")
@@ -84,9 +90,9 @@ namespace Klyte.Commons.LiteUI
                 }
             };
         }
-        public static void ButtonSelectorDisabled(float totalWidth, string label, string buttonText, Action action)
+        public static void ButtonSelectorDisabled(float totalWidth, string label, string buttonText)
         {
-            using (new GUILayout.HorizontalScope(GUILayout.Width(totalWidth - 10)))
+            using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
                 if (buttonText == "")
@@ -94,6 +100,38 @@ namespace Klyte.Commons.LiteUI
                     buttonText = v_empty;
                 }
                 GUILayout.Label(buttonText ?? v_null);
+            };
+        }
+
+
+        public static bool TextWithLabel(float totalWidth, string label, string value, Action<string> action, bool enabled = true)
+        {
+            if (!enabled)
+            {
+                TextWithLabelDisabled(totalWidth, label, value);
+                return false;
+            }
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
+                var newText = GUILayout.TextField(value ?? "", GUILayout.Height(20));
+                if (value != newText)
+                {
+                    action(newText);
+                }
+                return value != newText;
+            };
+        }
+        public static void TextWithLabelDisabled(float totalWidth, string label, string value)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
+                if (value == "")
+                {
+                    value = v_empty;
+                }
+                GUILayout.Label(value ?? v_null);
             };
         }
         public static bool CreateItemVerticalList(Rect sideListArea, ref Vector2 scrollPosition, int currentSelection, string[] sideList, string addButtonText, GUIStyle addButtonStyle, out int newSelection)
@@ -110,7 +148,7 @@ namespace Klyte.Commons.LiteUI
                         newSelection = newListSel;
                     }
 
-                    if (GUILayout.Button(addButtonText, addButtonStyle, GUILayout.ExpandWidth(true)))
+                    if (addButtonText != null && GUILayout.Button(addButtonText, addButtonStyle, GUILayout.ExpandWidth(true)))
                     {
                         result = true;
                         newSelection = sideList.Length;

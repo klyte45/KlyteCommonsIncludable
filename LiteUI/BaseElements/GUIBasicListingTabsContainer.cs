@@ -1,6 +1,5 @@
 ﻿using ColossalFramework.Globalization;
 using Klyte.Commons.LiteUI;
-using Klyte.Commons.Utils;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -12,6 +11,7 @@ namespace Klyte.Commons.UI
         private int m_tabSel = 0;
         private int m_listSel = -1;
         private readonly Action m_onAdd;
+        private readonly Action<int, T> m_onSetItemAt;
         private readonly Func<string[]> m_listGetter;
         private readonly Func<int, T> m_currentItemGetter;
         internal event Action<int> EventListItemChanged;
@@ -26,7 +26,7 @@ namespace Klyte.Commons.UI
                     EventListItemChanged?.Invoke(m_listSel);
                     foreach (var x in m_tabsImages)
                     {
-                        x.Second.Reset();
+                        x.Reset();
                     }
                     m_tabSel = 0;
                 }
@@ -59,38 +59,38 @@ namespace Klyte.Commons.UI
 
         private Vector2 m_scrollPosition;
 
-        private readonly Tuple<Texture, IGUITab<T>>[] m_tabsImages;
+        private readonly IGUITab<T>[] m_tabsImages;
 
-        public GUIBasicListingTabsContainer(Tuple<Texture, IGUITab<T>>[] tabsImages, Action onAdd, Func<string[]> listGetter, Func<int, T> currentItemGetter)
+        public GUIBasicListingTabsContainer(IGUITab<T>[] tabsImages, Action onAdd, Func<string[]> listGetter, Func<int, T> currentItemGetter, Action<int, T> onSetItemAt)
         {
             m_onAdd = onAdd;
             m_listGetter = listGetter;
             m_tabsImages = tabsImages;
             m_currentItemGetter = currentItemGetter;
+            m_onSetItemAt = onSetItemAt;
         }
 
         public static bool LockSelection { get; internal set; } = true;
 
-        public void DrawListTabs(Rect area)
+        public void DrawListTabs(Rect area, bool allowAdd = true)
         {
             using (new GUILayout.AreaScope(area))
             {
                 var sideListArea = new Rect(0, 0, 120, area.height);
                 var sideList = m_listGetter();
                 var addItemText = Locale.Get("K45_WTS_SEGMENT_ADDITEMLIST");
-                if (GUIKlyteCommons.CreateItemVerticalList(sideListArea, ref m_scrollPosition, ListSel, sideList, addItemText, GreenButton, out int newSel))
+                if (GUIKlyteCommons.CreateItemVerticalList(sideListArea, ref m_scrollPosition, ListSel, sideList, allowAdd ? addItemText : null, GreenButton, out int newSel))
                 {
                     m_onAdd();
                 }
                 ListSel = newSel;
-
                 if (ListSel >= 0 && ListSel < sideList.Length)
                 {
                     var usedHeight = 0f;
 
                     using (new GUILayout.AreaScope(new Rect(125, 0, area.width - 135, usedHeight += 40)))
                     {
-                        m_tabSel = GUILayout.SelectionGrid(m_tabSel, m_tabsImages.Select(x => x.First).ToArray(), m_tabsImages.Length, new GUIStyle(GUI.skin.button)
+                        m_tabSel = GUILayout.SelectionGrid(m_tabSel, m_tabsImages.Select(x => x.TabIcon).ToArray(), m_tabsImages.Length, new GUIStyle(GUI.skin.button)
                         {
                             fixedWidth = 32,
                             fixedHeight = 32,
@@ -102,7 +102,11 @@ namespace Klyte.Commons.UI
                     {
                         if (m_tabSel >= 0 && m_tabSel < m_tabsImages.Length)
                         {
-                            m_tabsImages[m_tabSel].Second.DrawArea(new Rect(0, 0, tabAreaRect.width, tabAreaRect.height), m_currentItemGetter(ListSel), ListSel);
+                            var item = m_currentItemGetter(ListSel);
+                            if (m_tabsImages[m_tabSel].DrawArea(tabAreaRect.size, ref item, ListSel))
+                            {
+                                m_onSetItemAt(ListSel, item);
+                            }
                         }
                     };
                 }
@@ -113,7 +117,8 @@ namespace Klyte.Commons.UI
     }
     public interface IGUITab<T>
     {
-        void DrawArea(Rect tabAreaRect, T currentItem, int currentItemIdx);
+        bool DrawArea(Vector2 tabAreaSize, ref T currentItem, int currentItemIdx);
         void Reset();
+        Texture TabIcon { get; }
     }
 }

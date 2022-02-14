@@ -8,9 +8,9 @@ namespace Klyte.Commons.LiteUI
     public class GUIFilterItemsScreen<S> where S : Enum
     {
         public delegate IEnumerator DoFilter(string input, Action<string[]> setOptions);
-        public delegate float ExtraFiltersFunc(out bool hasChanged);
+        public delegate float ResultChangeFunc(out bool hasChanged);
 
-        public GUIFilterItemsScreen(string title, MonoBehaviour targetObjCoroutines, DoFilter filter, Action<int, string> onSelect, Action<S> setState, S normalState, S activeState, ExtraFiltersFunc otherFilters = null, bool acceptsNull = false, bool acceptsEmpty = false)
+        public GUIFilterItemsScreen(string title, MonoBehaviour targetObjCoroutines, DoFilter filter, Action<int, string> onSelect, Action<S> setState, S normalState, S activeState, ResultChangeFunc otherFilters = null, ResultChangeFunc extraButtonsSearch = null, bool acceptsNull = false, bool acceptsEmpty = false)
         {
             m_filterAction = filter;
             m_onSelect = onSelect;
@@ -22,17 +22,19 @@ namespace Klyte.Commons.LiteUI
             m_otherFilters = otherFilters;
             m_title = title;
             m_setState = setState;
+            m_extraButtonsSearch = extraButtonsSearch;
         }
 
         private readonly DoFilter m_filterAction;
         private readonly Action<int, string> m_onSelect;
+        private readonly ResultChangeFunc m_extraButtonsSearch;
         private readonly S m_normalState;
         private readonly S m_activeState;
         private readonly Action<S> m_setState;
         private readonly MonoBehaviour m_targetObjCoroutines;
         private readonly bool m_acceptsNull;
         private readonly bool m_acceptsEmpty;
-        private readonly ExtraFiltersFunc m_otherFilters;
+        private readonly ResultChangeFunc m_otherFilters;
         private readonly string m_title;
         private GUIStyle m_titleLabelStyle;
 
@@ -59,7 +61,7 @@ namespace Klyte.Commons.LiteUI
             RestartFilterCoroutine();
         }
         public void DrawButton(float width, string value) => GUIKlyteCommons.ButtonSelector(width, m_title, value, () => SetFocus(true));
-        public void DrawButtonDisabled(float width, string value) => GUIKlyteCommons.ButtonSelectorDisabled(width, m_title, value, () => SetFocus(true));
+        public void DrawButtonDisabled(float width, string value) => GUIKlyteCommons.ButtonSelectorDisabled(width, m_title, value);
         public void DrawSelectorView(float height)
         {
             bool dirtyInput = false;
@@ -72,15 +74,20 @@ namespace Klyte.Commons.LiteUI
                         alignment = TextAnchor.MiddleCenter
                     };
                 }
-                GUILayout.Label(m_title + $"<{height}>", m_titleLabelStyle);
+                GUILayout.Label(m_title, m_titleLabelStyle);
             }
             using (new GUILayout.HorizontalScope())
             {
-                var newInput = GUILayout.TextField(m_searchText);
+                var newInput = GUILayout.TextField(m_searchText, GUILayout.Height(20));
                 dirtyInput = newInput != m_searchText;
                 if (dirtyInput)
                 {
                     m_searchText = newInput;
+                }
+                if (m_extraButtonsSearch != null)
+                {
+                    m_extraButtonsSearch(out bool dirtyByExtra);
+                    dirtyInput |= dirtyByExtra;
                 }
             }
             bool hasChanged = false;
