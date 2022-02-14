@@ -13,11 +13,11 @@ namespace Klyte.Commons.LiteUI
     {
         private string libraryFilter = "";
         private Vector2 libraryScroll;
-        private Wrapper<string[]> librarySearchResults = new Wrapper<string[]>();
+        private readonly Wrapper<string[]> librarySearchResults = new Wrapper<string[]>();
         private Coroutine librarySearchCoroutine;
 
-        private Texture ImportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Import");
-        private Texture ExportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Export");
+        private readonly Texture ImportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Import");
+        private readonly Texture ExportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Export");
 
         public string DeleteQuestionI18n { get; set; } = "";
         public string ImportI18n { get; set; } = "";
