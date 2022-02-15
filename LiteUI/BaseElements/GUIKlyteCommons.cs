@@ -33,41 +33,84 @@ namespace Klyte.Commons.LiteUI
         }
         public static Texture GetByNameFromDefaultAtlas(string name) => UIView.GetAView().defaultAtlas.sprites.Where(x => x.name == name).FirstOrDefault().texture;
 
-        public static bool AddVector3Field(Vector3Xml input, string i18nEntry, string baseFieldName)
+        #region Vector inputs
+        public static bool AddVector2Field(float totalWidth, Vector2Xml input, string i18nEntry, string baseFieldName, bool isEditable = true, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(Locale.Get(i18nEntry));
+                GUILayout.Label(Locale.Get(i18nEntry), GUILayout.Width(totalWidth / 2));
                 GUILayout.FlexibleSpace();
-
-                var x = GUIFloatField.FloatField(baseFieldName + "X", input.X);
-                var y = GUIFloatField.FloatField(baseFieldName + "Y", input.Y);
-                var z = GUIFloatField.FloatField(baseFieldName + "Z", input.Z);
-                var changed = x != input.X || y != input.Y || z != input.Z;
-                input.X = x;
-                input.Y = y;
-                input.Z = z;
-                return changed;
+                if (isEditable)
+                {
+                    var x = GUIFloatField.FloatField(baseFieldName + "_X", input.X, minValue, maxValue);
+                    var y = GUIFloatField.FloatField(baseFieldName + "_Y", input.Y, minValue, maxValue);
+                    var changed = x != input.X || y != input.Y;
+                    input.X = x;
+                    input.Y = y;
+                    return changed;
+                }
+                else
+                {
+                    GUILayout.Label(input.X.ToString("F3"));
+                    GUILayout.Label(input.Y.ToString("F3"));
+                    return false;
+                }
             };
         }
-
-        public static bool AddVector3Field(ref Vector3 input, string i18nEntry, string baseFieldName)
+        public static bool AddVector3Field(float totalWidth, Vector3Xml input, string i18nEntry, string baseFieldName, bool isEditable = true, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(Locale.Get(i18nEntry));
+                GUILayout.Label(Locale.Get(i18nEntry), GUILayout.Width(totalWidth / 2));
                 GUILayout.FlexibleSpace();
-                var x = GUIFloatField.FloatField(baseFieldName + "X", input.x);
-                var y = GUIFloatField.FloatField(baseFieldName + "Y", input.y);
-                var z = GUIFloatField.FloatField(baseFieldName + "Z", input.z);
-                var changed = x != input.x || y != input.y || z != input.z;
-                input.x = x;
-                input.y = y;
-                input.z = z;
-                return changed;
+                if (isEditable)
+                {
+                    var x = GUIFloatField.FloatField(baseFieldName + "_X", input.X, minValue, maxValue);
+                    var y = GUIFloatField.FloatField(baseFieldName + "_Y", input.Y, minValue, maxValue);
+                    var z = GUIFloatField.FloatField(baseFieldName + "_Z", input.Z, minValue, maxValue);
+                    var changed = x != input.X || y != input.Y || z != input.Z;
+                    input.X = x;
+                    input.Y = y;
+                    input.Z = z;
+                    return changed;
+                }
+                else
+                {
+                    GUILayout.Label(input.X.ToString("F3"));
+                    GUILayout.Label(input.Y.ToString("F3"));
+                    GUILayout.Label(input.Z.ToString("F3"));
+                    return false;
+                }
             };
         }
 
+        public static bool AddVector3Field(float totalWidth, ref Vector3 input, string i18nEntry, string baseFieldName, bool isEditable = true, float minValue = float.MinValue, float maxValue = float.MaxValue)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nEntry), GUILayout.Width(totalWidth / 2));
+                GUILayout.FlexibleSpace();
+                if (isEditable)
+                {
+                    var x = GUIFloatField.FloatField(baseFieldName + "_X", input.x, minValue, maxValue);
+                    var y = GUIFloatField.FloatField(baseFieldName + "_Y", input.y, minValue, maxValue);
+                    var z = GUIFloatField.FloatField(baseFieldName + "_Z", input.z, minValue, maxValue);
+                    var changed = x != input.x || y != input.y || z != input.z;
+                    input.x = x;
+                    input.y = y;
+                    input.z = z;
+                    return changed;
+                }
+                else
+                {
+                    GUILayout.Label(input.x.ToString("F3"));
+                    GUILayout.Label(input.y.ToString("F3"));
+                    GUILayout.Label(input.z.ToString("F3"));
+                    return false;
+                }
+            };
+        }
+        #endregion
         #region Utility UI structures
 
         public static void ButtonSelector(float totalWidth, string label, string buttonText, Action action, bool enabled = true)
@@ -164,6 +207,14 @@ namespace Klyte.Commons.LiteUI
             if (condition && GUILayout.Button(new GUIContent(icon, tooltip), GUILayout.Width(30), GUILayout.Height(30)))
             {
                 onClick();
+            }
+        }
+        public static void AddToggle(string i18nLocale, ref bool currentVal, bool editable = true, bool condition = true)
+        {
+            bool newVal;
+            if (condition && currentVal != (newVal = GUILayout.Toggle(currentVal, Locale.Get(i18nLocale))) && editable)
+            {
+                currentVal = newVal;
             }
         }
         #endregion
