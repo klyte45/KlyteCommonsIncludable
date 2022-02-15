@@ -177,6 +177,19 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.Label(value ?? v_null);
             };
         }
+        internal static bool ColorPicker(float totalWidth, string i18nId, ColorPicker picker, ref Color value, bool enabled = true)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nId), GUILayout.Width(totalWidth / 2));
+                var newVal = picker.PresentColor(i18nId, value);
+                if (enabled && newVal != value)
+                {
+                    value = newVal;
+                }
+                return enabled && value != newVal;
+            };
+        }
         public static bool CreateItemVerticalList(Rect sideListArea, ref Vector2 scrollPosition, int currentSelection, string[] sideList, string addButtonText, GUIStyle addButtonStyle, out int newSelection)
         {
             var result = false;
