@@ -190,6 +190,7 @@ namespace Klyte.Commons.LiteUI
                 return enabled && value != newVal;
             };
         }
+
         public static bool CreateItemVerticalList(Rect sideListArea, ref Vector2 scrollPosition, int currentSelection, string[] sideList, string addButtonText, GUIStyle addButtonStyle, out int newSelection)
         {
             var result = false;
@@ -222,13 +223,55 @@ namespace Klyte.Commons.LiteUI
                 onClick();
             }
         }
-        public static void AddToggle(string i18nLocale, ref bool currentVal, bool editable = true, bool condition = true)
+        public static bool AddToggle(string i18nLocale, ref bool currentVal, bool editable = true, bool condition = true)
         {
             bool newVal;
             if (condition && currentVal != (newVal = GUILayout.Toggle(currentVal, Locale.Get(i18nLocale))) && editable)
             {
                 currentVal = newVal;
+                return true;
             }
+            return false;
+        }
+
+        public static bool AddSlider(float totalWidth, string i18nLocale, ref float value, float min, float max)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nLocale), GUILayout.Width(totalWidth / 2));
+                GUILayout.Space(totalWidth / 3);
+                var rect = GUILayoutUtility.GetLastRect();
+                var newValue = GUI.HorizontalSlider(new Rect(rect.x, rect.yMin + 7, rect.width, 15), value, min, max);
+                newValue = GUIFloatField.FloatField(i18nLocale, newValue, min, max);
+                if (newValue != value)
+                {
+                    value = newValue;
+                    return true;
+                }
+                return false;
+            };
+        }
+
+        public static bool AddComboBox(float totalWidth, string i18nLocale, int selectedIndex, string[] options, out int result, GUIRootWindowBase root)
+        {
+            var changed = AddComboBox(totalWidth, i18nLocale, ref selectedIndex, options, root);
+            result = selectedIndex;
+            return changed;
+        }
+
+        public static bool AddComboBox(float totalWidth, string i18nLocale, ref int selectedIndex, string[] options, GUIRootWindowBase root)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nLocale), GUILayout.Width(totalWidth / 2));
+                var newVal = GUIComboBox.Box(selectedIndex, options, i18nLocale, root);
+                if (newVal != selectedIndex)
+                {
+                    selectedIndex = newVal;
+                    return true;
+                }
+                return false;
+            };
         }
         #endregion
 

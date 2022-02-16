@@ -73,6 +73,7 @@ namespace Klyte.Commons.LiteUI
             Vector2 mouse = Input.mousePosition;
             mouse.y = Screen.height - mouse.y;
 
+            mouse.x -= WindowRect.width;
             var windowRect = WindowRect;
             windowRect.position = mouse;
             MoveResize(windowRect);
@@ -180,6 +181,7 @@ namespace Klyte.Commons.LiteUI
 
         public Color PresentColor(string id, Color value)
         {
+
             var r = (int)Mathf.Clamp(value.r * 255.0f, byte.MinValue, byte.MaxValue);
             var g = (int)Mathf.Clamp(value.g * 255.0f, byte.MinValue, byte.MaxValue);
             var b = (int)Mathf.Clamp(value.b * 255.0f, byte.MinValue, byte.MaxValue);

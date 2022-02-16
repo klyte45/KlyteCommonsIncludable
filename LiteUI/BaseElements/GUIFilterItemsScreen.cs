@@ -13,7 +13,7 @@ namespace Klyte.Commons.LiteUI
         public GUIFilterItemsScreen(string title, MonoBehaviour targetObjCoroutines, DoFilter filter, Action<int, string> onSelect, Action<S> setState, S normalState, S activeState, ResultChangeFunc otherFilters = null, ResultChangeFunc extraButtonsSearch = null, bool acceptsNull = false, bool acceptsEmpty = false)
         {
             m_filterAction = filter;
-            m_onSelect = onSelect;
+            OnSelect = onSelect;
             m_normalState = normalState;
             m_activeState = activeState;
             m_targetObjCoroutines = targetObjCoroutines;
@@ -26,7 +26,6 @@ namespace Klyte.Commons.LiteUI
         }
 
         private readonly DoFilter m_filterAction;
-        private readonly Action<int, string> m_onSelect;
         private readonly ResultChangeFunc m_extraButtonsSearch;
         private readonly S m_normalState;
         private readonly S m_activeState;
@@ -50,6 +49,9 @@ namespace Klyte.Commons.LiteUI
             m_searchCoroutine = m_targetObjCoroutines.StartCoroutine(OnFilterParam());
         }
         private string[] m_stringCachedResultList = new string[0];
+
+        public Action<int, string> OnSelect { get; set; }
+
         private IEnumerator OnFilterParam()
         {
             yield return 0;
@@ -105,7 +107,7 @@ namespace Klyte.Commons.LiteUI
                 });
                 if (selectFont >= 0)
                 {
-                    m_onSelect(selectFont, m_stringCachedResultList[selectFont]);
+                    OnSelect(selectFont, m_stringCachedResultList[selectFont]);
                     SetFocus(false);
                 }
                 m_searchResultPanelScroll = scroll.scrollPosition;
@@ -114,12 +116,12 @@ namespace Klyte.Commons.LiteUI
             {
                 if (m_acceptsNull && GUILayout.Button(GUIKlyteCommons.v_null))
                 {
-                    m_onSelect(-2, null);
+                    OnSelect(-2, null);
                     SetFocus(false);
                 }
                 if (m_acceptsEmpty && GUILayout.Button(GUIKlyteCommons.v_empty))
                 {
-                    m_onSelect(-3, "");
+                    OnSelect(-3, "");
                     SetFocus(false);
                 }
                 if (GUILayout.Button(Locale.Get("CANCEL")))
