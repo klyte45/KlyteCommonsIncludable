@@ -179,42 +179,64 @@ namespace Klyte.Commons.LiteUI
             Texture.Apply();
         }
 
-        public Color PresentColor(string id, Color value)
+        public Color PresentColor(string id, Color value, bool enabled, bool useAlpha = false)
         {
 
-            var r = (int)Mathf.Clamp(value.r * 255.0f, byte.MinValue, byte.MaxValue);
-            var g = (int)Mathf.Clamp(value.g * 255.0f, byte.MinValue, byte.MaxValue);
-            var b = (int)Mathf.Clamp(value.b * 255.0f, byte.MinValue, byte.MaxValue);
-            var a = (int)Mathf.Clamp(value.a * 255.0f, byte.MinValue, byte.MaxValue);
-
-            r = GUIIntField.IntField(id + ".r", r, fieldWidth: 33);
-            g = GUIIntField.IntField(id + ".g", g, fieldWidth: 33);
-            b = GUIIntField.IntField(id + ".b", b, fieldWidth: 33);
-            a = GUIIntField.IntField(id + ".a", a, fieldWidth: 33);
-
-            value.r = Mathf.Clamp01(r / 255.0f);
-            value.g = Mathf.Clamp01(g / 255.0f);
-            value.b = Mathf.Clamp01(b / 255.0f);
-            value.a = Mathf.Clamp01(a / 255.0f);
-
-            if (GUILayout.Button(string.Empty, GUILayout.MinWidth(20), GUILayout.MaxWidth(80)))
+            if (enabled)
             {
-                Show(id, value);
+                var r = (int)Mathf.Clamp(value.r * 255.0f, byte.MinValue, byte.MaxValue);
+                var g = (int)Mathf.Clamp(value.g * 255.0f, byte.MinValue, byte.MaxValue);
+                var b = (int)Mathf.Clamp(value.b * 255.0f, byte.MinValue, byte.MaxValue);
+                var a = useAlpha ? (int)Mathf.Clamp(value.a * 255.0f, byte.MinValue, byte.MaxValue) : 255;
+
+                r = GUIIntField.IntField(id + ".r", r, fieldWidth: 30);
+                g = GUIIntField.IntField(id + ".g", g, fieldWidth: 30);
+                b = GUIIntField.IntField(id + ".b", b, fieldWidth: 30);
+                if (useAlpha)
+                {
+                    a = GUIIntField.IntField(id + ".a", a, fieldWidth: 30);
+                }
+
+                value.r = Mathf.Clamp01(r / 255.0f);
+                value.g = Mathf.Clamp01(g / 255.0f);
+                value.b = Mathf.Clamp01(b / 255.0f);
+                value.a = Mathf.Clamp01(a / 255.0f);
+
+                if (GUILayout.Button(string.Empty, GUILayout.MinWidth(20), GUILayout.MaxWidth(80)))
+                {
+                    Show(id, value);
+                }
+                else
+                {
+                    if (Visible && CurrentValueId == id)
+                    {
+                        value = SelectedColor;
+                    }
+                }
             }
             else
             {
-                if (Visible && CurrentValueId == id)
-                {
-                    value = SelectedColor;
-                }
+                GUILayout.Box(string.Empty, GUILayout.MinWidth(useAlpha ? 90 : 60), GUILayout.MaxWidth(100));
             }
 
+
             var lastRect = GUILayoutUtility.GetLastRect();
+            var colorRect = lastRect;
+            colorRect.x += 4.0f;
+            colorRect.y += 4.0f;
+            colorRect.width -= 8.0f;
+            colorRect.height -= 8.0f;
             lastRect.x += 4.0f;
-            lastRect.y += 4.0f;
             lastRect.width -= 8.0f;
-            lastRect.height -= 8.0f;
-            GUI.DrawTexture(lastRect, GetColorTexture(id, value), ScaleMode.StretchToFill);
+            GUI.DrawTexture(colorRect, GetColorTexture(id, value), ScaleMode.StretchToFill);
+            GUI.Label(lastRect, "#" + (useAlpha ? value.ToRGBA() : value.ToRGB()), new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                normal = new GUIStyleState()
+                {
+                    textColor = value.ContrastColor()
+                }
+            });
 
             return value;
         }

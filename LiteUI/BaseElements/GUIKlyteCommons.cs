@@ -11,6 +11,7 @@ namespace Klyte.Commons.LiteUI
     {
         public const string v_null = "<color=#FF00FF>--NULL--</color>";
         public const string v_empty = "<color=#888888>--EMPTY--</color>";
+        public const string v_invalid = "<color=#ff0000>--INVALID--</color>";
         public static readonly Texture2D darkGreenTexture;
         public static readonly Texture2D greenTexture;
         public static readonly Texture2D darkRedTexture;
@@ -177,12 +178,12 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.Label(value ?? v_null);
             };
         }
-        internal static bool ColorPicker(float totalWidth, string i18nId, ColorPicker picker, ref Color value, bool enabled = true)
+        internal static bool AddColorPicker(string i18nId, ColorPicker picker, ref Color value, bool enabled = true)
         {
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(Locale.Get(i18nId), GUILayout.Width(totalWidth / 2));
-                var newVal = picker.PresentColor(i18nId, value);
+                GUILayout.Label(Locale.Get(i18nId));
+                var newVal = picker.PresentColor(i18nId, value, enabled);
                 if (enabled && newVal != value)
                 {
                     value = newVal;
@@ -234,41 +235,90 @@ namespace Klyte.Commons.LiteUI
             return false;
         }
 
-        public static bool AddSlider(float totalWidth, string i18nLocale, ref float value, float min, float max)
+        public static bool AddSlider(float totalWidth, string i18nLocale, float value, out float newVal, float min, float max, bool isEnabled = true)
+        {
+            var result = AddSlider(totalWidth, i18nLocale, ref value, min, max, isEnabled);
+            newVal = value;
+            return result;
+        }
+        public static bool AddSlider(float totalWidth, string i18nLocale, ref float value, float min, float max, bool isEnabled = true)
         {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(Locale.Get(i18nLocale), GUILayout.Width(totalWidth / 2));
                 GUILayout.Space(totalWidth / 3);
-                var rect = GUILayoutUtility.GetLastRect();
-                var newValue = GUI.HorizontalSlider(new Rect(rect.x, rect.yMin + 7, rect.width, 15), value, min, max);
-                newValue = GUIFloatField.FloatField(i18nLocale, newValue, min, max);
-                if (newValue != value)
+                if (isEnabled)
                 {
-                    value = newValue;
-                    return true;
+                    var rect = GUILayoutUtility.GetLastRect();
+                    var newValue = GUI.HorizontalSlider(new Rect(rect.x, rect.yMin + 7, rect.width, 15), value, min, max);
+                    newValue = GUIFloatField.FloatField(i18nLocale, newValue, min, max);
+                    if (newValue != value)
+                    {
+                        value = newValue;
+                        return true;
+                    }
+                }
+                else
+                {
+                    GUILayout.Label(value.ToString("F3"));
+                }
+                return false;
+            };
+        }
+        public static bool AddFloatField(float totalWidth, string i18nLocale, float value, out float newVal, bool isEnabled = true, float min = float.MinValue, float max = float.MaxValue)
+        {
+            var res = AddFloatField(totalWidth, i18nLocale, ref value, isEnabled, min, max);
+            newVal = value;
+            return res;
+        }
+
+        public static bool AddFloatField(float totalWidth, string i18nLocale, ref float value, bool isEnabled = true, float min = float.MinValue, float max = float.MaxValue)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nLocale), GUILayout.Width(totalWidth / 2));
+                GUILayout.FlexibleSpace();
+                if (isEnabled)
+                {
+                    var newValue = GUIFloatField.FloatField(i18nLocale, value, min, max);
+                    if (newValue != value)
+                    {
+                        value = newValue;
+                        return true;
+                    }
+                }
+                else
+                {
+                    GUILayout.Label(value.ToString("F3"));
                 }
                 return false;
             };
         }
 
-        public static bool AddComboBox(float totalWidth, string i18nLocale, int selectedIndex, string[] options, out int result, GUIRootWindowBase root)
+        public static bool AddComboBox(float totalWidth, string i18nLocale, int selectedIndex, string[] options, out int result, GUIRootWindowBase root, bool isEditable = true)
         {
-            var changed = AddComboBox(totalWidth, i18nLocale, ref selectedIndex, options, root);
+            var changed = AddComboBox(totalWidth, i18nLocale, ref selectedIndex, options, root, isEditable);
             result = selectedIndex;
             return changed;
         }
 
-        public static bool AddComboBox(float totalWidth, string i18nLocale, ref int selectedIndex, string[] options, GUIRootWindowBase root)
+        public static bool AddComboBox(float totalWidth, string i18nLocale, ref int selectedIndex, string[] options, GUIRootWindowBase root, bool isEditable = true)
         {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(Locale.Get(i18nLocale), GUILayout.Width(totalWidth / 2));
-                var newVal = GUIComboBox.Box(selectedIndex, options, i18nLocale, root);
-                if (newVal != selectedIndex)
+                if (isEditable)
                 {
-                    selectedIndex = newVal;
-                    return true;
+                    var newVal = GUIComboBox.Box(selectedIndex, options, i18nLocale, root);
+                    if (newVal != selectedIndex)
+                    {
+                        selectedIndex = newVal;
+                        return true;
+                    }
+                }
+                else
+                {
+                    GUILayout.Label(selectedIndex >= 0 ? selectedIndex >= options.Length ? v_invalid : options[selectedIndex] : v_null);
                 }
                 return false;
             };

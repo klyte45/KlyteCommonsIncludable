@@ -83,6 +83,7 @@ namespace Klyte.Commons.LiteUI
                     deltaVal *= 10;
                 }
                 value = Mathf.Min(max, Mathf.Max(min, value - deltaVal));
+                Event.current.Use();
             }
 
             return value;
