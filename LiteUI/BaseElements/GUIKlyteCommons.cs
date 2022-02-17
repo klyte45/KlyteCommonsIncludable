@@ -84,6 +84,35 @@ namespace Klyte.Commons.LiteUI
                 }
             };
         }
+        public static bool AddVector4Field(float totalWidth, Vector4Xml input, string i18nEntry, string baseFieldName, bool isEditable = true, float minValue = float.MinValue, float maxValue = float.MaxValue)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(Locale.Get(i18nEntry), GUILayout.Width(totalWidth / 2));
+                GUILayout.FlexibleSpace();
+                if (isEditable)
+                {
+                    var x = GUIFloatField.FloatField(baseFieldName + "_X", input.X, minValue, maxValue);
+                    var y = GUIFloatField.FloatField(baseFieldName + "_Y", input.Y, minValue, maxValue);
+                    var z = GUIFloatField.FloatField(baseFieldName + "_Z", input.Z, minValue, maxValue);
+                    var w = GUIFloatField.FloatField(baseFieldName + "_W", input.W, minValue, maxValue);
+                    var changed = x != input.X || y != input.Y || z != input.Z || w != input.W;
+                    input.X = x;
+                    input.Y = y;
+                    input.Z = z;
+                    input.W = w;
+                    return changed;
+                }
+                else
+                {
+                    GUILayout.Label(input.X.ToString("F3"));
+                    GUILayout.Label(input.Y.ToString("F3"));
+                    GUILayout.Label(input.Z.ToString("F3"));
+                    GUILayout.Label(input.W.ToString("F3"));
+                    return false;
+                }
+            };
+        }
 
         public static bool AddVector3Field(float totalWidth, ref Vector3 input, string i18nEntry, string baseFieldName, bool isEditable = true, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
