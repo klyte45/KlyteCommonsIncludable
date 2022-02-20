@@ -30,7 +30,7 @@ namespace Klyte.Commons.LiteUI
 
             var popupSize = GetPopupDimensions(items);
 
-            GUILayout.Box(items[itemIndex]);
+            GUILayout.Box(itemIndex < 0 ? GUIKlyteCommons.v_null : itemIndex >= items.Length ? GUIKlyteCommons.v_invalid : items[itemIndex]);
             var lastRect = GUILayoutUtility.GetLastRect();
             var popupPosition = GUIUtility.GUIToScreenPoint(lastRect.position);
             if (lastRect.width > popupSize.x)

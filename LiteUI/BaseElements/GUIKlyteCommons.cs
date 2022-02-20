@@ -324,6 +324,16 @@ namespace Klyte.Commons.LiteUI
             };
         }
 
+        public static bool AddComboBox<T>(float totalWidth, string i18nLocale, ref T selectedVal, string[] options, T[] values, GUIRootWindowBase root, bool isEditable = true)
+        {
+            var selIdx = Array.IndexOf(values, selectedVal);
+            var changed = AddComboBox(totalWidth, i18nLocale, ref selIdx, options, root, isEditable);
+            if (selIdx >= 0)
+            {
+                selectedVal = values[selIdx];
+            }
+            return changed;
+        }
         public static bool AddComboBox(float totalWidth, string i18nLocale, int selectedIndex, string[] options, out int result, GUIRootWindowBase root, bool isEditable = true)
         {
             var changed = AddComboBox(totalWidth, i18nLocale, ref selectedIndex, options, root, isEditable);
