@@ -143,39 +143,48 @@ namespace Klyte.Commons.LiteUI
         #endregion
         #region Utility UI structures
 
-        public static void ButtonSelector(float totalWidth, string label, string buttonText, Action action, bool enabled = true)
-        {
-            if (!enabled)
-            {
-                ButtonSelectorDisabled(totalWidth, label, buttonText);
-                return;
-            }
-            using (new GUILayout.HorizontalScope())
-            {
-                GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
-                if (buttonText == "")
-                {
-                    buttonText = v_empty;
-                }
-                if (GUILayout.Button(buttonText ?? v_null))
-                {
-                    action();
-                }
-            };
-        }
-        public static void ButtonSelectorDisabled(float totalWidth, string label, string buttonText)
+        public static void AddButtonSelector(float totalWidth, string label, string buttonText, Action action, bool enabled = true)
         {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(label, GUILayout.Width(totalWidth / 3));
-                if (buttonText == "")
-                {
-                    buttonText = v_empty;
-                }
-                GUILayout.Label(buttonText ?? v_null);
+                AddButtonSelector(buttonText, action, enabled);
             };
         }
 
+        public static void AddButtonSelector(string buttonText, Action action, bool enabled)
+        {
+            if (!enabled)
+            {
+                AddButtonSelectorDisabled(buttonText);
+            }
+            else
+            {
+                AddButtonSelector(buttonText, action);
+            }
+        }
+
+        private static void AddButtonSelector(string buttonText, Action action)
+        {
+            if (buttonText == "")
+            {
+                buttonText = v_empty;
+            }
+            if (GUILayout.Button(buttonText ?? v_null))
+            {
+                action();
+            }
+        }
+
+        private static string AddButtonSelectorDisabled(string buttonText)
+        {
+            if (buttonText == "")
+            {
+                buttonText = v_empty;
+            }
+            GUILayout.Label(buttonText ?? v_null);
+            return buttonText;
+        }
 
         public static bool TextWithLabel(float totalWidth, string label, string value, Action<string> action, bool enabled = true)
         {

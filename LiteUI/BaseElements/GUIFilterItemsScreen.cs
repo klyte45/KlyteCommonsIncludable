@@ -62,8 +62,8 @@ namespace Klyte.Commons.LiteUI
             m_searchText = "";
             RestartFilterCoroutine();
         }
-        public void DrawButton(float width, string value) => GUIKlyteCommons.ButtonSelector(width, m_title, value, () => SetFocus(true));
-        public void DrawButtonDisabled(float width, string value) => GUIKlyteCommons.ButtonSelectorDisabled(width, m_title, value);
+        public void DrawButton(float width, string value) => GUIKlyteCommons.AddButtonSelector(width, m_title, value, () => SetFocus(true));
+        public void DrawButtonDisabled(float width, string value) => GUIKlyteCommons.AddButtonSelector(width, m_title, value, null, false);
         public void DrawSelectorView(float height)
         {
             bool dirtyInput = false;
