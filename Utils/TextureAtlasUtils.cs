@@ -35,14 +35,20 @@ namespace Klyte.Commons.Utils
             {
                 if (File.Exists(filename))
                 {
-                    byte[] fileData = File.ReadAllBytes(filename);
-                    var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                    if (tex.LoadImage(fileData))
+                    var tex = LoadTextureFromFile(filename);
+                    if (!(tex is null))
                     {
                         newFiles.AddRange(CreateSpriteInfo(borderDescriptors, filename, tex));
                     }
                 }
             }
+        }
+
+        public static Texture2D LoadTextureFromFile(string filename)
+        {
+            byte[] fileData = File.ReadAllBytes(filename);
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            return tex.LoadImage(fileData) ? tex : null;
         }
 
         public static List<SpriteInfo> CreateSpriteInfo(Dictionary<string, Tuple<RectOffset, bool>> borderDescriptors, string filename, Texture2D tex)
