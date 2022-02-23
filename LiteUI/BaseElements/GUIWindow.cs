@@ -20,8 +20,6 @@ namespace Klyte.Commons.LiteUI
         private static Texture2D highlightTexture;
 
         private static GUIStyle highlightstyle;
-
-        private readonly UIPanel panel;
         private readonly int id;
         private readonly bool resizable;
         private readonly bool hasTitlebar;
@@ -47,7 +45,7 @@ namespace Klyte.Commons.LiteUI
             this.hasTitlebar = hasTitlebar;
             this.minSize = minSize == default ? new Vector2(64.0f, 64.0f) : minSize;
             Windows.Add(this);
-            panel = gameObject.AddComponent<UIPanel>();
+            Panel = gameObject.AddComponent<UIPanel>();
         }
 
         public Rect WindowRect => windowRect;
@@ -85,6 +83,7 @@ namespace Klyte.Commons.LiteUI
 
         protected string Title { get; set; }
 
+        public UIPanel Panel { get; }
 
         public void UpdateFont()
         {
@@ -150,7 +149,10 @@ namespace Klyte.Commons.LiteUI
                 skin.horizontalScrollbarThumb = new GUIStyle(GUI.skin.horizontalScrollbarThumb);
                 skin.horizontalSlider = new GUIStyle(GUI.skin.horizontalSlider);
                 skin.horizontalSliderThumb = new GUIStyle(GUI.skin.horizontalSliderThumb);
-                skin.label = new GUIStyle(GUI.skin.label);
+                skin.label = new GUIStyle(GUI.skin.label)
+                {
+                    richText = true
+                };
                 skin.scrollView = new GUIStyle(GUI.skin.scrollView);
                 skin.textArea = new GUIStyle(GUI.skin.textArea);
                 skin.textField = new GUIStyle(GUI.skin.textField);
@@ -188,7 +190,7 @@ namespace Klyte.Commons.LiteUI
 
             if (!Visible)
             {
-                panel.isVisible = false;
+                Panel.isVisible = false;
                 return;
             }
             if (UIView.GetAView().panelsLibraryModalEffect.isVisible)
@@ -196,7 +198,7 @@ namespace Klyte.Commons.LiteUI
                 return;
             }
 
-            panel.isVisible = true;
+            Panel.isVisible = true;
 
             var oldSkin = GUI.skin;
             if (skin != null)
@@ -211,9 +213,9 @@ namespace Klyte.Commons.LiteUI
                 GUI.matrix = UIScaler.ScaleMatrix;
 
                 windowRect = GUI.Window(id, windowRect, WindowFunction, string.Empty);
-                panel.absolutePosition = windowRect.position;
-                panel.absolutePosition = windowRect.position;
-                panel.size = windowRect.size;
+                Panel.absolutePosition = windowRect.position;
+                Panel.absolutePosition = windowRect.position;
+                Panel.size = windowRect.size;
                 OnWindowDrawn();
             }
             finally

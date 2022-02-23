@@ -5,10 +5,11 @@ using UnityEngine;
 
 namespace Klyte.Commons.LiteUI
 {
-    internal sealed class GUIColorPicker : GUIWindow, IGameObject
+    internal sealed class ColorPicker : GUIWindow, IGameObject
     {
-        private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
-        private static readonly Color LineColor = Color.white;
+        private readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
+        private readonly Color LineColor = Color.white;
+
 
         private readonly int colorPickerSize = 142;
         private readonly int hueBarWidth = 26;
@@ -23,7 +24,7 @@ namespace Klyte.Commons.LiteUI
 
         private Texture2D lineTexTexture;
 
-        public GUIColorPicker()
+        public ColorPicker()
             : base("ColorPicker", new Rect(16.0f, 16.0f, 188.0f, 156.0f), false, false)
         {
             colorPickerRect = new Rect(8.0f, 8.0f, colorPickerSize, colorPickerSize);
@@ -48,7 +49,7 @@ namespace Klyte.Commons.LiteUI
 
         private Texture2D LineTex => lineTexTexture ?? (lineTexTexture = DrawLineTex());
 
-        public static Texture2D GetColorTexture(string id, Color color)
+        public Texture2D GetColorTexture(string id, Color color)
         {
             if (!TextureCache.TryGetValue(id, out var texture))
             {
@@ -72,6 +73,7 @@ namespace Klyte.Commons.LiteUI
             Vector2 mouse = Input.mousePosition;
             mouse.y = Screen.height - mouse.y;
 
+            mouse.x -= WindowRect.width;
             var windowRect = WindowRect;
             windowRect.position = mouse;
             MoveResize(windowRect);
@@ -150,7 +152,7 @@ namespace Klyte.Commons.LiteUI
             return texture;
         }
 
-        private static Texture2D DrawLineTex()
+        private Texture2D DrawLineTex()
         {
             var tex = new Texture2D(1, 1);
             tex.SetPixel(0, 0, LineColor);
@@ -170,11 +172,73 @@ namespace Klyte.Commons.LiteUI
             {
                 for (var y = 0; y < Texture.height; y++)
                 {
-                    Texture.SetPixel(x, y, GetColorAtXY(currentHSV.H, x / (float)Texture.width, 1.0f - y / (float)Texture.height));
+                    Texture.SetPixel(x, y, GetColorAtXY(currentHSV.H, x / (float)Texture.width, 1.0f - (y / (float)Texture.height)));
                 }
             }
 
             Texture.Apply();
+        }
+
+        public Color PresentColor(string id, Color value, bool enabled, bool useAlpha = false)
+        {
+
+            if (enabled)
+            {
+                var r = (int)Mathf.Clamp(value.r * 255.0f, byte.MinValue, byte.MaxValue);
+                var g = (int)Mathf.Clamp(value.g * 255.0f, byte.MinValue, byte.MaxValue);
+                var b = (int)Mathf.Clamp(value.b * 255.0f, byte.MinValue, byte.MaxValue);
+                var a = useAlpha ? (int)Mathf.Clamp(value.a * 255.0f, byte.MinValue, byte.MaxValue) : 255;
+
+                r = GUIIntField.IntField(id + ".r", r, fieldWidth: 30);
+                g = GUIIntField.IntField(id + ".g", g, fieldWidth: 30);
+                b = GUIIntField.IntField(id + ".b", b, fieldWidth: 30);
+                if (useAlpha)
+                {
+                    a = GUIIntField.IntField(id + ".a", a, fieldWidth: 30);
+                }
+
+                value.r = Mathf.Clamp01(r / 255.0f);
+                value.g = Mathf.Clamp01(g / 255.0f);
+                value.b = Mathf.Clamp01(b / 255.0f);
+                value.a = Mathf.Clamp01(a / 255.0f);
+
+                if (GUILayout.Button(string.Empty, GUILayout.MinWidth(20), GUILayout.MaxWidth(80)))
+                {
+                    Show(id, value);
+                }
+                else
+                {
+                    if (Visible && CurrentValueId == id)
+                    {
+                        value = SelectedColor;
+                    }
+                }
+            }
+            else
+            {
+                GUILayout.Box(string.Empty, GUILayout.MinWidth(useAlpha ? 90 : 60), GUILayout.MaxWidth(100));
+            }
+
+
+            var lastRect = GUILayoutUtility.GetLastRect();
+            var colorRect = lastRect;
+            colorRect.x += 4.0f;
+            colorRect.y += 4.0f;
+            colorRect.width -= 8.0f;
+            colorRect.height -= 8.0f;
+            lastRect.x += 4.0f;
+            lastRect.width -= 8.0f;
+            GUI.DrawTexture(colorRect, GetColorTexture(id, value), ScaleMode.StretchToFill);
+            GUI.Label(lastRect, "#" + (useAlpha ? value.ToRGBA() : value.ToRGB()), new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                normal = new GUIStyleState()
+                {
+                    textColor = value.ContrastColor()
+                }
+            });
+
+            return value;
         }
     }
 }

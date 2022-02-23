@@ -2,12 +2,12 @@
 
 namespace Klyte.Commons.LiteUI
 {
-    internal static class GUIComboBox<RootGUI> where RootGUI : GUIRootWindowBase
+    internal static class GUIComboBox
     {
         private const string ExpandDownButtonText = " ▼ ";
         private static PopupWindow popupWindow;
 
-        public static int Box(int itemIndex, string[] items, string callerId)
+        public static int Box(int itemIndex, string[] items, string callerId, GUIRootWindowBase root)
         {
             switch (items.Length)
             {
@@ -30,9 +30,15 @@ namespace Klyte.Commons.LiteUI
 
             var popupSize = GetPopupDimensions(items);
 
-            GUILayout.Box(items[itemIndex], GUILayout.Width(popupSize.x));
-            var popupPosition = GUIUtility.GUIToScreenPoint(GUILayoutUtility.GetLastRect().position);
-            if (GUILayout.Button(ExpandDownButtonText, GUILayout.Width(24f)) && EnsurePopupWindow())
+            GUILayout.Box(itemIndex < 0 ? GUIKlyteCommons.v_null : itemIndex >= items.Length ? GUIKlyteCommons.v_invalid : items[itemIndex]);
+            var lastRect = GUILayoutUtility.GetLastRect();
+            var popupPosition = GUIUtility.GUIToScreenPoint(lastRect.position);
+            if (lastRect.width > popupSize.x)
+            {
+                popupSize.x = lastRect.width;
+            }
+            popupPosition.y += lastRect.height;
+            if (GUILayout.Button(ExpandDownButtonText, GUILayout.Width(24f)) && EnsurePopupWindow(root))
             {
                 popupWindow.Show(callerId, items, itemIndex, popupPosition, popupSize);
             }
@@ -40,22 +46,21 @@ namespace Klyte.Commons.LiteUI
             return itemIndex;
         }
 
-        private static bool EnsurePopupWindow()
+        private static bool EnsurePopupWindow(GUIRootWindowBase root)
         {
             if (popupWindow != null)
             {
                 return true;
             }
 
-            var modTools = Object.FindObjectOfType<RootGUI>();
-            if (modTools == null)
+            if (root == null)
             {
                 return false;
             }
 
-            if (modTools.GetComponent<PopupWindow>() == null)
+            if (root.GetComponent<PopupWindow>() == null)
             {
-                popupWindow = modTools.gameObject.AddComponent<PopupWindow>();
+                popupWindow = root.gameObject.AddComponent<PopupWindow>();
             }
 
             return popupWindow != null;
@@ -98,10 +103,7 @@ namespace Klyte.Commons.LiteUI
 
             private string[] popupItems;
 
-            public PopupWindow()
-            {
-                hoverStyle = CreateHoverStyle();
-            }
+            public PopupWindow() => hoverStyle = CreateHoverStyle();
 
             public string OwnerId { get; private set; }
 
@@ -110,7 +112,7 @@ namespace Klyte.Commons.LiteUI
                 OwnerId = ownerId;
                 popupItems = items;
                 selectedIndex = currentIndex;
-                popupRect = new Rect(position, new Vector2(popupSize.x, Mathf.Min(MaxPopupHeight, popupSize.y)));
+                popupRect = new Rect(position, new Vector2(popupSize.x, Mathf.Min(MaxPopupHeight, popupSize.y, Screen.height - position.y - 16)));
                 popupScrollPosition = default;
                 mouseClickPoint = null;
                 readyToClose = false;
@@ -159,12 +161,13 @@ namespace Klyte.Commons.LiteUI
             private static GUIStyle CreateHoverStyle()
             {
                 var result = new GUIStyle(GUI.skin.label);
-                result.hover.textColor = Color.yellow;
-                var t = new Texture2D(1, 1);
-                t.SetPixel(0, 0, default);
-                t.Apply();
-                result.hover.background = t;
+                result.hover.textColor = Color.black;
+                result.hover.background = GUIKlyteCommons.greenTexture;
                 result.font = GUI.skin.font;
+
+                result.focused.textColor = Color.yellow;
+                result.focused.background = GUIKlyteCommons.darkGreenTexture;
+
 
                 return result;
             }
@@ -216,7 +219,7 @@ namespace Klyte.Commons.LiteUI
 
                 GUILayout.EndScrollView();
 
-                if (oldSelectedIndex != selectedIndex || mouseClickPoint.HasValue && !popupRect.Contains(mouseClickPoint.Value))
+                if (oldSelectedIndex != selectedIndex || (mouseClickPoint.HasValue && !popupRect.Contains(mouseClickPoint.Value)))
                 {
                     readyToClose = true;
                 }

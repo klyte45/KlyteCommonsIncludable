@@ -20,6 +20,7 @@ namespace Klyte.Commons.UI
         }
 
         public static Tuple<string, T>[] GetDropdownOptions<T>(string localeKey) where T : struct => Enum.GetValues(typeof(T)).Cast<T>().Select(x => Tuple.New(Locale.Get(localeKey, x.ToString()), x)).ToArray();
+        public static string[] GetDropdownOptionsSimple<T>(string localeKey) where T : struct => Enum.GetValues(typeof(T)).Cast<T>().Select(x => Locale.Get(localeKey, x.ToString())).ToArray();
         public static Tuple<string, int>[] GetDropdownOptions(string[] localeKeys) => localeKeys.Select((x, i) => Tuple.New(Locale.Get(x), i)).ToArray();
         public static Tuple<string, int>[] GetDropdownOptionsUnlocalized(string[] values) => values.Select((x, i) => Tuple.New(x, i)).ToArray();
         public static Tuple<string, T>[] GetDropdownOptions<T>(this T[] options, string localeKey) where T : struct => options.Select(x => Tuple.New(Locale.Get(localeKey, x.ToString()), x)).ToArray();

@@ -13,11 +13,11 @@ namespace Klyte.Commons.LiteUI
     {
         private string libraryFilter = "";
         private Vector2 libraryScroll;
-        private Wrapper<string[]> librarySearchResults = new Wrapper<string[]>();
+        private readonly Wrapper<string[]> librarySearchResults = new Wrapper<string[]>();
         private Coroutine librarySearchCoroutine;
 
-        private Texture ImportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Import");
-        private Texture ExportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Export");
+        private readonly Texture ImportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Import");
+        private readonly Texture ExportTex = GUIKlyteCommons.GetByNameFromDefaultAtlas("K45_Export");
 
         public string DeleteQuestionI18n { get; set; } = "";
         public string ImportI18n { get; set; } = "";
@@ -40,9 +40,9 @@ namespace Klyte.Commons.LiteUI
             yield return LibBaseFile<L, S>.Instance.BasicInputFiltering(libraryFilter, librarySearchResults);
         }
 
-        public void DrawImportView(Rect areaRect, Action<T> OnSelect)
+        public void DrawImportView(Action<T> OnSelect)
         {
-            GUIKlyteCommons.DoInHorizontal(() =>
+            using (new GUILayout.HorizontalScope())
             {
                 var newFilterVal = GUILayout.TextField(libraryFilter);
                 if (newFilterVal != libraryFilter)
@@ -50,88 +50,89 @@ namespace Klyte.Commons.LiteUI
                     libraryFilter = newFilterVal;
                     RestartLibraryFilterCoroutine();
                 }
-            });
-            GUIKlyteCommons.DoInScroll(ref libraryScroll, () =>
+            };
+
+            using (var scroll = new GUILayout.ScrollViewScope(libraryScroll))
             {
-                var selectLayout = GUILayout.SelectionGrid(-1, librarySearchResults.Value, 1, GUILayout.Width(areaRect.width - 25));
+                var selectLayout = GUILayout.SelectionGrid(-1, librarySearchResults.Value, 1);
                 if (selectLayout >= 0)
                 {
                     OnSelect(XmlUtils.TransformViaXml<S, T>(LibBaseFile<L, S>.Instance.Get(librarySearchResults.Value[selectLayout])));
                     Status = FooterBarStatus.Normal;
                 }
-            });
-            if (GUILayout.Button(Locale.Get("CANCEL")))
-            {
-                Status = FooterBarStatus.Normal;
-            }
+                libraryScroll = scroll.scrollPosition;
+            };
+
+            Draw(null, null, null);
         }
 
-        public void Draw(Rect area, GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent, Action<GUIStyle> onNormalDraw = null)
-            => GUIKlyteCommons.DoInArea(area,
-                (x) => GUIKlyteCommons.DoInHorizontal(() =>
+        public void Draw(GUIStyle removeButtonStyle, Action doOnDelete, Func<T> getCurrent, Action<GUIStyle> onNormalDraw = null)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                switch (Status)
                 {
-                    switch (Status)
-                    {
-                        case FooterBarStatus.AskingToRemove:
-                            GUILayout.Label(string.Format(Locale.Get(DeleteQuestionI18n), getCurrent().SaveName));
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
-                            {
-                                Status = FooterBarStatus.Normal;
-                                doOnDelete();
-                            }
-                            if (GUILayout.Button(Locale.Get("NO")))
-                            {
-                                Status = FooterBarStatus.Normal;
-                            }
-                            break;
-                        case FooterBarStatus.AskingToImport:
-                            if (GUILayout.Button(Locale.Get("CANCEL")))
-                            {
-                                Status = FooterBarStatus.Normal;
-                            }
-                            break;
-                        case FooterBarStatus.AskingToExport:
-                            GUILayout.Label(Locale.Get(NameAskingI18n));
-                            footerInputVal = GUILayout.TextField(footerInputVal, GUILayout.Width(150));
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(Locale.Get("SAVE")))
-                            {
-                                LibBaseFile<L, S>.Instance.EnsureFileExists();
-                                if (LibBaseFile<L, S>.Instance.Get(footerInputVal) is null)
-                                {
-                                    LibBaseFile<L, S>.Instance.Add(footerInputVal, getCurrent());
-                                    Status = FooterBarStatus.Normal;
-                                }
-                                else
-                                {
-                                    Status = FooterBarStatus.AskingToExportOverwrite;
-                                }
-                            }
-                            if (GUILayout.Button(Locale.Get("CANCEL")))
-                            {
-                                Status = FooterBarStatus.Normal;
-                            }
-                            break;
-                        case FooterBarStatus.AskingToExportOverwrite:
-                            GUILayout.Label(string.Format(Locale.Get(NameAskingOverwriteI18n)));
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
+                    case FooterBarStatus.AskingToRemove:
+                        GUILayout.Label(string.Format(Locale.Get(DeleteQuestionI18n), getCurrent().SaveName));
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
+                        {
+                            Status = FooterBarStatus.Normal;
+                            doOnDelete();
+                        }
+                        if (GUILayout.Button(Locale.Get("NO")))
+                        {
+                            Status = FooterBarStatus.Normal;
+                        }
+                        break;
+                    case FooterBarStatus.AskingToImport:
+                        if (GUILayout.Button(Locale.Get("CANCEL")))
+                        {
+                            Status = FooterBarStatus.Normal;
+                        }
+                        break;
+                    case FooterBarStatus.AskingToExport:
+                        GUILayout.Label(Locale.Get(NameAskingI18n));
+                        footerInputVal = GUILayout.TextField(footerInputVal, GUILayout.Width(150));
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(Locale.Get("SAVE")))
+                        {
+                            LibBaseFile<L, S>.Instance.EnsureFileExists();
+                            if (LibBaseFile<L, S>.Instance.Get(footerInputVal) is null)
                             {
                                 LibBaseFile<L, S>.Instance.Add(footerInputVal, getCurrent());
                                 Status = FooterBarStatus.Normal;
                             }
-                            if (GUILayout.Button(Locale.Get("NO")))
+                            else
                             {
-                                Status = FooterBarStatus.AskingToExport;
+                                Status = FooterBarStatus.AskingToExportOverwrite;
                             }
-                            break;
+                        }
+                        if (GUILayout.Button(Locale.Get("CANCEL")))
+                        {
+                            Status = FooterBarStatus.Normal;
+                        }
+                        break;
+                    case FooterBarStatus.AskingToExportOverwrite:
+                        GUILayout.Label(string.Format(Locale.Get(NameAskingOverwriteI18n)));
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(Locale.Get("YES"), removeButtonStyle))
+                        {
+                            LibBaseFile<L, S>.Instance.Add(footerInputVal, getCurrent());
+                            Status = FooterBarStatus.Normal;
+                        }
+                        if (GUILayout.Button(Locale.Get("NO")))
+                        {
+                            Status = FooterBarStatus.AskingToExport;
+                        }
+                        break;
 
-                        case FooterBarStatus.Normal:
-                            onNormalDraw?.Invoke(removeButtonStyle);
-                            break;
-                    }
-                }));
+                    case FooterBarStatus.Normal:
+                        onNormalDraw?.Invoke(removeButtonStyle);
+                        break;
+                }
+            }
+        }
 
         private FooterBarStatus m_currentHover;
         public void FooterDraw(GUIStyle removeButtonStyle)
@@ -192,6 +193,7 @@ namespace Klyte.Commons.LiteUI
         }
 
         public void GoToRemove() => Status = FooterBarStatus.AskingToRemove;
+
         public void GoToExport()
         {
             Status = FooterBarStatus.AskingToExport;
