@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Klyte.Commons.LiteUI
 {
-    internal sealed class ColorPicker : GUIWindow, IGameObject
+    internal sealed class GUIColorPicker : GUIWindow
     {
         private readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
         private readonly Color LineColor = Color.white;
@@ -24,7 +24,7 @@ namespace Klyte.Commons.LiteUI
 
         private Texture2D lineTexTexture;
 
-        public ColorPicker()
+        public GUIColorPicker()
             : base("ColorPicker", new Rect(16.0f, 16.0f, 188.0f, 156.0f), false, false)
         {
             colorPickerRect = new Rect(8.0f, 8.0f, colorPickerSize, colorPickerSize);

@@ -216,7 +216,7 @@ namespace Klyte.Commons.LiteUI
                 GUILayout.Label(value ?? v_null);
             };
         }
-        internal static bool AddColorPicker(string i18nId, ColorPicker picker, ref Color value, bool enabled = true)
+        internal static bool AddColorPicker(string i18nId, GUIColorPicker picker, ref Color value, bool enabled = true)
         {
             using (new GUILayout.HorizontalScope())
             {
