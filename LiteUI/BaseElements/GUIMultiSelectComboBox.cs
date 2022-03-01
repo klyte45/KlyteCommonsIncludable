@@ -103,7 +103,7 @@
             GUILayout.EndVertical();
         }
 
-        private sealed class MultiPopupWindow : MonoBehaviour, IUIObject, IGameObject
+        private sealed class MultiPopupWindow : MonoBehaviour
         {
             private const float MaxPopupHeight = 400f;
 

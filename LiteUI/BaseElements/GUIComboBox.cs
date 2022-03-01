@@ -85,7 +85,7 @@ namespace Klyte.Commons.LiteUI
             return new Vector2(width + 36, height + 36);
         }
 
-        private sealed class PopupWindow : MonoBehaviour, IUIObject, IGameObject
+        private sealed class PopupWindow : MonoBehaviour
         {
             private const float MaxPopupHeight = 400f;
 

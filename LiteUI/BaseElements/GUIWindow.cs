@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Klyte.Commons.LiteUI
 {
-    public abstract class GUIWindow : MonoBehaviour, IDestroyableObject, IUIObject
+    public abstract class GUIWindow : MonoBehaviour
     {
         private static readonly List<GUIWindow> Windows = new List<GUIWindow>();
 
