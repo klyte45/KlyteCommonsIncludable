@@ -37,7 +37,15 @@ namespace Klyte.Commons.Utils
             {
                 if (m_propsLoaded == null)
                 {
-                    m_propsLoaded = GetInfos().Where(x => x?.name != null).GroupBy(x => GetListName(x)).Select(x => Tuple.New(x.Key, x.FirstOrDefault())).ToDictionary(x => x.First, x => x.Second);
+                    var groups = GetInfos().Where(x => x?.name != null).GroupBy(x => GetListName(x)).Select(x => Tuple.New(x.Key, x.FirstOrDefault())).GroupBy(x => x.First);
+                    var repeatingGroups = groups.Where(x => x.Count() > 1);
+                    if (repeatingGroups.Count() > 0)
+                    {
+                        var text = ($"There are some assets of type '{typeof(T).Name}' with same asset name. It certainly will cause issues when trying to load them using its name as reference:\n - " + string.Join("\n - ", repeatingGroups.Select(x => $"{x.Key} (ct={x.Count()})").ToArray()));
+                        LogUtils.DoErrorLog(text);
+                        K45DialogControl.ShowModalError("There an issue with your assets!", text);
+                    }
+                    m_propsLoaded = groups.ToDictionary(x => x.Key, x => x.First().Second);
                 }
                 return m_propsLoaded;
             }
