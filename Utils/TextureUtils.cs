@@ -30,19 +30,20 @@ namespace Klyte.Commons.Utils
         {
             byte[] bytes;
             try
-            {
+            {                
                 bytes = GetBytes(texture);
+                bytes.GetLength(0);
             }
-            catch
+            catch (Exception ex)
             {
                 try
                 {
                     var img = texture.MakeReadable();
                     bytes = GetBytes(img);
                 }
-                catch (Exception ex)
+                catch (Exception ex2)
                 {
-                    LogUtils.DoErrorLog("There was an error while dumping the texture - " + ex.Message);
+                    LogUtils.DoErrorLog("There was an error while dumping the texture - " + ex.Message + " => " + ex2.Message);
                     return;
                 }
             }

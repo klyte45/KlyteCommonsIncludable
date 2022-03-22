@@ -53,10 +53,7 @@ namespace Klyte.Commons.Interfaces
                 UseLowSaturationButton.value = chk_lowSat.isChecked;
                 Controller.BridgeUUI.ApplyButtonColor(UseLowSaturationButton);
             };
-            chk_uui.eventClicked += (x, y) =>
-            {
-                UseUuiIfAvailable.value = chk_uui.isChecked;
-            };
+            chk_uui.eventClicked += (x, y) => UseUuiIfAvailable.value = chk_uui.isChecked;
         }
 
 

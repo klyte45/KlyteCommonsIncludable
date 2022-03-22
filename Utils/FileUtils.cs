@@ -12,10 +12,18 @@ namespace Klyte.Commons.Utils
     public class FileUtils
     {
         #region File & Prefab Utils
-        public static readonly string BASE_FOLDER_PATH = DataLocation.localApplicationData + Path.DirectorySeparatorChar + "Klyte45Mods" + Path.DirectorySeparatorChar;
+        public static readonly string BASE_FOLDER_PATH = Path.Combine(DataLocation.localApplicationData, "Klyte45Mods") + Path.DirectorySeparatorChar;
+        public static readonly string BASE_STAGING_FOLDER_PATH = Path.Combine(DataLocation.assetsPath, "K45_Staging");
 
+        public static string GetModStagingBasePath() => Path.Combine(BASE_STAGING_FOLDER_PATH, CommonProperties.ModName);
+        public static string GetModStagingBasePathForAsset(Package pack) => Path.Combine(GetModStagingBasePath(), pack.packageName);
         public static FileInfo EnsureFolderCreation(string folderName)
         {
+            if (folderName is null)
+            {
+                return null;
+            }
+
             if (File.Exists(folderName) && (File.GetAttributes(folderName) & FileAttributes.Directory) != FileAttributes.Directory)
             {
                 File.Delete(folderName);
@@ -26,6 +34,10 @@ namespace Klyte.Commons.Utils
             }
             return new FileInfo(folderName);
         }
+
+        internal static string GetRootFolderForK45(Package package) => package is null ? null : package.Find(package.packageMainAsset).isWorkshopAsset ? Path.GetDirectoryName(package.packagePath) : GetModStagingBasePathForAsset(package);
+        internal static string GetRootFolderForK45(PrefabInfo info) => info?.name?.Split('.')[0] is string id ? GetRootFolderForK45(PackageManager.allPackages.Where(x => x.packageName == id).FirstOrDefault()) : null;
+
         public static bool IsFileCreated(string fileName) => File.Exists(fileName);
         public static bool TryGetWorkshopId(PrefabInfo info, out long workshopId)
         {

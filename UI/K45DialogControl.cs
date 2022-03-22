@@ -205,7 +205,7 @@ namespace Klyte.Commons.Utils
         #endregion
 
         public void Awake() => component.stringUserData = VERSION;
-public void Start()
+        public void Start()
         {
             try
             {
@@ -868,6 +868,6 @@ public void Start()
         {
             LogUtils.DoWarnLog($"K45 PANEL REMOVED @ {Environment.StackTrace}");
             UIDynamicPanelsRedirector.RemovePanel();
-    }
+        }
     }
 }

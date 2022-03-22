@@ -76,9 +76,9 @@ namespace Klyte.Commons.Interfaces
         {
             get
             {
-                if (controller is null && LoadingManager.instance.m_currentlyLoading)
+                if (controller is null)
                 {
-                    LogUtils.DoErrorLog($"Trying to access controller while loading. NOT ALLOWED!\nAsk at Klyte45's GitHub to fix this. Stacktrace:\n{Environment.StackTrace}");
+                    LogUtils.DoLog($"Controller is null! Stacktrace:\n{Environment.StackTrace}");
                 }
                 return controller;
             }
@@ -168,7 +168,20 @@ namespace Klyte.Commons.Interfaces
                 needShowPopup = true;
             }
             FileUtils.EnsureFolderCreation(CommonProperties.ModRootFolder);
+            FileUtils.EnsureFolderCreation(StagingAssetFilesFolder);
             PatchesApply();
+        }
+
+        public string StagingAssetFilesFolder
+        {
+            get
+            {
+                if (stagingAssetFilesFolder is null)
+                {
+                    stagingAssetFilesFolder = CommonProperties.UseStagingFolder ? FileUtils.GetModStagingBasePath() : null;
+                }
+                return stagingAssetFilesFolder;
+            }
         }
 
         public void OnDisabled() => Redirector.UnpatchAll();
@@ -206,6 +219,7 @@ namespace Klyte.Commons.Interfaces
 
         private UIComponent m_onSettingsUiComponent;
         private static C controller;
+        private string stagingAssetFilesFolder;
 
         public void OnSettingsUI(UIHelperBase helperDefault)
         {
