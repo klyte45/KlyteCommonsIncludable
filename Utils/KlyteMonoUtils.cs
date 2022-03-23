@@ -59,11 +59,16 @@ namespace Klyte.Commons.Utils
         }
         public static void UiTextFieldDefaultsForm(UITextField uiItem)
         {
+            var baseBg = "OptionsDropboxListbox";
+            if (SceneUtils.IsAssetEditor)
+            {
+                baseBg = "TextFieldPanel";
+            }
             uiItem.selectionSprite = "EmptySprite";
             uiItem.useOutline = true;
-            uiItem.hoveredBgSprite = "OptionsDropboxListboxHovered";
-            uiItem.focusedBgSprite = "OptionsDropboxListboxFocused";
-            uiItem.normalBgSprite = "OptionsDropboxListbox";
+            uiItem.hoveredBgSprite = baseBg + "Hovered";
+            uiItem.focusedBgSprite = baseBg + "Focused";
+            uiItem.normalBgSprite = baseBg;
             uiItem.builtinKeyNavigation = true;
             uiItem.submitOnFocusLost = true;
             uiItem.horizontalAlignment = UIHorizontalAlignment.Left;

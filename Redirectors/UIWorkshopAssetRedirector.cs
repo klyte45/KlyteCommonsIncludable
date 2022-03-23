@@ -23,39 +23,45 @@ namespace Klyte.Commons.Redirectors
             var m_TargetAsset = __instance.GetType().GetField("m_TargetAsset", RedirectorUtils.allFlags).GetValue(__instance) as Package.Asset;
             if (m_TargetAsset.isMainAsset)
             {
-                var rootAssetFolder = FileUtils.GetRootPackageFolderForK45(m_TargetAsset);
-                LogUtils.DoErrorLog($"rootAssetFolder: {rootAssetFolder}; ");
-                if (!Directory.Exists(rootAssetFolder))
-                {
-                    return;
-                }
-
                 bool bundledAnyFile = false;
-                if (!(CommonProperties.AssetExtraFileNames is null))
+                foreach (Package.Asset asset in m_TargetAsset.package)
                 {
-                    foreach (string filename in CommonProperties.AssetExtraFileNames)
+                    if (asset.type != Package.AssetType.Object)
                     {
-                        var targetFilename = Path.Combine(rootAssetFolder, filename);
-                        if (File.Exists(targetFilename))
-                        {
-                            File.Copy(targetFilename, Path.Combine(m_ContentPath, filename));
-                            bundledAnyFile = true;
-                        }
+                        continue;
                     }
-                }
-                if (!(CommonProperties.AssetExtraDirectoryNames is null))
-                {
-                    foreach (string directory in CommonProperties.AssetExtraDirectoryNames)
+                    var rootAssetFolder = FileUtils.GetRootPackageFolderForK45(asset);
+                    LogUtils.DoErrorLog($"rootAssetFolder: {rootAssetFolder}; ");
+                    if (!Directory.Exists(rootAssetFolder))
                     {
-                        var targetFolder = Path.Combine(rootAssetFolder, directory);
-                        if (Directory.Exists(targetFolder))
-                        {
-                            WorkshopHelper.DirectoryCopy(targetFolder, Path.Combine(m_ContentPath, directory), true);
-                            bundledAnyFile = true;
-                        }
+                        continue;
                     }
-                }
 
+                    if (!(CommonProperties.AssetExtraFileNames is null))
+                    {
+                        foreach (string filename in CommonProperties.AssetExtraFileNames)
+                        {
+                            var targetFilename = Path.Combine(rootAssetFolder, filename);
+                            if (File.Exists(targetFilename))
+                            {
+                                File.Copy(targetFilename, Path.Combine(m_ContentPath, filename));
+                                bundledAnyFile = true;
+                            }
+                        }
+                    }
+                    if (!(CommonProperties.AssetExtraDirectoryNames is null))
+                    {
+                        foreach (string directory in CommonProperties.AssetExtraDirectoryNames)
+                        {
+                            var targetFolder = Path.Combine(rootAssetFolder, directory);
+                            if (Directory.Exists(targetFolder))
+                            {
+                                WorkshopHelper.DirectoryCopy(targetFolder, Path.Combine(m_ContentPath, directory), true);
+                                bundledAnyFile = true;
+                            }
+                        }
+                    }
+                }
                 if (bundledAnyFile)
                 {
                     var tagsField = (__instance.GetType().GetField("m_Tags", RedirectorUtils.allFlags));
