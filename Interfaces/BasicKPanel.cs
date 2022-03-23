@@ -36,6 +36,10 @@ namespace Klyte.Commons.Interfaces
 
                 CreateTitleBar();
             }
+            else
+            {
+                _mainPanel.isInteractive = false;
+            }
             AwakeActions();
         }
 

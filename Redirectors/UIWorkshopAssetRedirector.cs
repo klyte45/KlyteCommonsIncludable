@@ -23,7 +23,7 @@ namespace Klyte.Commons.Redirectors
             var m_TargetAsset = __instance.GetType().GetField("m_TargetAsset", RedirectorUtils.allFlags).GetValue(__instance) as Package.Asset;
             if (m_TargetAsset.isMainAsset)
             {
-                var rootAssetFolder = FileUtils.GetRootFolderForK45(m_TargetAsset.package);
+                var rootAssetFolder = FileUtils.GetRootPackageFolderForK45(m_TargetAsset);
                 LogUtils.DoErrorLog($"rootAssetFolder: {rootAssetFolder}; ");
                 if (!Directory.Exists(rootAssetFolder))
                 {
