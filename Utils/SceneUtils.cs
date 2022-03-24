@@ -3,6 +3,6 @@
     public static class SceneUtils
     {
 
-        public static bool IsAssetEditor => ToolManager.instance.m_properties.m_mode == ItemClass.Availability.AssetEditor;
+        public static bool IsAssetEditor => ToolManager.instance?.m_properties?.m_mode == ItemClass.Availability.AssetEditor;
     }
 }
