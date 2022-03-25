@@ -1,6 +1,7 @@
 ﻿using ColossalFramework.Packaging;
 using Klyte.Commons.Extensions;
 using Klyte.Commons.Utils;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -24,6 +25,7 @@ namespace Klyte.Commons.Redirectors
             if (m_TargetAsset.isMainAsset)
             {
                 bool bundledAnyFile = false;
+                HashSet<string> x = new HashSet<string>();
                 foreach (Package.Asset asset in m_TargetAsset.package)
                 {
                     if (asset.type != Package.AssetType.Object)
@@ -32,10 +34,11 @@ namespace Klyte.Commons.Redirectors
                     }
                     var rootAssetFolder = FileUtils.GetRootPackageFolderForK45(asset);
                     LogUtils.DoErrorLog($"rootAssetFolder: {rootAssetFolder}; ");
-                    if (!Directory.Exists(rootAssetFolder))
+                    if (x.Contains(rootAssetFolder) || !Directory.Exists(rootAssetFolder))
                     {
                         continue;
                     }
+                    x.Add(rootAssetFolder);
 
                     if (!(CommonProperties.AssetExtraFileNames is null))
                     {
