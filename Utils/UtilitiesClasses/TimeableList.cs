@@ -10,7 +10,7 @@ namespace Klyte.Commons.Utils
 {
     [XmlRoot("TimeableList")]
 
-    public class TimeableList<TValue> : IXmlSerializable, IEnumerable<TValue> where TValue : ITimeable<TValue>
+    public class TimeableList<TValue> : IXmlSerializable, IEnumerable<TValue> where TValue : class, ITimeable<TValue>
     {
 
         #region IXmlSerializable Members
