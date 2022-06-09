@@ -20,11 +20,16 @@ namespace Klyte.Commons.Interfaces
                 if (m_bridgeUUI is null)
                 {
                     m_bridgeUUI = BasicIUserModSimplified<U, C>.UseUuiIfAvailable
-                        ? PluginUtils.GetImplementationTypeForMod<BridgeUUIFallback, IBridgeUUI>(gameObject, "UnifiedUILib", "2.1.12", ClassBridgeUUI)
+                        ? PluginUtils.GetImplementationTypeForMod<BridgeUUIFallback, IBridgeUUI>(gameObject, "UnifiedUILib", "2.2.9", ClassBridgeUUI)
                         : gameObject.AddComponent<BridgeUUIFallback>();
                 }
                 return m_bridgeUUI;
             }
+        }
+        public void FallbackToKButton()
+        {
+            Destroy(m_bridgeUUI);
+            m_bridgeUUI = gameObject.AddComponent<BridgeUUIFallback>();
         }
 
         protected virtual void StartActions() { }

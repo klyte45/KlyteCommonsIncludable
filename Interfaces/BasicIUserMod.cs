@@ -2,7 +2,10 @@
 using ICities;
 using Klyte.Commons.Extensions;
 using Klyte.Commons.ModShared;
+using Klyte.Commons.Utils;
+using System;
 using System.Collections;
+using UnityEngine;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -20,7 +23,16 @@ namespace Klyte.Commons.Interfaces
             base.OnLevelLoadedInherit(mode);
             if (LoadUI && IsValidLoadMode(mode))
             {
-                Controller.BridgeUUI.RegisterMod(this);
+                try
+                {
+                    Controller.BridgeUUI.RegisterMod(this);
+                }
+                catch (Exception e)
+                {
+                    LogUtils.DoWarnLog($"Exception occurred while registering UUI. Falling back to traditional K button!\n {e}");
+                    Controller.FallbackToKButton();
+                    Controller.BridgeUUI.RegisterMod(this);
+                }
             }
         }
 
