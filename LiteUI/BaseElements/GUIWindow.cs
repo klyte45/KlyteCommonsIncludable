@@ -2,6 +2,7 @@
 using Klyte.Commons.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Klyte.Commons.LiteUI
@@ -32,6 +33,7 @@ namespace Klyte.Commons.LiteUI
         private Rect windowRect = new Rect(0, 0, 64, 64);
 
         private bool visible;
+        private Texture2D cachedModIcon;
 
         public static GUIStyle HighlightStyle => GUIStyle.none;
 
@@ -124,11 +126,11 @@ namespace Klyte.Commons.LiteUI
                 ResizeHoverTexture.Apply();
 
                 CloseNormalTexture = new Texture2D(1, 1);
-                CloseNormalTexture.SetPixel(0, 0, Color.red);
+                CloseNormalTexture.SetPixel(0, 0, ColorExtensions.FromRGB("AA0000"));
                 CloseNormalTexture.Apply();
 
                 CloseHoverTexture = new Texture2D(1, 1);
-                CloseHoverTexture.SetPixel(0, 0, Color.white);
+                CloseHoverTexture.SetPixel(0, 0, ColorExtensions.FromRGB("FF6666"));
                 CloseHoverTexture.Apply();
 
                 MoveNormalTexture = new Texture2D(1, 1);
@@ -323,7 +325,7 @@ namespace Klyte.Commons.LiteUI
 
         private void DrawTitlebar(Vector3 mouse)
         {
-            var moveRect = new Rect(windowRect.x, windowRect.y, windowRect.width, 20.0f);
+            var moveRect = new Rect(windowRect.x, windowRect.y, windowRect.width - 24f, 24.0f);
             var moveTex = MoveNormalTexture;
 
             // TODO: reduce nesting
@@ -334,6 +336,7 @@ namespace Klyte.Commons.LiteUI
                     if (movingWindow == this)
                     {
                         moveTex = MoveHoverTexture;
+                        GUI.contentColor = titleBarHover.ContrastColor();
 
                         if (Input.GetMouseButton(0))
                         {
@@ -353,23 +356,45 @@ namespace Klyte.Commons.LiteUI
                 else if (moveRect.Contains(mouse))
                 {
                     moveTex = MoveHoverTexture;
+                    GUI.contentColor = titleBarHover.ContrastColor();
                     if (Input.GetMouseButtonDown(0) && resizingWindow == null)
                     {
                         movingWindow = this;
                         moveDragHandle = new Vector2(windowRect.x, windowRect.y) - new Vector2(mouse.x, mouse.y);
                     }
                 }
+                else
+                {
+                    GUI.contentColor = titleBar.ContrastColor();
+                }
+            }
+            else
+            {
+                GUI.contentColor = titleBar.ContrastColor();
             }
 
-            GUI.DrawTexture(new Rect(0.0f, 0.0f, windowRect.width, 20.0f), moveTex, ScaleMode.StretchToFill);
-            GUI.contentColor = titleBar.ContrastColor();
-            GUI.Label(new Rect(8.0f, 0.0f, windowRect.width, 20.0f), Title);
+            GUI.DrawTexture(new Rect(0.0f, 0.0f, windowRect.width, 24.0f), moveTex, ScaleMode.StretchToFill);
+            if (cachedModIcon is null)
+            {
+                cachedModIcon = UIView.GetAView().defaultAtlas.sprites.Where(x => x.name == CommonProperties.ModIcon).FirstOrDefault()?.texture;
+                if (cachedModIcon is null)
+                {
+                    cachedModIcon = new Texture2D(1, 1);
+                    cachedModIcon.SetPixel(0, 0, Color.clear);
+                    cachedModIcon.Apply();
+                }
+            }
+            GUI.DrawTexture(new Rect(3.0f, 0.0f, 24f, 24.0f), cachedModIcon, ScaleMode.ScaleToFit);
+            GUI.Label(new Rect(30f, 0.0f, windowRect.width - 28, 22.0f), Title, new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleLeft
+            });
             GUI.contentColor = Color.white;
         }
 
         private void DrawCloseButton(Vector3 mouse)
         {
-            var closeRect = new Rect(windowRect.x + windowRect.width - 20.0f, windowRect.y, 16.0f, 8.0f);
+            var closeRect = new Rect(windowRect.x + windowRect.width - 24.0f, windowRect.y, 24.0f, 24.0f);
             var closeTex = CloseNormalTexture;
 
             if (!GUIUtility.hasModalWindow && closeRect.Contains(mouse))
@@ -384,13 +409,20 @@ namespace Klyte.Commons.LiteUI
                     OnWindowClosed();
                 }
             }
+            var oldColor = GUI.contentColor;
+            GUI.contentColor = Color.white;
+            GUI.DrawTexture(new Rect(windowRect.width - 24.0f, 0.0f, 24.0f, 24.0f), closeTex, ScaleMode.StretchToFill);
+            GUI.Label(new Rect(windowRect.width - 24.0f, 0.0f, 24.0f, 24.0f), "X", new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter
+            });
+            GUI.contentColor = oldColor;
 
-            GUI.DrawTexture(new Rect(windowRect.width - 20.0f, 0.0f, 16.0f, 8.0f), closeTex, ScaleMode.StretchToFill);
         }
 
         private void DrawResizeHandle(Vector3 mouse)
         {
-            var resizeRect = new Rect(windowRect.x + windowRect.width - 16.0f, windowRect.y + windowRect.height - 8.0f, 16.0f, 8.0f);
+            var resizeRect = new Rect(windowRect.x + windowRect.width - 12, windowRect.y + windowRect.height - 12, 12, 12);
             var resizeTex = ResizeNormalTexture;
 
             // TODO: reduce nesting
@@ -435,7 +467,7 @@ namespace Klyte.Commons.LiteUI
                 }
             }
 
-            GUI.DrawTexture(new Rect(windowRect.width - 16.0f, windowRect.height - 8.0f, 16.0f, 8.0f), resizeTex, ScaleMode.StretchToFill);
+            GUI.DrawTexture(new Rect(windowRect.width - 12, windowRect.height - 12, 12, 12), resizeTex, ScaleMode.StretchToFill);
         }
 
 

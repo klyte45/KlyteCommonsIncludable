@@ -43,6 +43,7 @@ namespace Klyte.Commons.ModShared
         {
             m_modButton.IsPressed = false;
             m_container.isVisible = false;
+            m_modButton.Button.Unfocus();
             ApplyButtonColor(UseLowSaturationButtonFunc());
         }
 
