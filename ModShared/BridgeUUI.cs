@@ -14,9 +14,13 @@ namespace Klyte.Commons.ModShared
 
         private UUICustomButton m_modButton;
         private UIPanel m_container;
-
-
         private Func<bool> UseLowSaturationButtonFunc;
+
+        public void Awake()
+        {
+            typeof(UUICustomButton).GetType();
+            typeof(UUIHelpers).GetType();
+        }
 
         public override void RegisterMod<U, C, T>(BasicIUserMod<U, C, T> modInstance)
         {
@@ -28,9 +32,7 @@ namespace Klyte.Commons.ModShared
              groupName: "Klyte45",
              tooltip: modInstance.Name,
              onToggle: (value) => { if (value) { Open(); } else { Close(); } },
-             onToolChanged: null,
-             icon: KlyteResourceLoader.LoadTexture($"UI.Images.%{modInstance.IconName}.png"),
-             hotkeys: new UUIHotKeys { }
+             icon: KlyteResourceLoader.LoadTexture($"UI.Images.%{modInstance.IconName}.png")
              );
 
             m_container = UIView.Find("TSBar").AttachUIComponent(CreateContainer(modInstance, 875, 550).gameObject) as UIPanel;
