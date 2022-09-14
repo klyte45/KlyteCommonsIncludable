@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
 using System.Text;
 
@@ -22,35 +23,32 @@ namespace Klyte.Commons.Utils
 
         public static byte[] ZipBytes(byte[] bytes)
         {
-            using (var msi = new MemoryStream(bytes))
+            var output = bytes;
+            try
             {
-                using (var mso = new MemoryStream())
-                {
-                    using (var gs = new GZipStream(mso, CompressionMode.Compress))
-                    {
-                        CopyTo(msi, gs);
-                    }
-                    return mso.ToArray();
-                }
+                using var msi = new MemoryStream(bytes);
+                using var mso = new MemoryStream();
+                using var gs = new GZipStream(mso, CompressionMode.Compress);
+                CopyTo(msi, gs);
+                output = mso.ToArray();
             }
+            catch (Exception e)
+            {
+                LogUtils.DoWarnLog($"Failed zipping bytes - returning source: {e}");
+            }
+            return output;
         }
 
         public static string Unzip(byte[] bytes) => Encoding.UTF8.GetString(UnzipBytes(bytes));
 
         public static byte[] UnzipBytes(byte[] bytes)
         {
-            using (var msi = new MemoryStream(bytes))
-            {
-                using (var mso = new MemoryStream())
-                {
-                    using (var gs = new GZipStream(msi, CompressionMode.Decompress))
-                    {
-                        //gs.CopyTo(mso);
-                        CopyTo(gs, mso);
-                    }
-                    return mso.ToArray();
-                }
-            }
+            using var msi = new MemoryStream(bytes);
+            using var mso = new MemoryStream();
+            using var gs = new GZipStream(msi, CompressionMode.Decompress);
+            //gs.CopyTo(mso);
+            CopyTo(gs, mso);
+            return mso.ToArray();
         }
     }
 }

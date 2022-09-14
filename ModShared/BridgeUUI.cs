@@ -15,6 +15,14 @@ namespace Klyte.Commons.ModShared
         private UUICustomButton m_modButton;
         private UIPanel m_container;
 
+        private void Awake()
+        {
+            //Check classes
+            typeof(UUICustomButton).GetType();
+            typeof(UUIHelpers).GetType();
+            typeof(UUIHotKeys).GetType();
+        }
+
 
         private Func<bool> UseLowSaturationButtonFunc;
 

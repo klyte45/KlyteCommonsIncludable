@@ -26,12 +26,12 @@ namespace Klyte.Commons.Utils
         ).ToDictionary(x => x.publishedFileID.AsUInt64, x => ((IUserMod)x.userModInstance)?.Name);
 
 
-        public static I GetImplementationTypeForMod<F, I>(GameObject objTarget, string dllName, string dllMinVersion, string nonFallbackClassName) where F : MonoBehaviour, I where I : Component
+        public static I GetImplementationTypeForMod<F, I>(GameObject objTarget, string dllName, string dllMinVersion, string nonFallbackClassName, string dllMaxVersion = null) where F : MonoBehaviour, I where I : Component
         {
             if (Singleton<PluginManager>.instance.GetPluginsInfo().Where((PluginManager.PluginInfo pi) =>
             pi.assemblyCount > 0
             && pi.isEnabled
-            && (pi.GetAssemblies().Where(x => (x.GetName().Name == dllName) && x.GetName().Version.CompareTo(new Version(dllMinVersion)) >= 0).Count() > 0)
+            && (pi.GetAssemblies().Where(x => (x.GetName().Name == dllName) && x.GetName().Version.CompareTo(new Version(dllMinVersion)) >= 0 && (dllMaxVersion is null || x.GetName().Version.CompareTo(new Version(dllMaxVersion)) < 0)).Count() > 0)
 
         ).Count() > 0)
             {
