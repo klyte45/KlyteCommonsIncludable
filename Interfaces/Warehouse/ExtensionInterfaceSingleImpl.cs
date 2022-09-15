@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace Klyte.Commons.Interfaces
 {
-    public abstract class ExtensionInterfaceSingleImpl<T, R, U> : DataExtensionBase<U> where T : Enum, IConvertible where R : new() where U : ExtensionInterfaceSingleImpl<T, R, U>, new()
+    public abstract class ExtensionInterfaceSingleImpl<T, R, U> : DataExtensionBase<U> where T : Enum, IConvertible where R : class, new() where U : ExtensionInterfaceSingleImpl<T, R, U>, new()
     {
         [XmlElement("Data")]
         public SimpleEnumerableList<T, R> m_cachedListString = new SimpleEnumerableList<T, R>();
