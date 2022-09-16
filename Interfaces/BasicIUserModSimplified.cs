@@ -78,7 +78,7 @@ namespace Klyte.Commons.Interfaces
             {
                 if (controller is null && LoadingManager.instance.m_currentlyLoading)
                 {
-                    LogUtils.DoErrorLog($"Trying to access controller while loading. NOT ALLOWED!\nAsk at Klyte45's GitHub to fix this. Stacktrace:\n{Environment.StackTrace}");
+                    LogUtils.DoLog($"Trying to access controller while loading. NOT ALLOWED!\n Stacktrace:\n{Environment.StackTrace}");
                 }
                 return controller;
             }
