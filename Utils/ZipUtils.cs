@@ -1,5 +1,4 @@
-﻿using ColossalFramework.IO;
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -27,17 +26,16 @@ namespace Klyte.Commons.Utils
             var output = bytes;
             try
             {
-                using (var msi = new MemoryStream(bytes, 0, bytes.Length, false, true))
+                using (var msi = new MemoryStream(bytes))
                 {
-
-                    using var mso = new MemoryStream();
-                    using var gs = new GZipStream(mso, CompressionMode.Compress);
-                    msi.CopyTo(gs);
-                    output = mso.ToArray();
-                }
-                if (output.Length == 0 && bytes.Length > 0)
-                {
-                    throw new Exception("Invalid Zeroed result!!!!!");
+                    using (var mso = new MemoryStream())
+                    {
+                        using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                        {
+                            CopyTo(msi, gs);
+                        }
+                        output = mso.ToArray();
+                    }
                 }
             }
             catch (Exception e)
@@ -52,11 +50,18 @@ namespace Klyte.Commons.Utils
 
         public static byte[] UnzipBytes(byte[] bytes)
         {
-            using var msi = new MemoryStream(bytes, 0, bytes.Length, false, true);
-            using var mso = new MemoryStream();
-            using var gs = new GZipStream(msi, CompressionMode.Decompress);
-            msi.CopyTo(gs);
-            return mso.ToArray();
+            using (var msi = new MemoryStream(bytes))
+            {
+                using (var mso = new MemoryStream())
+                {
+                    using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+                    {
+                        //gs.CopyTo(mso);
+                        CopyTo(gs, mso);
+                    }
+                    return mso.ToArray();
+                }
+            }
         }
     }
 }
