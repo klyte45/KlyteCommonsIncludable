@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Klyte.Commons.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -276,8 +277,8 @@ namespace Klyte.Commons.Utils
             return result;
         }
 
-        internal static T GetPrivateField<T>(object prefabAI, string v) => (T)prefabAI.GetType().GetField(v).GetValue(prefabAI);
-        internal static object GetPrivateStaticField(string v, Type type) => type.GetField(v).GetValue(null);
+        internal static T GetPrivateField<T>(object prefabAI, string v) => (T)prefabAI.GetType().GetField(v, RedirectorUtils.allFlags).GetValue(prefabAI);
+        internal static object GetPrivateStaticField(string v, Type type) => type.GetField(v, RedirectorUtils.allFlags).GetValue(null);
 
 
         #region Called by reflection - Don't delete.
@@ -450,7 +451,7 @@ namespace Klyte.Commons.Utils
                                            select t);
             if (instances.Count() != 1)
             {
-                throw new Exception($"Defininções inválidas para [{ string.Join(", ", typeArgs.Select(x => x.ToString()).ToArray()) }] no tipo genérico {typeOr}");
+                throw new Exception($"Defininções inválidas para [{string.Join(", ", typeArgs.Select(x => x.ToString()).ToArray())}] no tipo genérico {typeOr}");
             }
 
             Type targetType = instances.First();
