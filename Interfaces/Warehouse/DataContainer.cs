@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
     public sealed class DataContainer : SingletonLite<DataContainer>, ISerializableDataExtension
     {

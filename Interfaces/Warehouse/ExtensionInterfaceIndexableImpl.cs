@@ -1,9 +1,9 @@
-﻿using Klyte.Commons.Utils;
+﻿using Klyte.Commons.Utils.UtilitiesClasses;
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
     public abstract class ExtensionInterfaceIndexableImpl<R, U> : DataExtensionBase<U> where R : IIdentifiable, new() where U : ExtensionInterfaceIndexableImpl<R, U>, new()
     {

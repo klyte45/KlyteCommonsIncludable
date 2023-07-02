@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.Extensions
+namespace Klyte.Commons.Extensions.UI
 {
     public class TextList<T>
     {

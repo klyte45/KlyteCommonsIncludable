@@ -2,6 +2,7 @@ using ColossalFramework;
 using ColossalFramework.Globalization;
 using ColossalFramework.Packaging;
 using ColossalFramework.PlatformServices;
+using Klyte.Commons.Utils.UtilitiesClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,7 +31,6 @@ namespace Klyte.Commons.Utils
             }
         }
         private Dictionary<string, T> m_propsLoaded;
-        [Obsolete("Use the list with full details")]
         public Dictionary<string, T> PrefabsLoaded
         {
             get

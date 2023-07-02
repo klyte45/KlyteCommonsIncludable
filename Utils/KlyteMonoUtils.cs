@@ -1,7 +1,8 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.UI;
 using ICities;
-using Klyte.Commons.Extensions;
+using Klyte.Commons.Extensions.UI;
+using Klyte.Commons.UI;
 using Klyte.Commons.UI.SpriteNames;
 using System;
 using UnityEngine;

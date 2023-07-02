@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.UtilitiesClasses
 {
     public class CoroutineWithData<T>
     {

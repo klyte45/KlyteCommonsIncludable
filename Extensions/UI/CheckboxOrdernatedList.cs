@@ -1,11 +1,10 @@
 using ColossalFramework.UI;
-using Klyte.Commons.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.Extensions
+namespace Klyte.Commons.Extensions.UI
 {
     public class CheckboxOrdernatedList<T> : UICustomControl where T : class, ICheckable
     {

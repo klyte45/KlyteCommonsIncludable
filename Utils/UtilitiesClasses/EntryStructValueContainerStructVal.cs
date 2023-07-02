@@ -1,8 +1,7 @@
-﻿
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.UtilitiesClasses
 {
     [XmlRoot("Entry")]
     public class EntryStructValueContainerStructVal<TKey, TValue> where TKey : class where TValue : struct

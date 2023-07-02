@@ -1,4 +1,4 @@
-﻿namespace Klyte.Commons.Utils
+﻿namespace Klyte.Commons.Utils.UtilitiesClasses
 {
 
     public class MutableTuple<T1, T2, T3, T4, T5> : MutableTuple<T1, T2, T3, T4>

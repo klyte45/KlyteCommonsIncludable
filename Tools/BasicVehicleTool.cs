@@ -4,7 +4,7 @@ using ColossalFramework.UI;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace Klyte.Commons
+namespace Klyte.Commons.Tools
 {
 
     public abstract class BaseVehicleTool<T> : DefaultTool where T : BaseVehicleTool<T>

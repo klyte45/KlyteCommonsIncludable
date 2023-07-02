@@ -1,4 +1,5 @@
-﻿using Harmony;
+﻿using HarmonyLib;
+using Klyte.Commons.Utils.UtilitiesClasses;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -22,7 +23,7 @@ namespace Klyte.Commons.Utils
             }
             catch
             {
-                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Error log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
         public static void DoWarnLog(string format, params object[] args)
@@ -33,7 +34,7 @@ namespace Klyte.Commons.Utils
             }
             catch
             {
-                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer warn log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Error log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
         public static void DoErrorLog(string format, params object[] args)
@@ -44,27 +45,27 @@ namespace Klyte.Commons.Utils
             }
             catch
             {
-                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Erro ao fazer err log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
+                Debug.LogErrorFormat($"{CommonProperties.Acronym}: Error log: {{0}} (args = {{1}})", format, args == null ? "[]" : string.Join(",", args.Select(x => x != null ? x.ToString() : "--NULL--").ToArray()));
             }
         }
 
-        public static void PrintMethodIL(IEnumerable<CodeInstruction> inst, bool force = false)
+        public static void PrintMethodIL(List<CodeInstruction> inst, bool force = false)
         {
             if (force || CommonProperties.DebugMode)
             {
                 int j = 0;
-                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}").ToArray())}");
+                Debug.Log($"TRANSPILLED:\n\t{string.Join("\n\t", inst.Select(x => $"{j++:D8} {x.opcode,-10} {ParseOperand(inst, x.operand)}").ToArray())}");
             }
         }
 
-        public static string GetLinesPointingToLabel(IEnumerable<CodeInstruction> inst, Label lbl)
+        public static string GetLinesPointingToLabel(List<CodeInstruction> inst, Label lbl)
         {
             int j = 0;
-            return "\t" + string.Join("\n\t", inst.Select(x => Tuple.New(x, $"{(j++).ToString("D8")} {x.opcode.ToString().PadRight(10)} {ParseOperand(inst, x.operand)}")).Where(x => x.First.operand is Label label && label == lbl).Select(x => x.Second).ToArray());
+            return "\t" + string.Join("\n\t", inst.Select(x => Tuple.New(x, $"{j++:D8} {x.opcode,-10} {ParseOperand(inst, x.operand)}")).Where(x => x.First.operand is Label label && label == lbl).Select(x => x.Second).ToArray());
         }
 
 
-        internal static string ParseOperand(IEnumerable<CodeInstruction> instr, object operand)
+        internal static string ParseOperand(List<CodeInstruction> instr, object operand)
         {
             if (operand is null)
             {

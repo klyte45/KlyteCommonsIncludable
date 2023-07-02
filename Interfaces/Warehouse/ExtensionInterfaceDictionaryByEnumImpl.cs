@@ -1,8 +1,8 @@
-﻿using Klyte.Commons.Utils;
+﻿using Klyte.Commons.Utils.UtilitiesClasses;
 using System;
 using System.Xml.Serialization;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
     public abstract class ExtensionInterfaceDictionaryByEnumImpl<T, U, D> : DataExtensionBase<U> where T : Enum, IConvertible where U : ExtensionInterfaceDictionaryByEnumImpl<T, U, D>, new() where D : class
     {

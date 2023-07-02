@@ -1,6 +1,6 @@
 ﻿using ColossalFramework;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.StructExtensions
 {
     public static class StringExtensions
     {

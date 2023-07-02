@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace Klyte.Commons
+namespace Klyte.Commons.Tools
 {
 
     public abstract class BaseNetTool<T> : NetTool where T : BaseNetTool<T>

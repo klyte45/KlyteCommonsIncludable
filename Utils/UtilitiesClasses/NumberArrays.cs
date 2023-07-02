@@ -1,4 +1,4 @@
-﻿namespace Klyte.Commons.Utils
+﻿namespace Klyte.Commons.Utils.UtilitiesClasses
 {
     public class NumberArrays
     {

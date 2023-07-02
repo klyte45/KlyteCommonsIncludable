@@ -1,11 +1,10 @@
 ﻿using Klyte.Commons.Interfaces;
 using System;
 using System.Collections.Generic;
-
 using System.Xml.Serialization;
 
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.UtilitiesClasses
 {
     [XmlRoot("SimpleEnumerableList")]
 

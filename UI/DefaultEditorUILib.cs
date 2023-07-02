@@ -3,10 +3,12 @@ using ColossalFramework.Globalization;
 using ColossalFramework.UI;
 using ICities;
 using Klyte.Commons.Extensions;
+using Klyte.Commons.Extensions.UI;
 using Klyte.Commons.Interfaces;
 using Klyte.Commons.Libraries;
 using Klyte.Commons.UI.SpriteNames;
 using Klyte.Commons.Utils;
+using Klyte.Commons.Utils.UtilitiesClasses;
 using System;
 using System.Collections;
 using System.Linq;
@@ -120,7 +122,7 @@ namespace Klyte.Commons.UI
         }
 
 
-        private static readonly MethodInfo m_submitField = typeof(UITextField).GetMethod("OnSubmit", RedirectorUtils.allFlags);
+        private static readonly MethodInfo m_submitField = typeof(UITextField).GetMethod("OnSubmit", Patcher.allFlags);
         public static void RollFloat(UIComponent component, UIMouseEventParameter eventParam)
         {
             if (component is UITextField tf && tf.numericalOnly && float.TryParse(tf.text, out float currentValue))

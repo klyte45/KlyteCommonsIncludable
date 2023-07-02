@@ -4,7 +4,8 @@ using ColossalFramework.Globalization;
 using ColossalFramework.Threading;
 using ColossalFramework.UI;
 using Klyte.Commons.Extensions;
-using Klyte.Commons.i18n;
+using Klyte.Commons.Extensions.UI;
+using Klyte.Commons.UI.i18n;
 using Klyte.Commons.Redirectors;
 using System;
 using System.Collections;
@@ -13,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Klyte.Commons.Utils.UtilitiesClasses;
 
 namespace Klyte.Commons.Utils
 {
@@ -173,9 +175,9 @@ namespace Klyte.Commons.Utils
 
             #region Declare Dynamic Panel Info
             var panelTestInfo = new UIDynamicPanels.DynamicPanelInfo();
-            panelTestInfo.GetType().GetField("m_Name", RedirectorUtils.allFlags).SetValue(panelTestInfo, PANEL_ID);
-            panelTestInfo.GetType().GetField("m_PanelRoot", RedirectorUtils.allFlags).SetValue(panelTestInfo, mainPanel);
-            panelTestInfo.GetType().GetField("m_IsModal", RedirectorUtils.allFlags).SetValue(panelTestInfo, true);
+            panelTestInfo.GetType().GetField("m_Name", Patcher.allFlags).SetValue(panelTestInfo, PANEL_ID);
+            panelTestInfo.GetType().GetField("m_PanelRoot", Patcher.allFlags).SetValue(panelTestInfo, mainPanel);
+            panelTestInfo.GetType().GetField("m_IsModal", Patcher.allFlags).SetValue(panelTestInfo, true);
             #endregion
 
             return panelTestInfo;
@@ -205,7 +207,8 @@ namespace Klyte.Commons.Utils
         #endregion
 
         public void Awake() => component.stringUserData = VERSION;
-public void Start()
+
+        public void Start()
         {
             try
             {
@@ -567,6 +570,7 @@ public void Start()
                 ShowModalInternal(properties, action);
             }
         }
+
         public static void ShowModalError(string title, string message, bool showGitHubButton = false)
         {
             BindProperties properties = new BindProperties
@@ -681,9 +685,9 @@ public void Start()
                 ShowModalInternal(properties, null);
             }
         }
+
         private static void ShowModalHelpAbsolutePath(string fullPathName, string featureName, int startPage, params string[] formatsEntries)
         {
-
             var properties = new BindProperties
             {
                 icon = CommonProperties.ModIcon,
@@ -702,8 +706,6 @@ public void Start()
                 ShowModalInternal(properties, null);
             }
         }
-
-
 
         public static void ShowModalPromptDropDown(BindProperties properties, string[] options, int selIdx, Func<int, int, string, bool> action)
         {
@@ -861,13 +863,12 @@ public void Start()
             public override string ToString() => string.Join(",", ToDictionary().ToList().Select(x => $"{x.Key}≠{x.Value}").ToArray());
         }
 
-
         #endregion
 
         public void OnDestroy()
         {
             LogUtils.DoWarnLog($"K45 PANEL REMOVED @ {Environment.StackTrace}");
             UIDynamicPanelsRedirector.RemovePanel();
-    }
+        }
     }
 }

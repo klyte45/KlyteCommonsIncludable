@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.UI
 {
     public class UIRadialChartExtended : UISprite
     {

@@ -1,4 +1,4 @@
-﻿namespace Klyte.Commons.UI.Sprites
+﻿namespace Klyte.Commons.UI.SpriteNames
 {
     public enum LineIconSpriteNames
     {

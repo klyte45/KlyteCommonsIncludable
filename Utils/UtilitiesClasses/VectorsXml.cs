@@ -1,8 +1,7 @@
-﻿
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.UtilitiesClasses
 {
     [XmlRoot("Vector2")]
 

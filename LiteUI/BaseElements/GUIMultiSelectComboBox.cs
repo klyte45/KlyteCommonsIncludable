@@ -1,4 +1,4 @@
-﻿namespace Klyte.Commons.LiteUI
+﻿namespace Klyte.Commons.LiteUI.BaseElements
 {
     using System;
     using System.Collections.Generic;

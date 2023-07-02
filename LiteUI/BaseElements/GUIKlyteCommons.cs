@@ -1,11 +1,11 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.UI;
-using Klyte.Commons.Utils;
+using Klyte.Commons.Utils.UtilitiesClasses;
 using System;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.LiteUI
+namespace Klyte.Commons.LiteUI.BaseElements
 {
     public static class GUIKlyteCommons
     {

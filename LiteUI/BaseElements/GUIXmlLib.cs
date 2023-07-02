@@ -6,7 +6,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace Klyte.Commons.LiteUI
+namespace Klyte.Commons.LiteUI.BaseElements
 {
     public class GUIXmlLib<L, T> : GUIXmlLib<L, T, T> where T : class, ILibable where L : LibBaseFile<L, T>, new() { }
     public class GUIXmlLib<L, S, T> where T : S where S : class, ILibable where L : LibBaseFile<L, S>, new()

@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace Klyte.Commons.i18n
+namespace Klyte.Commons.UI.i18n
 {
     public class KlyteLocaleManager : MonoBehaviour
     {
@@ -28,8 +28,8 @@ namespace Klyte.Commons.i18n
         private const string m_localeKeySeparator = "|";
         private const string m_commentChar = "#";
         private const string m_ignorePrefixChar = "%";
-        internal static readonly Func<LocaleManager, Locale> m_localeManagerLocale = ReflectionUtils.GetGetFieldDelegate<LocaleManager, Locale>(typeof(LocaleManager).GetField("m_Locale", RedirectorUtils.allFlags));
-        internal static readonly Func<Locale, Dictionary<Locale.Key, string>> m_localeStringsDictionary = ReflectionUtils.GetGetFieldDelegate<Locale, Dictionary<Locale.Key, string>>(typeof(Locale).GetField("m_LocalizedStrings", RedirectorUtils.allFlags));
+        internal static readonly Func<LocaleManager, Locale> m_localeManagerLocale = ReflectionUtils.GetGetFieldDelegate<LocaleManager, Locale>(typeof(LocaleManager).GetField("m_Locale", Patcher.allFlags));
+        internal static readonly Func<Locale, Dictionary<Locale.Key, string>> m_localeStringsDictionary = ReflectionUtils.GetGetFieldDelegate<Locale, Dictionary<Locale.Key, string>>(typeof(Locale).GetField("m_LocalizedStrings", Patcher.allFlags));
 
         internal static SavedString CurrentLanguageId => new SavedString("K45_LoadedLanguage", Settings.gameSettingsFile, "en", true);
 
@@ -113,7 +113,7 @@ namespace Klyte.Commons.i18n
         {
             foreach (string eventLocale in new string[] { "eventUIComponentLocaleChanged", "eventLocaleChanged" })
             {
-                FieldInfo field = typeof(LocaleManager).GetField(eventLocale, RedirectorUtils.allFlags);
+                FieldInfo field = typeof(LocaleManager).GetField(eventLocale, Patcher.allFlags);
                 if (field.GetValue(LocaleManager.instance) != null)
                 {
                     foreach (Delegate eventHandler in (field.GetValue(LocaleManager.instance) as MulticastDelegate).GetInvocationList())

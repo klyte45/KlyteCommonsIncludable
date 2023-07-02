@@ -1,7 +1,7 @@
 ﻿using ColossalFramework.UI;
-using Klyte.Commons.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Klyte.Commons.Utils
 {
@@ -9,7 +9,7 @@ namespace Klyte.Commons.Utils
     {
         #region Sorting
 
-        public static int NaturalCompare(string left, string right) => (int)typeof(PublicTransportDetailPanel).GetMethod("NaturalCompare", RedirectorUtils.allFlags).Invoke(null, new object[] { left, right });
+        public static int NaturalCompare(string left, string right) => (int)typeof(PublicTransportDetailPanel).GetMethod("NaturalCompare", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(null, new object[] { left, right });
 
         public static void Quicksort<T>(IList<T> elements, Comparison<T> comp, bool invert) where T : UIComponent => Quicksort(elements, 0, elements.Count - 1, comp, invert);
 

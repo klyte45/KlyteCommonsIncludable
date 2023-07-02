@@ -1,7 +1,6 @@
 ﻿using ColossalFramework.Globalization;
-using Klyte.Commons.i18n;
+using Klyte.Commons.UI.i18n;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils

@@ -1,7 +1,7 @@
 ﻿using ColossalFramework;
 using System;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.StructExtensions
 {
     public static class PathUnitExtensions
     {

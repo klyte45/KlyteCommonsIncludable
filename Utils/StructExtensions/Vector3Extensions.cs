@@ -1,7 +1,7 @@
 ﻿using ColossalFramework.Math;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.StructExtensions
 {
     public static class Vector3Extensions
     {

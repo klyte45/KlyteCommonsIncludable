@@ -1,9 +1,10 @@
 ﻿using ColossalFramework.UI;
 using Klyte.Commons.Extensions;
-using System;
+using Klyte.Commons.Utils;
+using Klyte.Commons.Utils.StructExtensions;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.UI
 {
     public class UIColorFieldExtension : UICustomControl
     {
@@ -51,7 +52,7 @@ namespace Klyte.Commons.Utils
                                     colorField.selectedColor = targetColor;
                                     ((UITextField)x).textColor = Color.white;
                                     ((UITextField)x).text = targetColor.ToRGB();
-                                    colorField.GetType().GetMethod("OnSelectedColorChanged", RedirectorUtils.allFlags).Invoke(colorField, new object[0]);
+                                    colorField.GetType().GetMethod("OnSelectedColorChanged", Patcher.allFlags).Invoke(colorField, new object[0]);
                                     ((UITextField)x).selectionStart = selStart;
                                     ((UITextField)x).selectionEnd = selEnd;
                                 }

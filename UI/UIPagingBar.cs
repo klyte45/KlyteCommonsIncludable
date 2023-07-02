@@ -1,11 +1,12 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.UI;
-using Klyte.Commons.Extensions;
+using Klyte.Commons.Extensions.UI;
+using Klyte.Commons.Utils;
 using System;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.UI
 {
     public class UIPagingBar : UICustomControl
     {

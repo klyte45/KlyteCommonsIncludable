@@ -4,7 +4,7 @@ using Klyte.Commons.Utils;
 using System;
 using System.Text;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
     public abstract class DataExtensionLibBase<LIB, DESC> : BasicLib<LIB, DESC>, IDataExtension
         where LIB : DataExtensionLibBase<LIB, DESC>, new()

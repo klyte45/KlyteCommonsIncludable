@@ -1,4 +1,5 @@
 ﻿using Klyte.Commons.Utils;
+using Klyte.Commons.Utils.StructExtensions;
 using System;
 
 namespace Klyte.Commons.LiteUI

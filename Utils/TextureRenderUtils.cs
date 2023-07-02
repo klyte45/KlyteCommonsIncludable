@@ -1,10 +1,11 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.UI;
-using Klyte.Commons.Extensions;
+using Klyte.Commons.Utils.StructExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -172,7 +173,7 @@ namespace Klyte.Commons.Utils
             var textColors = new Stack<ColorInfo>();
             textColors.Clear();
             textColors.Push(new ColorInfo(baseColor));
-            var tokens = (PoolList<UIMarkupToken>)typeof(UIMarkupTokenizer).GetMethod("Tokenize", RedirectorUtils.allFlags).Invoke(null, new object[] { text });
+            var tokens = (PoolList<UIMarkupToken>)typeof(UIMarkupTokenizer).GetMethod("Tokenize", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(null, new object[] { text });
             Vector2 texSize = CalculateTextureSize(uidynamicFont, textScale, ref tokens, out int startYPos);
             if (texSize.x <= 0 || texSize.y <= 0)
             {

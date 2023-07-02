@@ -1,15 +1,16 @@
 ﻿using ColossalFramework.UI;
 using Klyte.Commons.Utils;
+using Klyte.Commons.Utils.StructExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Klyte.Commons.LiteUI
+namespace Klyte.Commons.LiteUI.BaseElements
 {
     public abstract class GUIWindow : MonoBehaviour, IDestroyableObject, IUIObject
     {
-        private static readonly List<GUIWindow> Windows = new List<GUIWindow>();
+		private static readonly List<GUIWindow> Windows = new List<GUIWindow>();
 
         private static GUIWindow resizingWindow;
         private static Vector2 resizeDragHandle = Vector2.zero;
@@ -26,8 +27,11 @@ namespace Klyte.Commons.LiteUI
         private readonly bool resizable;
         private readonly bool hasTitlebar;
         private GUISkin skin;
-        private string cachedFontName = string.Empty;
+#pragma warning disable IDE0052 // Remove unread private members
+		private string cachedFontName = string.Empty;
         private int cachedFontSize;
+#pragma warning restore IDE0052 // Remove unread private members
+		
 
         private Vector2 minSize = Vector2.zero;
         private Rect windowRect = new Rect(0, 0, 64, 64);

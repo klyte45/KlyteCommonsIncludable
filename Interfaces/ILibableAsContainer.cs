@@ -1,4 +1,4 @@
-﻿using Klyte.Commons.Utils;
+﻿using Klyte.Commons.Utils.UtilitiesClasses;
 using System.Linq;
 using System.Xml.Serialization;
 using static Klyte.Commons.Utils.XmlUtils;

@@ -4,7 +4,7 @@ using System;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
 
     [XmlRoot("DataExtension")]

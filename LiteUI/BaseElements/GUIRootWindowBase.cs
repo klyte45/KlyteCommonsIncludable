@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Klyte.Commons.LiteUI
+namespace Klyte.Commons.LiteUI.BaseElements
 {
     public abstract class GUIRootWindowBase : GUIWindow
     {

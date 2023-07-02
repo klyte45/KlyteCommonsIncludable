@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Klyte.Commons.Utils
+namespace Klyte.Commons.Utils.StructExtensions
 {
     public static class ColorExtensions
     {

@@ -1,8 +1,8 @@
-﻿using Klyte.Commons.Utils;
+﻿using Klyte.Commons.Utils.UtilitiesClasses;
 using System;
 using System.Xml.Serialization;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
     public abstract class ExtensionInterfaceSingleImpl<T, R, U> : DataExtensionBase<U> where T : Enum, IConvertible where R : class, new() where U : ExtensionInterfaceSingleImpl<T, R, U>, new()
     {

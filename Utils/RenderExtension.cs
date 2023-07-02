@@ -1,8 +1,9 @@
 ﻿using ColossalFramework.Math;
 using Klyte.Commons.Utils;
+using Klyte.Commons.Utils.StructExtensions;
 using UnityEngine;
 
-namespace Klyte.Commons
+namespace Klyte.Commons.Utils
 {
     /// <summary>
     /// Based on ModsCommon.Utilities.RenderExtension by macsergey

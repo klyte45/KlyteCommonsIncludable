@@ -1,10 +1,9 @@
-﻿extern alias UUI;
-using ColossalFramework.UI;
+﻿using ColossalFramework.UI;
 using Klyte.Commons.Interfaces;
 using Klyte.Commons.Utils;
 using System;
 using UnityEngine;
-using UUI::UnifiedUI.Helpers;
+using UnifiedUI.Helpers;
 
 namespace Klyte.Commons.ModShared
 {

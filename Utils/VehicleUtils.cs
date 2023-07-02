@@ -1,12 +1,9 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Math;
-using ColossalFramework.Threading;
-using Klyte.Commons.Extensions;
+using System.Reflection;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace Klyte.Commons.Utils
@@ -71,32 +68,41 @@ namespace Klyte.Commons.Utils
 
         public static FieldInfo GetVehicleCapacityField<AI>(AI ai) where AI : VehicleAI
         {
-            if (!m_cachedCapacityFieldForAiType.TryGetValue(ai.GetType(), out FieldInfo fieldInfo))
+            var result = m_cachedCapacityFieldForAiType.TryGetValue(ai.GetType(), out FieldInfo fieldInfo);
+            if(result && fieldInfo != null)
+			{
+                return fieldInfo;
+			} 
+            else
             {
                 Type typeTry = ai.GetType();
                 do
                 {
-                    fieldInfo = typeTry.GetField("m_passengerCapacity", RedirectorUtils.allFlags);
+                    fieldInfo = typeTry.GetField("m_passengerCapacity", BindingFlags.Instance | BindingFlags.Public);
                     typeTry = typeTry.BaseType;
                 } while (typeTry != typeof(VehicleAI) && fieldInfo == null);
                 m_cachedCapacityFieldForAiType[ai.GetType()] = fieldInfo;
             }
-
             return fieldInfo;
         }
+
         public static FieldInfo GetTransportInfoField<AI>(AI ai) where AI : VehicleAI
         {
-            if (!m_cachedTransportInfoFieldsForAiType.TryGetValue(ai.GetType(), out FieldInfo fieldInfo))
+            var result = m_cachedTransportInfoFieldsForAiType.TryGetValue(ai.GetType(), out FieldInfo fieldInfo);
+            if(result && fieldInfo != null)
+			{
+                return fieldInfo;
+			} 
+            else
             {
                 Type typeTry = ai.GetType();
                 do
                 {
-                    fieldInfo = typeTry.GetField("m_transportInfo", RedirectorUtils.allFlags);
+                    fieldInfo = typeTry.GetField("m_transportInfo", BindingFlags.Instance | BindingFlags.Public);
                     typeTry = typeTry.BaseType;
                 } while (typeTry != typeof(VehicleAI) && fieldInfo == null);
                 m_cachedTransportInfoFieldsForAiType[ai.GetType()] = fieldInfo;
             }
-
             return fieldInfo;
         }
 
@@ -144,8 +150,8 @@ namespace Klyte.Commons.Utils
             }
         }
 
-        public static bool IsTrailer(VehicleInfo prefab) => prefab.m_placementStyle != ItemClass.Placement.Automatic;
-
+        public static bool IsTrailer(VehicleInfo prefab) => prefab.GetAI() is CarTrailerAI;
+ 
         public static void ReplaceVehicleModel(ushort idx, VehicleInfo newInfo)
         {
             if (newInfo == null)

@@ -1,23 +1,18 @@
 ﻿using ColossalFramework.Globalization;
 using ColossalFramework.UI;
-using Klyte.Commons.Extensions;
-using Klyte.Commons.i18n;
+using Klyte.Commons.UI.i18n;
 using Klyte.Commons.Utils;
 using System.Linq;
+using HarmonyLib;
+using UnityEngine;
 
 namespace Klyte.Commons.Redirectors
 {
-
-    public class UIDynamicPanelsRedirector : Redirector, IRedirectable
+    [HarmonyPatch(typeof(UIDynamicPanels))]
+    public static class UIDynamicPanelsRedirector
     {
-        public Redirector RedirectorInstance => this;
-        public void Awake()
-        {
-            System.Reflection.MethodInfo initMethod = typeof(UIDynamicPanels).GetMethod("Init", RedirectorUtils.allFlags);
-            AddRedirect(initMethod, GetType().GetMethod("PreInit", RedirectorUtils.allFlags));
-
-        }
-
+        [HarmonyPatch(typeof(UIDynamicPanels), "Init")]
+        [HarmonyPrefix]
         public static void PreInit(UIView view, UIDynamicPanels __instance)
         {
             int? ct = __instance.m_DynamicPanels?.Where(x =>
@@ -38,7 +33,8 @@ namespace Klyte.Commons.Redirectors
                 {
                     LogUtils.DoWarnLog($"Unregistering older k45 panel (v: {oldPanel.panelRoot?.stringUserData})");
                     oldPanel.panelRoot.enabled = false;
-                    oldPanel.Destroy();Destroy(oldPanel.panelRoot);
+                    oldPanel.Destroy();
+                    Object.Destroy(oldPanel.panelRoot);
                 }
                 var listDynPanel = __instance.m_DynamicPanels.Where(x => x?.name != K45DialogControl.PANEL_ID).ToList();
                 listDynPanel.Insert(0, K45DialogControl.CreatePanelInfo(view));

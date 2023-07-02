@@ -1,5 +1,4 @@
-﻿using Klyte.Commons.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -277,8 +276,8 @@ namespace Klyte.Commons.Utils
             return result;
         }
 
-        internal static T GetPrivateField<T>(object prefabAI, string v) => (T)prefabAI.GetType().GetField(v, RedirectorUtils.allFlags).GetValue(prefabAI);
-        internal static object GetPrivateStaticField(string v, Type type) => type.GetField(v, RedirectorUtils.allFlags).GetValue(null);
+        internal static T GetPrivateField<T>(object prefabAI, string v) => (T)prefabAI.GetType().GetField(v, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(prefabAI);
+        internal static object GetPrivateStaticField(string v, Type type) => type.GetField(v, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(null);
 
 
         #region Called by reflection - Don't delete.

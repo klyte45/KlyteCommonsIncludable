@@ -1,7 +1,6 @@
 ﻿using ColossalFramework;
 using ICities;
-using Klyte.Commons.Extensions;
-using Klyte.Commons.ModShared;
+using Klyte.Commons.Extensions.UI;
 using System.Collections;
 
 namespace Klyte.Commons.Interfaces

@@ -1,7 +1,7 @@
 ﻿using ICities;
 using System;
 
-namespace Klyte.Commons.Interfaces
+namespace Klyte.Commons.Interfaces.Warehouse
 {
     public interface IDataExtension
     {

@@ -5,8 +5,9 @@ using ColossalFramework.PlatformServices;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
+using Klyte.Commons.Extensions.UI;
 using Klyte.Commons.Extensions;
-using Klyte.Commons.i18n;
+using Klyte.Commons.UI.i18n;
 using Klyte.Commons.Utils;
 using System;
 using System.Collections;
@@ -17,6 +18,7 @@ using System.Reflection;
 using UnityEngine;
 using static ColossalFramework.UI.UITextureAtlas;
 using static Klyte.Commons.Utils.K45DialogControl;
+using Klyte.Commons.Utils.UtilitiesClasses;
 
 namespace Klyte.Commons.Interfaces
 {
@@ -89,7 +91,7 @@ namespace Klyte.Commons.Interfaces
         {
             if (loading == null || (!loading.loadingComplete && !IsValidLoadMode(loading)))
             {
-                Redirector.UnpatchAll();
+                Patcher.UnpatchAll();
             }
         }
 
@@ -115,7 +117,7 @@ namespace Klyte.Commons.Interfaces
             else
             {
                 LogUtils.DoWarnLog($"Invalid load mode: {mode}. The mod will not be loaded!");
-                Redirector.UnpatchAll();
+                Patcher.UnpatchAll();
             }
         }
 
@@ -147,7 +149,7 @@ namespace Klyte.Commons.Interfaces
         public void OnLevelUnloading()
         {
             Controller = null;
-            Redirector.UnpatchAll();
+            Patcher.UnpatchAll();
             PatchesApply();
         }
         public virtual void OnReleased() => PluginManager.instance.eventPluginsStateChanged -= SearchIncompatibilitiesModal;
@@ -155,7 +157,7 @@ namespace Klyte.Commons.Interfaces
         protected void PatchesApply()
         {
             UnsubAuto();
-            Redirector.PatchAll();
+            Patcher.PatchAll();
             OnPatchesApply();
         }
 
@@ -171,7 +173,7 @@ namespace Klyte.Commons.Interfaces
             PatchesApply();
         }
 
-        public void OnDisabled() => Redirector.UnpatchAll();
+        public void OnDisabled() => Patcher.UnpatchAll();
 
         public static string MinorVersion => MajorVersion + "." + typeof(U).Assembly.GetName().Version.Build;
         public static string MajorVersion => typeof(U).Assembly.GetName().Version.Major + "." + typeof(U).Assembly.GetName().Version.Minor;
